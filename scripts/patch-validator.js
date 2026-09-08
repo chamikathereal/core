@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const filePath = path.resolve(__dirname, '..', 'cli', 'fivora-cli', 'src', 'tools', 'fivora-template-validator.cjs');
+const filePath = path.resolve(__dirname, '..', 'cli', 'deneb-cli', 'src', 'tools', 'fivora-template-validator.cjs');
 let content = fs.readFileSync(filePath, 'utf8');
 
 const target = 'm=i.includes("@fivora/editable-components")&&(i.includes("SiteDataProvider")||i.includes("BaseSiteDataProvider"))';

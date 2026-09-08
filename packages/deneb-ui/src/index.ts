@@ -22,6 +22,10 @@ export * from './EditableHero';
 export * from './EditableDialog';
 export * from './EditableAnnouncementBar';
 export * from './EditableCategoryPills';
+export * from './StickyMobileBar';
+export * from './TrustBadges';
+export * from './ProductQuickView';
+export * from './CookieConsentBanner';
 export * from './ThemeStyles';
 export * from './SiteDataProvider';
 
@@ -58,6 +62,10 @@ export { EditableFooter as Footer } from './EditableFooter';
 export { EditableHeroCentered as Hero, EditableHeroSplit as HeroSplit } from './EditableHero';
 export { EditableAnnouncementBar as AnnouncementBar } from './EditableAnnouncementBar';
 export { EditableCategoryPills as CategoryPills } from './EditableCategoryPills';
+export { StickyMobileBar } from './StickyMobileBar';
+export { TrustBadges } from './TrustBadges';
+export { ProductQuickView } from './ProductQuickView';
+export { CookieConsentBanner } from './CookieConsentBanner';
 export { FloatingContactWidget } from './contact/FloatingContactWidget';
 
 

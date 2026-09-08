@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const filePath = path.resolve(__dirname, '..', 'cli', 'fivora-cli', 'bin', 'index.js');
+const filePath = path.resolve(__dirname, '..', 'cli', 'deneb-cli', 'bin', 'index.js');
 let content = fs.readFileSync(filePath, 'utf8');
 
 const heroMarker = "'hero': {";
