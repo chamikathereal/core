@@ -280,6 +280,11 @@
               "key": "contactHeading",
               "type": "text",
               "label": "Contact Column Heading"
+            },
+            {
+              "key": "instagramUrl",
+              "type": "text",
+              "label": "Instagram Profile URL"
             }
           ]
         }
@@ -588,6 +593,16 @@
           "key": "whatsappDesc",
           "type": "textarea",
           "label": "WhatsApp Section Description"
+        },
+        {
+          "key": "whatsappCtaLabel",
+          "type": "text",
+          "label": "WhatsApp CTA Button Label"
+        },
+        {
+          "key": "whatsappCtaUrl",
+          "type": "text",
+          "label": "WhatsApp CTA Link URL"
         },
         {
           "key": "categoryLabel1",
@@ -1019,7 +1034,8 @@
         "supportLink1": "Shipping & Returns",
         "supportLink2": "Size Guide",
         "supportLink3": "WhatsApp Orders",
-        "contactHeading": "Contact"
+        "contactHeading": "Contact",
+        "instagramUrl": "https://instagram.com"
       }
     },
     "home": {
@@ -1080,6 +1096,8 @@
       "whatsappLabel": "Easy Ordering",
       "whatsappTitle": "Order Directly via WhatsApp",
       "whatsappDesc": "Select your size, add to your bag, and send your order in one tap. Our team confirms availability within hours.",
+      "whatsappCtaLabel": "Start a Conversation",
+      "whatsappCtaUrl": "https://wa.me/94771234567?text=Hi%2C%20I'd%20like%20to%20order%3A%0A%0AI'm%20interested%20in%20VANTA%20footwear.%20Can%20you%20help%20me%20choose%20a%20pair%3F",
       "categoryLabel1": "Performance",
       "categoryLabel2": "Sneakers",
       "categoryLabel3": "Lifestyle",
