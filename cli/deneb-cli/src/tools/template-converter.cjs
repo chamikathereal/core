@@ -268,10 +268,10 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
     }
   }
 
-  // 2. Extract Headings: <h1> to <h6>
-  const headingRegex = /<(h[1-6])(\s+[^>]*)?>([^<>{}\n]+)<\/\1>/g;
+  // 2. Extract Headings: <h1> to <h6> (multiline-safe)
+  const headingRegex = /<(h[1-6])(\s+[^>]*)?>([^<>{}]+)<\/\1>/g;
   code = code.replace(headingRegex, (match, tag, attrs = '', text) => {
-    const trimmed = text.trim();
+    const trimmed = text.trim().replace(/\s+/g, ' ');
     if (!trimmed || trimmed.length < 2 || attrs.includes('data-preview-field-path')) {
       return match;
     }
@@ -285,10 +285,10 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
     return `<${tag} data-preview-field-path="${pageKey}.${fieldKey}"${attrs}>{siteData?.content?.${pageKey}?.${fieldKey} || "${trimmed}"}</${tag}>`;
   });
 
-  // 3. Extract Paragraphs: <p>
-  const pRegex = /<p(\s+[^>]*)?>([^<>{}\n]+)<\/p>/g;
+  // 3. Extract Paragraphs: <p> (multiline-safe)
+  const pRegex = /<p(\s+[^>]*)?>([^<>{}]+)<\/p>/g;
   code = code.replace(pRegex, (match, attrs = '', text) => {
-    const trimmed = text.trim();
+    const trimmed = text.trim().replace(/\s+/g, ' ');
     if (!trimmed || trimmed.length < 2 || attrs.includes('data-preview-field-path')) {
       return match;
     }
@@ -302,10 +302,10 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
     return `<p data-preview-field-path="${pageKey}.${fieldKey}"${attrs}>{siteData?.content?.${pageKey}?.${fieldKey} || "${trimmed}"}</p>`;
   });
 
-  // 4. Extract CardTitle & CardDescription (shadcn/ui & modern patterns)
-  const cardTitleRegex = /<CardTitle(\s+[^>]*)?>([^<>{}\n]+)<\/CardTitle>/g;
+  // 4. Extract CardTitle & CardDescription (shadcn/ui & modern patterns, multiline-safe)
+  const cardTitleRegex = /<CardTitle(\s+[^>]*)?>([^<>{}]+)<\/CardTitle>/g;
   code = code.replace(cardTitleRegex, (match, attrs = '', text) => {
-    const trimmed = text.trim();
+    const trimmed = text.trim().replace(/\s+/g, ' ');
     if (!trimmed || trimmed.length < 2 || attrs.includes('data-preview-field-path')) {
       return match;
     }
@@ -319,9 +319,9 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
     return `<CardTitle data-preview-field-path="${pageKey}.${fieldKey}"${attrs}>{siteData?.content?.${pageKey}?.${fieldKey} || "${trimmed}"}</CardTitle>`;
   });
 
-  const cardDescRegex = /<CardDescription(\s+[^>]*)?>([^<>{}\n]+)<\/CardDescription>/g;
+  const cardDescRegex = /<CardDescription(\s+[^>]*)?>([^<>{}]+)<\/CardDescription>/g;
   code = code.replace(cardDescRegex, (match, attrs = '', text) => {
-    const trimmed = text.trim();
+    const trimmed = text.trim().replace(/\s+/g, ' ');
     if (!trimmed || trimmed.length < 2 || attrs.includes('data-preview-field-path')) {
       return match;
     }
@@ -335,10 +335,10 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
     return `<CardDescription data-preview-field-path="${pageKey}.${fieldKey}"${attrs}>{siteData?.content?.${pageKey}?.${fieldKey} || "${trimmed}"}</CardDescription>`;
   });
 
-  // 5. Extract Buttons & CTAs: <Button> and <button>
-  const btnRegex = /<(Button|button)(\s+[^>]*)?>([^<>{}\n]+)<\/\1>/g;
+  // 5. Extract Buttons & CTAs: <Button> and <button> (multiline-safe)
+  const btnRegex = /<(Button|button)(\s+[^>]*)?>([^<>{}]+)<\/\1>/g;
   code = code.replace(btnRegex, (match, tag, attrs = '', text) => {
-    const trimmed = text.trim();
+    const trimmed = text.trim().replace(/\s+/g, ' ');
     if (!trimmed || trimmed.length < 2 || attrs.includes('data-preview-field-path')) {
       return match;
     }
@@ -390,6 +390,12 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
   if (fileModified) {
     backupFile(filePath, projectDir, backupDir);
 
+    // Next.js safety: A client component cannot export metadata.
+    // If metadata was exported, preserve it as a local constant so Next.js build passes.
+    if (code.includes('export const metadata') || code.includes('export let metadata')) {
+      code = code.replace(/export\s+(const|let)\s+metadata/g, '// Metadata preserved for static export\n$1 metadata');
+    }
+
     // Ensure 'use client' at top if not present
     if (!code.includes('use client')) {
       code = "'use client';\n\n" + code;
@@ -405,10 +411,27 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
 
     // Add const { siteData } = useSiteData(); inside the primary component function
     if (!code.includes('useSiteData()')) {
-      code = code.replace(
-        /(export\s+default\s+function\s+[A-Za-z0-9_]*\s*\([^)]*\)\s*\{)/,
-        `$1\n  const { siteData } = useSiteData();`
-      );
+      let injected = false;
+      // Match export default function Name(...) {
+      if (/(export\s+default\s+function\s*[A-Za-z0-9_]*\s*\([^)]*\)\s*\{)/.test(code)) {
+        code = code.replace(/(export\s+default\s+function\s*[A-Za-z0-9_]*\s*\([^)]*\)\s*\{)/, `$1\n  const { siteData } = useSiteData();`);
+        injected = true;
+      }
+      // Match export default (...) => {
+      if (!injected && /(export\s+default\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{)/.test(code)) {
+        code = code.replace(/(export\s+default\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{)/, `$1\n  const { siteData } = useSiteData();`);
+        injected = true;
+      }
+      // Match const ComponentName = (...) => {
+      if (!injected && /(const\s+[A-Za-z0-9_]+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{)/.test(code)) {
+        code = code.replace(/(const\s+[A-Za-z0-9_]+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{)/, `$1\n  const { siteData } = useSiteData();`);
+        injected = true;
+      }
+      // Match function ComponentName(...) {
+      if (!injected && /(function\s+[A-Za-z0-9_]+\s*\([^)]*\)\s*\{)/.test(code)) {
+        code = code.replace(/(function\s+[A-Za-z0-9_]+\s*\([^)]*\)\s*\{)/, `$1\n  const { siteData } = useSiteData();`);
+        injected = true;
+      }
     }
 
     fs.writeFileSync(filePath, code, 'utf8');
