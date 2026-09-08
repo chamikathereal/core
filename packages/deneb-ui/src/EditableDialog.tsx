@@ -220,7 +220,7 @@ export function EditableDialog({
 }
 
 // Dialog Component Primitives (shadcn/HeroUI style)
-export interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type DialogContentProps = React.HTMLAttributes<HTMLDivElement>;
 export function DialogHeader({ className = '', style, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div style={{ marginBottom: '1rem', ...style }} className={`deneb-dialog-header ${className}`.trim()} {...props}>

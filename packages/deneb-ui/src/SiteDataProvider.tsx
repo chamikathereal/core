@@ -369,10 +369,11 @@ export function getFieldStyle(
 
 export function useFieldStyle(path?: string): GenericRecord | null {
   const siteData = useSiteData();
+  const content = siteData?.content;
   return useMemo(() => {
-    if (!path || !siteData?.content) return null;
-    return getFieldStyle(siteData.content, path);
-  }, [siteData?.content, path]);
+    if (!path || !content) return null;
+    return getFieldStyle(content, path);
+  }, [content, path]);
 }
 
 /**
