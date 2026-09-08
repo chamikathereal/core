@@ -28,7 +28,7 @@ Preview server stopped during navigation (${e}). Restarting (${b}/${k})...
   <iframe id="template-preview" title="Local template preview"></iframe>
   <script>
     (() => {
-      const BRIDGE_SOURCE = ${JSON.stringify(D)};
+      const BRIDGE_SOURCE = ${JSON.stringify((()=>{try{delete require.cache[require.resolve("./template-preview-focus-bridge.cjs")];const e=require("./template-preview-focus-bridge.cjs");if(typeof e=="string"&&e.trim())return e;}catch{}return ee;})())};
       const preview = document.getElementById('template-preview');
       const errorBox = document.getElementById('bridge-error');
       const PREVIOUS_PREVIEW_PREFIX = ['MARKET', 'PLACE'].join('') + '_PREVIEW_';
