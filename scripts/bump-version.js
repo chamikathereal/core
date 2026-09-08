@@ -7,7 +7,7 @@ const targetType = process.argv[2] || 'patch'; // 'patch', 'minor', 'major'
 
 const packagePaths = [
   path.join(rootDir, 'packages', 'deneb-ui', 'package.json'),
-  path.join(rootDir, 'cli', 'fivora-cli', 'package.json'),
+  path.join(rootDir, 'cli', 'deneb-cli', 'package.json'),
   path.join(rootDir, 'packages', 'create-template', 'package.json'),
 ];
 

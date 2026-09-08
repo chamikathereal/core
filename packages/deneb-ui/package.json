@@ -7,6 +7,15 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deneb-ui/core.git",
+    "directory": "packages/deneb-ui"
+  },
+  "homepage": "https://github.com/deneb-ui/core#readme",
+  "bugs": {
+    "url": "https://github.com/deneb-ui/core/issues"
+  },
   "files": [
     "dist",
     "README.md"

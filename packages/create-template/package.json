@@ -5,12 +5,19 @@
   "bin": {
     "create-deneb-template": "bin/index.js",
     "create-deneb": "bin/index.js",
-    "create-fivora-template": "bin/index.js",
-    "create-fivora": "bin/index.js",
     "create-template": "bin/index.js"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deneb-ui/core.git",
+    "directory": "packages/create-template"
+  },
+  "homepage": "https://github.com/deneb-ui/core#readme",
+  "bugs": {
+    "url": "https://github.com/deneb-ui/core/issues"
   },
   "files": [
     "bin",
@@ -24,7 +31,6 @@
   "keywords": [
     "deneb",
     "deneb-ui",
-    "fivora",
     "create",
     "template",
     "scaffold",

@@ -52,11 +52,11 @@ jobs:
       - name: Validate Template Compliance
         run: |
           cd templates/nextjs
-          node ../../cli/fivora-cli/bin/index.js validate . --skip-install || echo "Preflight validation completed."
+          node ../../cli/deneb-cli/bin/index.js validate . --skip-install || echo "Preflight validation completed."
 
       - name: Publish to npm Registry
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.DENEB_TOKEN || secrets.NPM_TOKEN }}
         run: |
           DRY_RUN_FLAG=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
@@ -93,7 +93,7 @@ jobs:
           fi
 
           if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/cli" ]; then
-            publish_pkg "cli/fivora-cli" "@deneb-ui/cli"
+            publish_pkg "cli/deneb-cli" "@deneb-ui/cli"
           fi
 
           if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/create-template" ]; then
