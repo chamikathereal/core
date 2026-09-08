@@ -406,7 +406,94 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
     return `<span data-preview-field-path="${pageKey}.${fieldKey}"${attrs}>{siteData?.content?.${pageKey}?.${fieldKey} || ${JSON.stringify(trimmed)}}</span>`;
   });
 
-  // 9. Anchor Links: <a> (sensitive attribute handler)
+  // 9. Adaptive Action-Link Splitter & Social Media Handler (100% Fivora Contract Safe)
+  // 9a. WhatsApp & Direct Communication Links
+  const waRegex = /<a(\s+[^>]*?)href="([^"]*(?:wa\.me|whatsapp)[^"]*)"([^>]*)>([\s\S]*?)<\/a>/gi;
+  code = code.replace(waRegex, (match, preHref = '', href, postHref = '', innerContent) => {
+    if (preHref.includes('data-preview-field-path') || postHref.includes('data-preview-field-path')) {
+      return match;
+    }
+    const urlKey = 'whatsappCtaUrl';
+    const labelKey = 'whatsappCtaLabel';
+    extractedData[urlKey] = href;
+
+    // Extract text from innerContent
+    const textMatch = innerContent.match(/>([^<>{}]+)</) || [null, innerContent.replace(/<[^>]+>/g, '').trim()];
+    const text = (textMatch[1] || 'Order via WhatsApp').trim();
+    extractedData[labelKey] = text;
+
+    elementCount += 2;
+    fileModified = true;
+
+    // Wrap inner label cleanly in span if not already wrapped
+    let updatedInner = innerContent;
+    if (/<span(\s+[^>]*)?>([^<>{}]+)<\/span>/i.test(innerContent)) {
+      updatedInner = innerContent.replace(
+        /<span(\s+[^>]*)?>([^<>{}]+)<\/span>/i,
+        `<span data-preview-field-path="${pageKey}.${labelKey}"$1>{siteData?.content?.${pageKey}?.${labelKey} || ${JSON.stringify(text)}}</span>`
+      );
+    } else if (text && innerContent.includes(text)) {
+      updatedInner = innerContent.replace(
+        text,
+        `<span data-preview-field-path="${pageKey}.${labelKey}">{siteData?.content?.${pageKey}?.${labelKey} || ${JSON.stringify(text)}}</span>`
+      );
+    }
+
+    return `<a${preHref}href={siteData?.content?.${pageKey}?.${urlKey} || ${JSON.stringify(href)}} data-preview-field-path="${pageKey}.${urlKey}"${postHref}>${updatedInner}</a>`;
+  });
+
+  // 9b. Social Media Icon Links (Instagram, Facebook, TikTok, Twitter/X, YouTube, LinkedIn)
+  const socialRegex = /<a(\s+[^>]*?)href="([^"]*(?:instagram|facebook|tiktok|twitter|youtube|linkedin)\.com[^"]*)"([^>]*)>([\s\S]*?)<\/a>/gi;
+  code = code.replace(socialRegex, (match, preHref = '', href, postHref = '', innerContent) => {
+    if (preHref.includes('data-preview-field-path') || postHref.includes('data-preview-field-path')) {
+      return match;
+    }
+    const platMatch = href.match(/(instagram|facebook|tiktok|twitter|youtube|linkedin)\.com/i);
+    const platform = platMatch ? platMatch[1].toLowerCase() : 'social';
+    const fieldKey = `${platform}Url`;
+
+    extractedData[fieldKey] = href;
+    elementCount++;
+    fileModified = true;
+
+    return `<a${preHref}href={siteData?.content?.common?.footer?.${fieldKey} || siteData?.content?.${pageKey}?.${fieldKey} || ${JSON.stringify(href)}} data-preview-field-path="common.footer.${fieldKey}"${postHref}>${innerContent}</a>`;
+  });
+
+  // 9c. Button / CTA Action Links with Text (Split URL on <a> and Label on <span>)
+  const btnLinkRegex = /<a(\s+[^>]*?class(?:Name)?="[^"]*(?:btn|button|cta|action|rounded|bg-)[^"]*"[^>]*?)href="([^"]+)"([^>]*)>([\s\S]*?)<\/a>/gi;
+  code = code.replace(btnLinkRegex, (match, preHref = '', href, postHref = '', innerContent) => {
+    if (preHref.includes('data-preview-field-path') || postHref.includes('data-preview-field-path') || href.startsWith('#') || href.includes('javascript:')) {
+      return match;
+    }
+    const textOnly = innerContent.replace(/<[^>]+>/g, '').trim();
+    if (!textOnly || textOnly.length < 2) return match;
+
+    const rawUrlKey = toFieldKey(textOnly, 'ctaUrl', elementCount + 1);
+    const urlKey = getUniqueKey(rawUrlKey);
+    const labelKey = urlKey.replace(/Url$/, 'Label') || getUniqueKey('ctaLabel');
+
+    extractedData[urlKey] = href;
+    extractedData[labelKey] = textOnly;
+    elementCount += 2;
+    fileModified = true;
+
+    let updatedInner = innerContent;
+    if (/<span(\s+[^>]*)?>([^<>{}]+)<\/span>/i.test(innerContent)) {
+      updatedInner = innerContent.replace(
+        /<span(\s+[^>]*)?>([^<>{}]+)<\/span>/i,
+        `<span data-preview-field-path="${pageKey}.${labelKey}"$1>{siteData?.content?.${pageKey}?.${labelKey} || ${JSON.stringify(textOnly)}}</span>`
+      );
+    } else {
+      updatedInner = innerContent.replace(
+        textOnly,
+        `<span data-preview-field-path="${pageKey}.${labelKey}">{siteData?.content?.${pageKey}?.${labelKey} || ${JSON.stringify(textOnly)}}</span>`
+      );
+    }
+
+    return `<a${preHref}href={siteData?.content?.${pageKey}?.${urlKey} || ${JSON.stringify(href)}} data-preview-field-path="${pageKey}.${urlKey}"${postHref}>${updatedInner}</a>`;
+  });
+
+  // 9d. Standard Anchor Links with Plain Text
   const linkRegex = /<a(\s+[^>]*)?>([^<>{}]+)<\/a>/g;
   code = code.replace(linkRegex, (match, attrs = '', text) => {
     const trimmed = text.trim().replace(/\s+/g, ' ');
@@ -651,16 +738,32 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
   // If active recipe has defined sections, seed them
   if (activeRecipe && Array.isArray(activeRecipe.sections)) {
     for (const sec of activeRecipe.sections) {
-      if (sec.id === 'common') continue;
+      if (sec.id === 'common') {
+        const commonSec = editorSections.find((s) => s.id === 'common');
+        if (commonSec && Array.isArray(sec.fields)) {
+          for (const rf of sec.fields) {
+            if (!commonSec.fields.some((f) => f.key === rf.key)) {
+              commonSec.fields.push(rf);
+            }
+          }
+        }
+        continue;
+      }
       editorSections.push(sec);
     }
   }
 
-  // Seed recipe defaults if available
+  // Seed recipe defaults if available with deep merge for common/footer
   if (activeRecipe && activeRecipe.defaults) {
     for (const [secKey, secVal] of Object.entries(activeRecipe.defaults)) {
-      if (!content[secKey]) content[secKey] = {};
-      Object.assign(content[secKey], secVal);
+      if (!content[secKey]) {
+        content[secKey] = JSON.parse(JSON.stringify(secVal));
+      } else if (typeof secVal === 'object' && !Array.isArray(secVal)) {
+        content[secKey] = { ...secVal, ...content[secKey] };
+        if (secVal.footer && content[secKey].footer) {
+          content[secKey].footer = { ...secVal.footer, ...content[secKey].footer };
+        }
+      }
     }
   }
 
