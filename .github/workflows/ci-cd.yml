@@ -29,12 +29,15 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,6 +48,26 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
+
+      - name: Check Version & Auto-Bump If Already on npm
+        id: version_check
+        run: |
+          LOCAL_VER=$(node -p "require('./packages/deneb-ui/package.json').version")
+          REMOTE_VER=$(npm view @deneb-ui/ui version 2>/dev/null || echo "")
+          echo "Current repo version: $LOCAL_VER"
+          echo "Latest npm version:   $REMOTE_VER"
+
+          if [ "$LOCAL_VER" = "$REMOTE_VER" ] && [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
+            echo "⚡ Remote version matches local ($LOCAL_VER). Auto-bumping patch version..."
+            node scripts/bump-version.js patch
+            NEW_VER=$(node -p "require('./packages/deneb-ui/package.json').version")
+            echo "BUMPED=true" >> $GITHUB_ENV
+            echo "NEW_VERSION=$NEW_VER" >> $GITHUB_ENV
+            echo "✔ Bumped all packages to v$NEW_VER"
+          else
+            echo "BUMPED=false" >> $GITHUB_ENV
+            echo "Local version is already ahead or running dry-run. Proceeding with v$LOCAL_VER."
+          fi
 
       - name: Build All Packages & Sync Templates
         run: npm run build
@@ -72,12 +95,12 @@ jobs:
             local name=$2
             cd "$GITHUB_WORKSPACE/$dir"
             local local_ver=$(node -p "require('./package.json').version")
-            local remote_ver=$(npm view "$name" version 2>/dev/null || echo "")
+            local is_published=$(npm view "$name@$local_ver" version 2>/dev/null || echo "")
 
             echo "========================================================="
-            echo "Checking $name (local: v$local_ver, npm: ${remote_ver:-not published})"
+            echo "Checking $name (local: v$local_ver)"
 
-            if [ "$local_ver" = "$remote_ver" ] && [ -z "$DRY_RUN_FLAG" ]; then
+            if [ -n "$is_published" ] && [ -z "$DRY_RUN_FLAG" ]; then
               echo "⏩ Skipping $name: v$local_ver is already published on npm."
               return 0
             fi
@@ -101,5 +124,14 @@ jobs:
           fi
 
           echo "========================================================="
-          echo "✔ All requested packages published successfully!"
+          echo "✔ All requested packages processed!"
           echo "========================================================="
+
+      - name: Commit & Push Bumped Version Back to Repo
+        if: env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/*/package.json cli/*/package.json package*.json templates/*/package.json
+          git commit -m "chore(release): auto-bump packages to v${{ env.NEW_VERSION }} [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:main || echo "Push to main branch skipped or already up to date"
