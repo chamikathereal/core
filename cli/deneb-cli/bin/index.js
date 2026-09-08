@@ -1123,16 +1123,28 @@ if (command === 'init') {
   runValidateAndZip(commandArgs[0] || '.', commandArgs.slice(1));
 } else if (command === 'update' || command === 'upgrade') {
   updateDependencies(commandArgs);
-} else if (command === 'package') {
-  const script = path.join(toolsDir, 'fivora-template-validator.cjs');
-  const res = spawnSync(process.execPath, [script, 'package', ...commandArgs], { stdio: 'inherit' });
-  process.exit(res.status ?? 0);
+} else if (command === 'save-recipe' || command === 'learn') {
+  const targetDir = path.resolve(commandArgs[0] || '.');
+  const recipeName = commandArgs[1] || path.basename(targetDir);
+  try {
+    const { saveRecipeFromProject } = require('../src/tools/recipe-engine.cjs');
+    const res = saveRecipeFromProject(targetDir, recipeName);
+    console.log(`\n\x1b[32m✔ Successfully learned and saved recipe:\x1b[0m \x1b[1m${res.recipe.name}\x1b[0m`);
+    console.log(`  Saved to CLI recipe bank: \x1b[90m${res.globalDest}\x1b[0m`);
+    console.log(`  Saved to project recipe:  \x1b[90m${res.localDest}\x1b[0m`);
+    console.log(`  Future runs of "npx @deneb-ui/cli init" will automatically apply these calibrated fix patterns!\n`);
+  } catch (err) {
+    console.error(`\x1b[31m✖ Failed to save recipe:\x1b[0m ${err.message}`);
+    process.exit(1);
+  }
 } else {
   console.log(`Usage: deneb <command> [options]
   DENEB UI Framework — Powered by DENEB-UI Collaborate with FIVORA
 
 Core Commands:
   init              Auto-convert & configure existing Next.js (shadcn/HeroUI/Tailwind) into editable Fivora template
+  save-recipe       Learn and save calibrated fixes & schemas into reusable recipe bank (e.g. deneb save-recipe . shoes-store)
+  learn             Alias for save-recipe
   update            Update DENEB packages (@deneb-ui/ui, @deneb-ui/cli) and UI components
   validate          Validate website configuration and visual editing contracts with Fivora platform
   doctor            Run comprehensive environment, manifest & asset diagnostic checks

@@ -2338,8 +2338,23 @@ function fivoraPreviewFocusBridge(
   function positionBadge(target: HTMLElement) {
     if (!hoverBadge) return;
     const rect = target.getBoundingClientRect();
-    hoverBadge.style.top = `${Math.max(4, rect.top - 4)}px`;
-    hoverBadge.style.left = `${Math.min(window.innerWidth - 36, rect.right - 32)}px`;
+    const isImage =
+      target.tagName === 'IMG' ||
+      target.querySelector('img') !== null ||
+      target.classList.contains('animated-shoe') ||
+      target.closest('.animated-shoe') !== null ||
+      /image/i.test(target.getAttribute('data-preview-field-path') ?? '') ||
+      /image/i.test(target.getAttribute('data-content-path') ?? '') ||
+      /image/i.test(target.getAttribute('data-field-path') ?? '') ||
+      /image/i.test(target.getAttribute(RESOLVED_PATH_ATTRIBUTE) ?? '');
+
+    if (isImage) {
+      hoverBadge.style.top = `${Math.max(4, Math.min(window.innerHeight - 36, rect.bottom - 40))}px`;
+      hoverBadge.style.left = `${Math.max(4, rect.left + 16)}px`;
+    } else {
+      hoverBadge.style.top = `${Math.max(4, rect.top - 4)}px`;
+      hoverBadge.style.left = `${Math.min(window.innerWidth - 36, rect.right - 32)}px`;
+    }
     hoverBadge.style.opacity = '1';
   }
 
