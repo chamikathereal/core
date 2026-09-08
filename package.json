@@ -1,0 +1,20 @@
+{
+  "name": "deneb-ui-framework-monorepo",
+  "version": "2.0.5",
+  "private": true,
+  "description": "DENEB UI Framework Monorepo — Created by Chamika Gayashan & Induranga Kawishwara",
+  "workspaces": [
+    "packages/*",
+    "cli/*",
+    "templates/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspace=@deneb-ui/ui build && npm run --workspace=@deneb-ui/create-template sync-template",
+    "publish:dry-run": "npm publish --workspace=@deneb-ui/ui --workspace=@deneb-ui/cli --workspace=@deneb-ui/create-template --access public --dry-run",
+    "publish:all": "npm publish --workspace=@deneb-ui/ui --workspace=@deneb-ui/cli --workspace=@deneb-ui/create-template --access public",
+    "bump": "node scripts/bump-version.js patch",
+    "bump:minor": "node scripts/bump-version.js minor",
+    "release": "npm run bump && npm run publish:all",
+    "release:dry-run": "npm run bump && npm run publish:dry-run"
+  }
+}

@@ -1,0 +1,52 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { execSync } = require('node:child_process');
+
+const rootDir = path.resolve(__dirname, '..');
+const targetType = process.argv[2] || 'patch'; // 'patch', 'minor', 'major'
+
+const packagePaths = [
+  path.join(rootDir, 'packages', 'deneb-ui', 'package.json'),
+  path.join(rootDir, 'cli', 'fivora-cli', 'package.json'),
+  path.join(rootDir, 'packages', 'create-template', 'package.json'),
+];
+
+
+
+
+function bump(version, type) {
+  const parts = version.split('.').map(Number);
+  if (type === 'major') {
+    parts[0] += 1;
+    parts[1] = 0;
+    parts[2] = 0;
+  } else if (type === 'minor') {
+    parts[1] += 1;
+    parts[2] = 0;
+  } else {
+    parts[2] += 1;
+  }
+  return parts.join('.');
+}
+
+// Read current version from first package
+const firstPkg = JSON.parse(fs.readFileSync(packagePaths[0], 'utf8'));
+const oldVersion = firstPkg.version;
+const newVersion = bump(oldVersion, targetType);
+
+console.log(`\n🚀 Bumping all DENEB packages: v${oldVersion} -> v${newVersion} (${targetType})\n`);
+
+for (const pkgPath of packagePaths) {
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    pkg.version = newVersion;
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log(`  ✔ Updated ${pkg.name} -> v${newVersion}`);
+  }
+}
+
+console.log(`\n📦 Rebuilding packages and syncing templates...`);
+execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
+
+console.log(`\n🎉 All packages bumped to v${newVersion} and built successfully!`);
+console.log(`Ready to publish with: npm run publish:all\n`);

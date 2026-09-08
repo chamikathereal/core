@@ -1,0 +1,34 @@
+{
+  "name": "@deneb-ui/cli",
+  "version": "2.0.7",
+  "description": "Official developer CLI for DENEB UI — Validating, scaffolding, testing, and packaging storefront templates. Created by Chamika Gayashan & Induranga Kawishwara.",
+  "bin": {
+    "deneb": "bin/index.js",
+    "denebui": "bin/index.js",
+    "deneb-cli": "bin/index.js",
+    "fivora": "bin/index.js",
+    "ceeg": "bin/index.js",
+    "ceegui": "bin/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "deneb",
+    "deneb-ui",
+    "fivora",
+    "cli",
+    "validator",
+    "packager"
+  ],
+  "author": "Chamika Gayashan & Induranga Kawishwara",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.6.0"
+  }
+}

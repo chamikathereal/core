@@ -1,0 +1,107 @@
+{
+  "project": { "id": "starter-demo", "title": "Fivora Starter Demo", "status": "APPROVED" },
+  "merchant": {
+    "businessName": "Fivora Store",
+    "description": "A modern high-converting digital storefront built on the Fivora platform."
+  },
+  "template": {
+    "id": "starter-template",
+    "name": "Fivora Starter",
+    "engine": "NEXT_STATIC_EXPORT",
+    "structure": {
+      "pages": ["home", "about_us", "services", "contact"],
+      "theme": {
+        "primaryColor": "#016a7e",
+        "secondaryColor": "#0a1931",
+        "accentColor": "#00adb5",
+        "backgroundColor": "#ffffff",
+        "textColor": "#0f172a",
+        "headingFont": "Inter",
+        "bodyFont": "Inter",
+        "baseSize": "16px",
+        "heroMinHeight": "72vh",
+        "sectionPadding": "5rem"
+      }
+    }
+  },
+  "requirements": {
+    "requiredPages": ["home", "about_us", "services", "contact"],
+    "requiredFeatures": []
+  },
+  "content": {
+    "common": {
+      "websiteTitle": "Fivora Store",
+      "shortDescription": "Next-generation commerce templates built for the Fivora with reusable components and strict visual editing.",
+      "logoUrl": "/fivora-logo.png",
+      "headerCtaLabel": "Contact Us",
+      "navLabels": {
+        "home": "Home",
+        "about_us": "About",
+        "services": "Services",
+        "contact": "Contact"
+      },
+      "footerHeading": "Build something extraordinary with Fivora.",
+      "copyright": "Fivora. All rights reserved.",
+      "socialMedia": {
+        "twitter": "https://twitter.com",
+        "github": "https://github.com",
+        "linkedin": "https://linkedin.com",
+        "instagram": "https://instagram.com"
+      }
+    },
+    "home": {
+      "heroEyebrow": "⚡ Fivora Template Starter",
+      "heroTitle": "Design Stores That Captivate",
+      "heroSummary": "Built with @fivora/editable-components. Hot-reload locally, simulate merchant visual editing in the Lab, validate preflight contracts, and package with 1-click.",
+      "bannerImageUrl": "/fivora-icon.svg",
+      "primaryCtaLabel": "Explore Services",
+      "secondaryCtaLabel": "About This Starter",
+      "introTitle": "Engineered for high conversion and effortless editing",
+      "introBody": "Every editable value comes directly from Fivora site data with auto-balancing layouts, responsive typography, and strict contract validation out of the box.",
+      "featuresHeading": "Why build with the Fivora Authoring Kit?",
+      "features": [
+        { "title": "Auto-Balancing Layouts", "body": "Cards, grids, and containers automatically balance and fill space seamlessly across all screen sizes." },
+        { "title": "Strict Visual Editing", "body": "Direct bindings enable merchants to click, edit, and preview changes without breaking template styles." },
+        { "title": "1-Click Clean Packaging", "body": "Built-in zip command strips heavy caches, node_modules, and git files so uploads pass instantly." }
+      ]
+    },
+    "about": {
+      "heading": "Built for the next generation of online storefronts",
+      "body": "The Fivora connects businesses with high-converting, beautifully crafted templates. This starter template demonstrates clean monorepo architecture, responsive typography, and auto-balancing components.",
+      "imageUrl": "/placeholder.svg"
+    },
+    "servicesPage": {
+      "heading": "Template Services & Capabilities",
+      "intro": "Each service card is an atomic component featuring an image, heading, description, and repeatable checklist."
+    },
+    "services": [
+      {
+        "id": "visual-editing",
+        "name": "Visual Editing Lab",
+        "description": "Simulate how merchants customize your template in real time with the built-in local development lab.",
+        "imageUrl": "/placeholder.svg",
+        "features": ["Zero-server static preview", "Field focus bridge", "Instant feedback"]
+      },
+      {
+        "id": "clean-packaging",
+        "name": "Automated Packager",
+        "description": "Automatically produce clean, upload-ready ZIP archives excluding junk and cache files.",
+        "imageUrl": "/placeholder.svg",
+        "features": ["Excludes node_modules", "Excludes .next and .git", "100% preflight compliant"]
+      }
+    ],
+    "contact": {
+      "heading": "Get in touch with our team",
+      "intro": "Have questions about building or customizing Fivora templates? Contact us today.",
+      "phone": "+94 11 234 5678",
+      "email": "developer@fivora.lk",
+      "address": "Colombo, Sri Lanka",
+      "formTitle": "Send an enquiry",
+      "submitLabel": "Send Message",
+      "directMessageText": "Send us a direct message",
+      "whatsapp": "+94 77 123 4567"
+    }
+  },
+  "media": {},
+  "seo": null
+}

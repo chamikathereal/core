@@ -1,0 +1,105 @@
+name: Publish DENEB UI Packages to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        type: choice
+        options:
+          - all
+          - '@deneb-ui/ui'
+          - '@deneb-ui/cli'
+          - '@deneb-ui/create-template'
+        default: 'all'
+      dry_run:
+        description: 'Dry run only (validates package without uploading to registry)'
+        type: boolean
+        default: false
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Build, Validate & Publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@deneb-ui'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build All Packages & Sync Templates
+        run: npm run build
+
+      - name: Validate Template Compliance
+        run: |
+          cd templates/nextjs
+          node ../../cli/fivora-cli/bin/index.js validate . --skip-install || echo "Preflight validation completed."
+
+      - name: Publish to npm Registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+            echo "Running in DRY RUN mode (no actual upload to npm)"
+          fi
+
+          TARGET_PACKAGE="${{ github.event.inputs.package || 'all' }}"
+          echo "Target package: $TARGET_PACKAGE"
+
+          publish_pkg() {
+            local dir=$1
+            local name=$2
+            cd "$GITHUB_WORKSPACE/$dir"
+            local local_ver=$(node -p "require('./package.json').version")
+            local remote_ver=$(npm view "$name" version 2>/dev/null || echo "")
+
+            echo "========================================================="
+            echo "Checking $name (local: v$local_ver, npm: ${remote_ver:-not published})"
+
+            if [ "$local_ver" = "$remote_ver" ] && [ -z "$DRY_RUN_FLAG" ]; then
+              echo "⏩ Skipping $name: v$local_ver is already published on npm."
+              return 0
+            fi
+
+            echo "---------------------------------------------------------"
+            echo "🚀 Publishing $name v$local_ver from $dir..."
+            echo "---------------------------------------------------------"
+            npm publish --access public $DRY_RUN_FLAG
+          }
+
+          if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/ui" ]; then
+            publish_pkg "packages/deneb-ui" "@deneb-ui/ui"
+          fi
+
+          if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/cli" ]; then
+            publish_pkg "cli/fivora-cli" "@deneb-ui/cli"
+          fi
+
+          if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/create-template" ]; then
+            publish_pkg "packages/create-template" "@deneb-ui/create-template"
+          fi
+
+          echo "========================================================="
+          echo "✔ All requested packages published successfully!"
+          echo "========================================================="

@@ -1,0 +1,362 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "specId": "fivora-template-ai-restructure",
+  "specVersion": 7,
+  "kind": "ai_coding_prompt",
+  "title": "Strict Fivora Template Restructuring Prompt",
+  "executionInstruction": "Inspect and modify the complete template. Do not stop at an audit or the first repaired field. Treat every rule and completion gate in this document as mandatory unless an input explicitly marks it not applicable.",
+  "variables": {
+    "templateDirectory": "{{TEMPLATE_DIRECTORY}}",
+    "businessOrDesignType": "{{BUSINESS_OR_DESIGN_TYPE}}",
+    "fivoraAuthoringKitDirectory": "{{FIVORA_AUTHORING_KIT_DIRECTORY}}",
+    "packageName": "{{PACKAGE_NAME}}",
+    "additionalConstraints": "{{ADDITIONAL_CONSTRAINTS_OR_NONE}}"
+  },
+  "role": "You are a senior Next.js, static-export, content-modeling, and Fivora visual-editing engineer.",
+  "objective": "Restructure the existing design into a generic strict Fivora template whose real components are driven entirely by its template-specific siteData.content tree, remain live-editable, produce deterministic selected-page questions, and build as a source-only static package.",
+  "preserve": [
+    "existing visual design",
+    "responsive layout",
+    "animations and interaction design",
+    "public assets that are decorative or legitimate demo data-file assets",
+    "route intent unless strict static export requires a targeted correction"
+  ],
+  "requiredInputs": [
+    "fivora-template.json",
+    "package.json and lock file",
+    "next.config.* and TypeScript configuration",
+    "src/data/site-data.json or the manifest-declared siteDataFile",
+    "root layout",
+    "every route and shared layout component",
+    "header, navigation, footer, forms, cards, carousels, galleries, and modals",
+    "existing SiteDataProvider/useSiteData implementation",
+    "the complete Fivora Template Developer Guide"
+  ],
+  "contract": {
+    "templateSpecificShape": {
+      "rules": [
+        "Do not impose a universal home/about/services/products/gallery shape.",
+        "Derive the content tree from this design's actual merchant-visible and behavioral values.",
+        "Every editable value lives below siteData.content.",
+        "Use content.common for truly site-wide values and template-specific page or feature sections for everything else.",
+        "Keep content.common.logoUrl as the editable website logo when the design has a logo."
+      ]
+    },
+    "manifest": {
+      "required": {
+        "framework": "nextjs-static-export",
+        "version": 2,
+        "visualEditing.contractVersion": 1,
+        "visualEditing.mode": "strict",
+        "siteDataFile": "the real template data-file path",
+        "outputDirectory": "out",
+        "pages[].route": "one canonical static route per declared page"
+      },
+      "keyEquality": [
+        "pages[].id",
+        "editorSchema.sections[].pageKey",
+        "requirements.requiredPages entries",
+        "data-preview-page-key"
+      ],
+      "rules": [
+        "Keep fivora-template.json at the ZIP root.",
+        "Do not downgrade to manifest v1 to avoid strict validation.",
+        "Do not author renderedContentPathsByPage; Fivora derives it from validated exported markers.",
+        "Use lowercase stable page IDs and canonical static routes without query strings or hashes."
+      ]
+    },
+    "selectedPageMapping": {
+      "sourceOfTruth": "Exact data-preview-field-path markers exported beneath each route's exact data-preview-page-key.",
+      "rules": [
+        "Produce a page-to-content-path audit before editing.",
+        "Mark shared header/footer values on every route where they render.",
+        "Mark cross-page content on the selected page that consumes it; a Home service card still uses services[${index}] paths.",
+        "Do not use hidden, aria-hidden, display:none, visibility:hidden, or data-preview-static descendants to fake page usage.",
+        "Do not call AI per merchant or page selection to decide questions; deterministic marker metadata and the admin-approved intake plan perform that filtering.",
+        "Filter every header, hero, body, card, teaser-section, and footer destination through requirements.requiredPages.",
+        "Put data-target-page=\"<exact-manifest-page-id>\" on every complete route-control wrapper; never infer destinations from labels or business-category words.",
+        "Completely omit controls dedicated to unselected routes. If an editable label must remain mounted for coverage, keep data-target-page on its complete non-navigation wrapper so Fivora hides it; never leave visible button-styled fallback text, href=\"#\", a disabled route control, hidden copy, or hardcoded route link.",
+        "Do not delete content paths genuinely rendered on selected routes. Home cards remain editable even when a dedicated listing page is absent; only that page's navigation controls disappear."
+      ]
+    },
+    "exactMarkers": {
+      "attributes": {
+        "page": "data-preview-page-key",
+        "field": "data-preview-field-path",
+        "list": "data-preview-list-path",
+        "item": "data-preview-item-path",
+        "targetPage": "data-target-page",
+        "static": "data-preview-static"
+      },
+      "rules": [
+        "Put a page marker on each route root.",
+        "Put a field marker on the smallest real visible or behavioral leaf.",
+        "Put a list marker on the collection container and keep it mounted at zero items.",
+        "Put an indexed item marker on every current repeated item.",
+        "Use current array indexes in item and field paths, never database IDs.",
+        "Use JSX template literals such as products[${index}].name so add, duplicate, remove, and reorder remain correct.",
+        "Mark a control's label and destination as separate fields when both are editable.",
+        "Keep cleared strings, images, zero, false booleans, actions, and required items mounted and selectable.",
+        "Author data-preview-static deliberately in JSX on the smallest genuinely fixed element. Never use a script, compiler transform, wrapper, or post-build HTML rewrite to blanket-inject static markers.",
+        "Never put data-preview-field-path, data-preview-list-path, or data-preview-item-path on a data-preview-static element or anywhere under a data-preview-static ancestor. The visual editor intentionally ignores the complete static subtree."
+      ]
+    },
+    "listsAndCards": {
+      "atomicityRule": "One repeated visual/business entity equals one list item containing all fields and images for that entity.",
+      "cardinality": {
+        "minItems": {
+          "supported": true,
+          "required": false,
+          "meaning": "Enforced lower bound for Add/remove and submission.",
+          "default": 0
+        },
+        "maxItems": {
+          "supported": true,
+          "required": false,
+          "meaning": "Enforced upper bound for Add/duplicate and submission.",
+          "constraint": "When present, maxItems is an integer greater than or equal to minItems."
+        }
+      },
+      "rules": [
+        "Render the real current array with map((item, index) => ...).",
+        "Never render fixed or sparse demo positions such as indexes 0, 2, and 6.",
+        "Never mount a repeated card whose current array item does not exist.",
+        "Never split one card across parallel positional arrays.",
+        "Keep every object-list demo item complete, or explicitly declare fields when the default list is empty.",
+        "Keep demo list length within minItems and maxItems.",
+        "Omit maxItems for a genuinely unbounded list.",
+        "Test zero, minimum, one, maximum when present, add, duplicate, remove, and reorder states."
+      ]
+    },
+    "images": {
+      "rules": [
+        "Use an image field for every named non-repeatable placement.",
+        "Keep desktop/mobile, hero/about, and other semantically different placements as separate fields.",
+        "Use an object-list image field when the image belongs to a product, service, project, person, menu item, or other card.",
+        "Use a primitive image list only when each repeated item is truly only an image.",
+        "Give every repeated image its own indexed item and field marker.",
+        "Keep an empty neutral image slot mounted; do not restore a demo business image in code.",
+        "Prefix local public assets with the manifest base-path environment variable."
+      ],
+      "primitiveImageListExample": {
+        "content": {
+          "home": {
+            "heroSlides": [
+              "/demo/hero-01.webp",
+              "/demo/hero-02.webp",
+              "/demo/hero-03.webp"
+            ]
+          }
+        },
+        "editorSchemaField": {
+          "key": "heroSlides",
+          "type": "list",
+          "label": "Hero slideshow images",
+          "minItems": 1,
+          "maxItems": 5,
+          "itemField": {
+            "type": "image",
+            "label": "Slide image",
+            "recommendedWidth": 1600,
+            "recommendedHeight": 900
+          }
+        },
+        "jsxPattern": [
+          "<div data-preview-list-path=\"home.heroSlides\">",
+          "  {(home?.heroSlides ?? []).map((imageUrl, index) => (",
+          "    <div key={`${imageUrl}-${index}`} data-preview-item-path={`home.heroSlides[${index}]`}>",
+          "      <div data-preview-field-path={`home.heroSlides[${index}]`}>",
+          "        {imageUrl ? <img src={imageUrl} alt=\"\" /> : <EmptyImageSlot />}",
+          "      </div>",
+          "    </div>",
+          "  ))}",
+          "</div>"
+        ]
+      }
+    },
+    "systemIdentifiers": {
+      "recognizedExamples": [
+        "id",
+        "productId",
+        "serviceId",
+        "projectId",
+        "project_id",
+        "identifier",
+        "uuid",
+        "uid"
+      ],
+      "rules": [
+        "Internal identifiers are platform-generated and repaired; the merchant never enters them.",
+        "Use IDs only for stable React keys, internal references, or nonvisual behavior.",
+        "Add nonvisual wildcard ID paths such as products[*].id to visualEditing.controlOnlyPaths.",
+        "Never use an ID inside data-preview-field-path, data-preview-item-path, or list ordering logic.",
+        "Adding or duplicating an item must receive a fresh identity; edit, reorder, and save preserve existing identities.",
+        "Do not expose IDs, routes, slugs, ordering indexes, enabled flags, or other plumbing as plain merchant questions unless they are genuinely visible business values."
+      ]
+    },
+    "demoAndFallbacks": {
+      "rules": [
+        "Realistic demo values belong only in the declared siteDataFile.",
+        "Do not duplicate demo merchant text, cards, services, products, contact values, or images in JSX/TS constants.",
+        "Do not use value || DEMO_VALUE, contentText(value, DEMO_VALUE), or fallback demo arrays for editable values.",
+        "Render incoming empty values as empty marked targets or neutral non-merchant placeholders.",
+        "Decorative constants and accessibility-only generic text may remain hardcoded and should be marked static when appropriate.",
+        "merchant and media may provide registered-data or asset fallbacks, but must never resurrect the template author's demo business."
+      ],
+      "forbiddenPatterns": [
+        "services.length ? services : DEMO_SERVICES",
+        "title || 'Demo Company'",
+        "contentText(description, 'Demo description')",
+        "imageUrl || '/demo-business-photo.jpg'"
+      ]
+    },
+    "livePreview": {
+      "requiredProtocolStrings": [
+        "FIVORA_PREVIEW_SITE_DATA",
+        "FIVORA_PREVIEW_READY",
+        "FIVORA_PREVIEW_FOCUS_PAGE"
+      ],
+      "rules": [
+        "Wrap the complete rendered site, including header and footer, in SiteDataProvider.",
+        "Read editable UI through useSiteData, not direct JSON imports.",
+        "Deep-merge objects and replace arrays when preview data arrives.",
+        "Validate parent message source/origin and announce readiness.",
+        "Use the same real components for local demo, live editor preview, admin test, and published static output."
+      ]
+    },
+    "renderingAndBuild": {
+      "rules": [
+        "Keep component-boundary types optional and nullable.",
+        "Use optional chaining and nullish coalescing for merchant values.",
+        "Do not infer a rigid SiteData type from demo JSON.",
+        "Configure output: export, images.unoptimized: true, and basePath from the manifest environment variable.",
+        "Do not use runtime API routes, Server Actions, middleware, ISR, runtime databases, or ungenerated dynamic routes.",
+        "Make internal routes and public assets work under a non-empty base path."
+      ]
+    },
+    "tiers": {
+      "rules": [
+        "Standard and Premium use the same strict manifest, content, live-preview, marker, selected-page, static-build, and packaging contract.",
+        "Standard and Premium must render a complete production-quality base design without depending on project design overrides.",
+        "Both tiers may merge project-level manual overrides into siteData.template.structure.theme; Premium additionally offers AI-assisted design generation.",
+        "For precise design controls on every tier, declare themeSchema, expose merged flat theme values as CSS variables, and consume them in the real components.",
+        "Do not create separate source branches or weaken validation for either tier."
+      ]
+    },
+    "package": {
+      "requiredAtZipRoot": [
+        "fivora-template.json",
+        "package.json",
+        "lock file",
+        "source",
+        "configuration",
+        "required public assets"
+      ],
+      "forbidden": [
+        "node_modules",
+        ".next",
+        ".cache",
+        ".turbo",
+        ".yarn/cache",
+        ".pnpm-store",
+        "out",
+        "dist",
+        "build",
+        "coverage",
+        ".git",
+        ".env files",
+        "logs",
+        "OS/editor metadata",
+        "nested ZIP files",
+        "the parent source directory as an extra archive level"
+      ]
+    }
+  },
+  "workflow": [
+    {
+      "phase": "audit",
+      "actions": [
+        "Inspect every required input before editing.",
+        "Recursively inventory every content leaf and every merchant-specific rendered or behavioral value.",
+        "Create route/component/value/content-path and selected-page usage tables.",
+        "Create list path/item shape/demo count/minItems/maxItems/rendered routes table.",
+        "Identify hardcoded merchant fallbacks, direct JSON UI imports, sparse indexes, parallel arrays, technical questions, unmarked image slots, and static-export risks."
+      ],
+      "requiredOutput": "A concrete audit with no generic assumptions about business type or routes."
+    },
+    {
+      "phase": "content_model",
+      "actions": [
+        "Design the template-specific siteData.content tree from the real UI.",
+        "Make repeated cards atomic object items and pure slides primitive image items.",
+        "Move all demo merchant values into the data file and remove code fallbacks.",
+        "Define optional template-specific TypeScript types."
+      ]
+    },
+    {
+      "phase": "runtime_and_markers",
+      "actions": [
+        "Add or repair SiteDataProvider/useSiteData and the exact message bridge.",
+        "Connect header, navigation, footer, pages, forms, cards, and images to live content.",
+        "Add exact page, field, list, and item markers on real visible targets.",
+        "Keep empty targets and containers mounted."
+      ]
+    },
+    {
+      "phase": "manifest_and_schema",
+      "actions": [
+        "Create or repair strict manifest v2 and canonical pages.",
+        "Declare accurate schema types, labels, required rules, options, minItems, and optional maxItems.",
+        "Add only nonvisual system paths to controlOnlyPaths.",
+        "Keep demo cardinality within declared bounds."
+      ]
+    },
+    {
+      "phase": "verification",
+      "actions": [
+        "Test all routes, selected/unselected pages, shared and cross-page fields, and verify selected-page HTML contains no links to unselected manifest routes and no editable marker has a data-preview-static ancestor.",
+        "Test all primitive types and every list operation at zero/minimum/maximum states.",
+        "Test missing IDs, nulls, empty arrays, cleared values, equal visible values at distinct paths, and empty image slots.",
+        "Run install, lint, static build, base-path build, Fivora local contract validation, archive integrity, and archive-content inspection."
+      ]
+    },
+    {
+      "phase": "package",
+      "actions": [
+        "Use the authoring kit package:template command to create and validate the exact final ZIP.",
+        "Keep the manifest at ZIP root and never reuse an older archive.",
+        "Report the exact ZIP path and every verification result."
+      ]
+    }
+  ],
+  "localCommands": {
+    "templateInstall": "cd {{TEMPLATE_DIRECTORY}} && npm install",
+    "templateLint": "cd {{TEMPLATE_DIRECTORY}} && npm run lint",
+    "templateBuild": "cd {{TEMPLATE_DIRECTORY}} && npm run build",
+    "fivoraContractValidation": "cd {{FIVORA_AUTHORING_KIT_DIRECTORY}} && npm run validate -- \"{{TEMPLATE_DIRECTORY}}\" --json",
+    "validatedPackage": "cd {{FIVORA_AUTHORING_KIT_DIRECTORY}} && npm run package:template -- \"{{TEMPLATE_DIRECTORY}}\" --output \"{{PACKAGE_NAME}}.zip\"",
+    "zipIntegrity": "unzip -t {{PACKAGE_NAME}}.zip",
+    "zipInventory": "unzip -Z1 {{PACKAGE_NAME}}.zip"
+  },
+  "requiredDeliverables": [
+    "implemented source changes, not only recommendations",
+    "content-path audit summary",
+    "selected-page usage map",
+    "list and image cardinality table",
+    "system-managed path list",
+    "hardcoded fallback removal summary",
+    "exact install/lint/build/contract-validation outcomes",
+    "clean ZIP path, integrity result, and archive inventory result",
+    "honest remaining issues"
+  ],
+  "completionGate": [
+    "Every merchant-visible or behavioral value has one content source and an exact real target.",
+    "Every selected route exports its exact page and consumed field markers.",
+    "Every list renders only existing current items with dynamic indexed markers.",
+    "Every image placement is independently addressable and empty-safe.",
+    "No technical ID is a merchant question or preview index.",
+    "No editable value can resurrect template demo business content from code.",
+    "Probe-content and empty-state Fivora contract phases pass.",
+    "The final source-only ZIP is valid and clean."
+  ]
+}
