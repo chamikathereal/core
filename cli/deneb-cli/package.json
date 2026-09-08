@@ -1,6 +1,6 @@
 {
   "name": "@deneb-ui/cli",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "Official developer CLI for DENEB UI — Validating, scaffolding, testing, and packaging storefront templates. Created by Chamika Gayashan & Induranga Kawishwara.",
   "bin": {
     "deneb": "bin/index.js",
