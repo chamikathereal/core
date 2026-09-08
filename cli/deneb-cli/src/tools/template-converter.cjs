@@ -472,13 +472,19 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
   const siteDataPath = path.join(projectDir, 'src', 'data', 'site-data.json');
   fs.mkdirSync(path.dirname(siteDataPath), { recursive: true });
 
+  const navLabels = {};
+  for (const p of detectedPages) {
+    navLabels[p.id] = p.label || p.id;
+  }
+
   const content = {
     common: {
       websiteTitle: projectName,
       shortDescription: `A high-converting storefront built for the Fivora platform.`,
       logoUrl: '/fivora-logo.png',
       headerCtaLabel: 'Contact Us',
-      copyright: `${projectName}. All rights reserved.`,
+      copyright: `© ${new Date().getFullYear()} ${projectName}. All rights reserved.`,
+      navLabels: navLabels,
       business: {
         phone: '+1 (555) 482-9012',
         whatsapp: '15554829012',
@@ -498,6 +504,27 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
         { key: 'shortDescription', type: 'textarea', label: 'Short Description' },
         { key: 'logoUrl', type: 'image', label: 'Website Logo' },
         { key: 'headerCtaLabel', type: 'text', label: 'Header CTA Button' },
+        {
+          key: 'navLabels',
+          type: 'object',
+          label: 'Navigation Labels',
+          fields: detectedPages.map((p) => ({
+            key: p.id,
+            type: 'text',
+            label: `${p.label || p.id} Link`,
+          })),
+        },
+        {
+          key: 'business',
+          type: 'object',
+          label: 'Business Information',
+          fields: [
+            { key: 'phone', type: 'tel', label: 'Phone Number' },
+            { key: 'whatsapp', type: 'text', label: 'WhatsApp Number' },
+            { key: 'email', type: 'email', label: 'Contact Email' },
+          ],
+        },
+        { key: 'copyright', type: 'text', label: 'Copyright' },
       ],
     },
   ];
@@ -505,6 +532,10 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
   for (const page of detectedPages) {
     const pageKey = page.id;
     const pageFields = extractedByPage[pageKey] || {};
+
+    if (pageKey === 'home' && !pageFields.heroImage && !pageFields.bannerImageUrl) {
+      pageFields.heroImage = '/hero-banner.jpg';
+    }
 
     content[pageKey] = {
       ...(content[pageKey] || {}),
@@ -566,7 +597,7 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
     visualEditing: {
       contractVersion: 1,
       mode: 'strict',
-      controlOnlyPaths: [],
+      controlOnlyPaths: ['common.brandUrl'],
     },
     siteDataFile: 'src/data/site-data.json',
     outputDirectory: 'out',
