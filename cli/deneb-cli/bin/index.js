@@ -546,17 +546,29 @@ function initProject(targetInput) {
   // 1. Scan / Detect Pages
   const detectedPages = detectPages(targetDir);
 
-  // 2. Generate fivora-template.json (version 2 contract)
+  // 2. Run Universal Template Conversion Engine
+  // Automatically detects CSS/UI frameworks (shadcn/ui, HeroUI, Tailwind CSS),
+  // creates safe backup, instruments Root Layout with SiteDataProvider,
+  // extracts hardcoded text/images/buttons/placeholders,
+  // injects data-preview-field-path markers, harmonizes UI components,
+  // and builds synchronized site-data.json & fivora-template.json.
+  let conversionRes = null;
+  try {
+    const { runUniversalTemplateConversion } = require('../src/tools/template-converter.cjs');
+    conversionRes = runUniversalTemplateConversion(targetDir, projectName, detectedPages);
+  } catch (err) {
+    console.error(`\x1b[33m⚠ Note:\x1b[0m Automated conversion encountered an issue: ${err.message}. Falling back to default generation.`);
+  }
+
+  // 3. Fallback: Generate fivora-template.json if not yet present
   const manifestPath = path.join(targetDir, 'fivora-template.json');
   if (!fs.existsSync(manifestPath)) {
     const manifest = getDefaultManifest(projectName, detectedPages);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
     console.log(`\x1b[32m✔ Created\x1b[0m fivora-template.json (version 2, strict visual editing contract)`);
-  } else {
-    console.log(`\x1b[90m⏩ Kept existing\x1b[0m fivora-template.json`);
   }
 
-  // 3. Generate siteDataFile
+  // 4. Fallback: Generate siteDataFile if not yet present
   let manifestObj;
   try {
     manifestObj = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -571,8 +583,6 @@ function initProject(targetInput) {
     const siteData = getDefaultSiteData(projectName, detectedPages);
     fs.writeFileSync(siteDataPath, JSON.stringify(siteData, null, 2) + '\n');
     console.log(`\x1b[32m✔ Created\x1b[0m ${relSiteData} (merchant & editable site data)`);
-  } else {
-    console.log(`\x1b[90m⏩ Kept existing\x1b[0m ${relSiteData}`);
   }
 
   // 4. Update package.json scripts
@@ -1122,7 +1132,7 @@ if (command === 'init') {
   DENEB UI Framework — Powered by DENEB-UI Collaborate with FIVORA
 
 Core Commands:
-  init              Configure an existing Next.js project with missing Fivora files & scripts
+  init              Auto-convert & configure existing Next.js (shadcn/HeroUI/Tailwind) into editable Fivora template
   update            Update DENEB packages (@deneb-ui/ui, @deneb-ui/cli) and UI components
   validate          Validate website configuration and visual editing contracts with Fivora platform
   doctor            Run comprehensive environment, manifest & asset diagnostic checks
