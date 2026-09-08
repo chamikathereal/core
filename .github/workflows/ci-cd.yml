@@ -49,28 +49,19 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Check Version & Auto-Bump If Already on npm
-        id: version_check
+      - name: Dynamic Auto-Version Bump & Build
+        id: dynamic_bump
         run: |
-          LOCAL_VER=$(node -p "require('./packages/deneb-ui/package.json').version")
-          REMOTE_VER=$(npm view @deneb-ui/ui version 2>/dev/null || echo "")
-          echo "Current repo version: $LOCAL_VER"
-          echo "Latest npm version:   $REMOTE_VER"
-
-          if [ "$LOCAL_VER" = "$REMOTE_VER" ] && [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
-            echo "⚡ Remote version matches local ($LOCAL_VER). Auto-bumping patch version..."
-            node scripts/bump-version.js patch
+          if [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
+            node scripts/auto-version-bump.js
             NEW_VER=$(node -p "require('./packages/deneb-ui/package.json').version")
-            echo "BUMPED=true" >> $GITHUB_ENV
             echo "NEW_VERSION=$NEW_VER" >> $GITHUB_ENV
-            echo "✔ Bumped all packages to v$NEW_VER"
+            echo "BUMPED=true" >> $GITHUB_ENV
+            echo "✔ Dynamic version ready: v$NEW_VER"
           else
-            echo "BUMPED=false" >> $GITHUB_ENV
-            echo "Local version is already ahead or running dry-run. Proceeding with v$LOCAL_VER."
+            echo "Dry run mode - skipping dynamic version bump."
+            npm run build
           fi
-
-      - name: Build All Packages & Sync Templates
-        run: npm run build
 
       - name: Validate Template Compliance
         run: |
