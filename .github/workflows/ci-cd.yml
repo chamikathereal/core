@@ -126,3 +126,14 @@ jobs:
           git add packages/*/package.json cli/*/package.json package*.json templates/*/package.json
           git commit -m "chore(release): auto-bump packages to v${{ env.NEW_VERSION }} [skip ci]" || echo "No changes to commit"
           git push origin HEAD:main || echo "Push to main branch skipped or already up to date"
+
+      - name: Trigger UI Showcase Synchronization
+        if: env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DENEB_ORG_SYNC_PAT || secrets.GITHUB_TOKEN }}
+          repository: deneb-ui/ui
+          event-type: core_package_published
+          client-payload: '{"version": "${{ env.NEW_VERSION }}", "sha": "${{ github.sha }}", "actor": "${{ github.actor }}"}'
+        continue-on-error: true
+

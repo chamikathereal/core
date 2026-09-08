@@ -133,6 +133,19 @@ function saveRecipeFromProject(projectDir, recipeName = 'custom-storefront', opt
       autoIndex: true,
       defaultCardPrefix: 'product',
     },
+    actionRules: {
+      splitActionAndLabel: true,
+      whatsappKeywords: ['whatsapp', 'wa.me', 'order via whatsapp', 'chat on whatsapp'],
+      actionFieldMapping: {
+        whatsapp: { urlField: 'whatsappCtaUrl', labelField: 'whatsappCtaLabel' },
+        order: { urlField: 'orderCtaUrl', labelField: 'orderCtaLabel' },
+        promo: { urlField: 'promoCtaUrl', labelField: 'promoCtaLabel' },
+      },
+    },
+    socialRules: {
+      platforms: ['instagram', 'facebook', 'twitter', 'tiktok', 'youtube', 'linkedin'],
+      targetPath: 'common.footer',
+    },
     sections: manifest.editorSchema?.sections || [],
     defaults: siteData.content || {},
   };

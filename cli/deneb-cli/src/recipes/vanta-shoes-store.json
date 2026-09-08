@@ -1,8 +1,8 @@
 {
   "name": "vanta-shoes-store",
-  "label": "vanta-shoes-store",
-  "description": "Learned and saved recipe extracted from shoes_shop.",
-  "savedAt": "2026-09-08T15:46:21.569Z",
+  "label": "Vanta Shoes Storefront",
+  "description": "Calibrated Vanta shoes store recipe with WhatsApp CTA, Instagram social link, product grid, and hero slides.",
+  "savedAt": "2026-09-08T17:20:49.206Z",
   "signatures": {
     "keywords": [
       "vanta-shoes-store",
@@ -54,6 +54,40 @@
     ],
     "autoIndex": true,
     "defaultCardPrefix": "product"
+  },
+  "actionRules": {
+    "splitActionAndLabel": true,
+    "whatsappKeywords": [
+      "whatsapp",
+      "wa.me",
+      "order via whatsapp",
+      "chat on whatsapp"
+    ],
+    "actionFieldMapping": {
+      "whatsapp": {
+        "urlField": "whatsappCtaUrl",
+        "labelField": "whatsappCtaLabel"
+      },
+      "order": {
+        "urlField": "orderCtaUrl",
+        "labelField": "orderCtaLabel"
+      },
+      "promo": {
+        "urlField": "promoCtaUrl",
+        "labelField": "promoCtaLabel"
+      }
+    }
+  },
+  "socialRules": {
+    "platforms": [
+      "instagram",
+      "facebook",
+      "twitter",
+      "tiktok",
+      "youtube",
+      "linkedin"
+    ],
+    "targetPath": "common.footer"
   },
   "sections": [
     {
