@@ -9,21 +9,46 @@ if (!version) {
 }
 
 const names = ['@deneb-ui/core', '@deneb-ui/ui', '@deneb-ui/cli', '@deneb-ui/create-template'];
-const missing = [];
+const attempts = Number(process.env.NPM_LOCKSTEP_ATTEMPTS || 12);
+const delayMs = Number(process.env.NPM_LOCKSTEP_DELAY_MS || 15000);
 
-for (const name of names) {
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function viewVersion(name) {
   try {
-    const published = execSync(`npm view ${name}@${version} version`, { encoding: 'utf8' }).trim();
-    if (published !== version) missing.push(`${name}@${version}`);
-    else console.log(`✔ ${name}@${version}`);
+    return execSync(`npm view ${name}@${version} version --no-workspaces`, {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
   } catch {
-    missing.push(`${name}@${version}`);
+    return '';
   }
 }
 
-if (missing.length) {
-  console.error(`npm lockstep failed. Not published:\n- ${missing.join('\n- ')}`);
-  process.exit(1);
+for (let attempt = 1; attempt <= attempts; attempt++) {
+  const missing = [];
+  for (const name of names) {
+    if (viewVersion(name) === version) console.log(`✔ ${name}@${version}`);
+    else missing.push(`${name}@${version}`);
+  }
+
+  if (!missing.length) {
+    console.log(`All four packages published at v${version}`);
+    process.exit(0);
+  }
+
+  console.log(
+    `Waiting for npm to index (${attempt}/${attempts}): missing ${missing.join(', ')}`,
+  );
+  if (attempt < attempts) sleep(delayMs);
 }
 
-console.log(`All four packages published at v${version}`);
+console.error(
+  `npm lockstep failed after ${attempts} attempts. Not visible on the registry yet:\n- ${names
+    .filter((name) => viewVersion(name) !== version)
+    .map((name) => `${name}@${version}`)
+    .join('\n- ')}`,
+);
+process.exit(1);
