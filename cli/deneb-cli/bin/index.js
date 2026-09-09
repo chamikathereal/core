@@ -444,6 +444,31 @@ function getComponentRegistry(importPkg) {
       component: 'EditableProductCard',
       code: `'use client';\n\nimport { EditableProductCard, type EditableProductCardProps } from '${importPkg}';\n\nexport function ProductCard(props: EditableProductCardProps) {\n  return <EditableProductCard {...props} />;\n}\n`,
     },
+    'product-grid': {
+      file: 'ProductGrid.tsx',
+      component: 'EditableProductGrid',
+      code: `'use client';\n\nimport { EditableProductGrid, ProductGrid, type EditableProductGridProps, type ProductGridItem } from '${importPkg}';\n\nexport { EditableProductGrid, ProductGrid, type EditableProductGridProps, type ProductGridItem };\n`,
+    },
+    'product-detail': {
+      file: 'ProductDetail.tsx',
+      component: 'EditableProductDetail',
+      code: `'use client';\n\nimport { EditableProductDetail, ProductDetail, type EditableProductDetailProps, type ProductDetailItem } from '${importPkg}';\n\nexport { EditableProductDetail, ProductDetail, type EditableProductDetailProps, type ProductDetailItem };\n`,
+    },
+    'customer-reviews': {
+      file: 'CustomerReviews.tsx',
+      component: 'EditableCustomerReviews',
+      code: `'use client';\n\nimport { EditableCustomerReviews, CustomerReviews, type EditableCustomerReviewsProps, type CustomerReviewItem } from '${importPkg}';\n\nexport { EditableCustomerReviews, CustomerReviews, type EditableCustomerReviewsProps, type CustomerReviewItem };\n`,
+    },
+    'cart-drawer': {
+      file: 'CartDrawer.tsx',
+      component: 'EditableCartDrawer',
+      code: `'use client';\n\nimport { EditableCartDrawer, CartDrawer, type EditableCartDrawerProps } from '${importPkg}';\n\nexport { EditableCartDrawer, CartDrawer, type EditableCartDrawerProps };\n`,
+    },
+    'filter-sidebar': {
+      file: 'FilterSidebar.tsx',
+      component: 'EditableFilterSidebar',
+      code: `'use client';\n\nimport { EditableFilterSidebar, FilterSidebar, type EditableFilterSidebarProps, type FilterOptionGroup } from '${importPkg}';\n\nexport { EditableFilterSidebar, FilterSidebar, type EditableFilterSidebarProps, type FilterOptionGroup };\n`,
+    },
     'pricing-card': {
       file: 'PricingCard.tsx',
       component: 'EditablePricingCard',
