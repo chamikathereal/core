@@ -63,22 +63,24 @@ if (fs.existsSync(targetTemplateDir)) {
 
 copyClean(rootTemplateDir, targetTemplateDir);
 
-// Ensure template package.json points to published versions
-const pkgPath = path.join(targetTemplateDir, 'package.json');
-if (fs.existsSync(pkgPath)) {
+const rootPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', '..', 'package.json'), 'utf8'));
+const denebRange = `^${rootPkg.version}`;
+
+function pinDenebDeps(pkgPath) {
+  if (!fs.existsSync(pkgPath)) return;
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   pkg.name = 'deneb-template-starter';
   pkg.dependencies ||= {};
   pkg.devDependencies ||= {};
-
-  // Normalize legacy package names whenever an older template is synced.
   delete pkg.dependencies['@deneb/ui'];
   delete pkg.dependencies['@fivora/editable-components'];
   delete pkg.devDependencies['@fivora/cli'];
-  pkg.dependencies['@deneb-ui/ui'] = '^2.0.0';
-  pkg.devDependencies['@deneb-ui/cli'] = '^2.0.0';
-
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+  pkg.dependencies['@deneb-ui/ui'] = denebRange;
+  pkg.devDependencies['@deneb-ui/cli'] = denebRange;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 }
 
-console.log('✓ Clean template synced successfully.');
+pinDenebDeps(path.join(rootTemplateDir, 'package.json'));
+pinDenebDeps(path.join(targetTemplateDir, 'package.json'));
+
+console.log(`✓ Clean template synced successfully (Deneb deps ${denebRange}).`);

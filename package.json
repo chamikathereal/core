@@ -11,6 +11,9 @@
   "scripts": {
     "build": "npm run --workspace=@deneb-ui/core build && npm run --workspace=@deneb-ui/ui build && npm run --workspace=@deneb-ui/create-template sync-template && npm run check:packages",
     "check:packages": "node scripts/check-package-consistency.js",
+    "check:lockstep": "node scripts/assert-release-lockstep.js",
+    "smoke:scaffold": "node scripts/smoke-create-template.js",
+    "test": "npm run check:lockstep && npm test --workspace=@deneb-ui/core && npm test --workspace=@deneb-ui/cli && npm run smoke:scaffold",
     "publish:dry-run": "npm publish --workspace=@deneb-ui/core --workspace=@deneb-ui/ui --workspace=@deneb-ui/cli --workspace=@deneb-ui/create-template --access public --dry-run",
     "publish:all": "npm publish --workspace=@deneb-ui/core --workspace=@deneb-ui/ui --workspace=@deneb-ui/cli --workspace=@deneb-ui/create-template --access public",
     "bump": "node scripts/bump-version.js patch",

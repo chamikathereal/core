@@ -7,7 +7,10 @@ This directory contains the original TypeScript source files used to generate th
 - `local-template-lab.cjs` -> compiles into `local-template-lab.cjs`
 
 ## Rebuilding Tools
-Run:
+From `cli/deneb-cli`:
+
 ```bash
-npx ts-node build-tools.ts
+npm run build:tools
 ```
+
+The standalone validator bundle (`deneb-template-validator.cjs`) requires the remaining `src/common/*` Fivora preflight modules. Until those sources live in this repo, keep the checked-in bundle and do not treat a failed rebuild as a release blocker.

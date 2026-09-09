@@ -64,6 +64,19 @@ jobs:
             npm run build
           fi
 
+      - name: Assert release lockstep
+        run: node scripts/assert-release-lockstep.js
+
+      - name: Test packages
+        env:
+          DENEB_SKIP_FONTS: '1'
+        run: |
+          npm test --workspace=@deneb-ui/core
+          npm test --workspace=@deneb-ui/cli
+
+      - name: Scaffold smoke test
+        run: node scripts/smoke-create-template.js
+
       - name: Validate Template Compliance
         run: |
           cd templates/nextjs
@@ -73,6 +86,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DENEB_TOKEN || secrets.NPM_TOKEN }}
         run: |
+          set -euo pipefail
           DRY_RUN_FLAG=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             DRY_RUN_FLAG="--dry-run"
@@ -123,12 +137,16 @@ jobs:
           echo "✔ All requested packages processed!"
           echo "========================================================="
 
+          if [ "$TARGET_PACKAGE" = "all" ] && [ -z "$DRY_RUN_FLAG" ]; then
+            node "$GITHUB_WORKSPACE/scripts/verify-npm-lockstep.js" "${{ env.NEW_VERSION }}"
+          fi
+
       - name: Commit & Push Bumped Version Back to Repo
         if: env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add packages/*/package.json cli/*/package*.json package*.json templates/*/package*.json
+          git add package.json package-lock.json packages cli/deneb-cli templates/nextjs
           git commit -m "chore(release): auto-bump packages to v${{ env.NEW_VERSION }} [skip ci]" || echo "No changes to commit"
           git push origin HEAD:main || echo "Push to main branch skipped or already up to date"
 

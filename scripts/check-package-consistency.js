@@ -56,8 +56,8 @@ for (const [label, templatePackage] of [
   ['bundled template', bundledTemplate],
 ]) {
   expectEqual(`${label} name`, templatePackage.name, 'deneb-template-starter');
-  expectEqual(`${label} UI dependency`, templatePackage.dependencies?.['@deneb-ui/ui'], '^2.0.0');
-  expectEqual(`${label} CLI dependency`, templatePackage.devDependencies?.['@deneb-ui/cli'], '^2.0.0');
+  expectEqual(`${label} UI dependency`, templatePackage.dependencies?.['@deneb-ui/ui'], `^${rootPackage.version}`);
+  expectEqual(`${label} CLI dependency`, templatePackage.devDependencies?.['@deneb-ui/cli'], `^${rootPackage.version}`);
 }
 
 expectEqual('template lock name', sourceTemplateLock.name, sourceTemplate.name);
