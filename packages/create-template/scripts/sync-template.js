@@ -67,22 +67,16 @@ copyClean(rootTemplateDir, targetTemplateDir);
 const pkgPath = path.join(targetTemplateDir, 'package.json');
 if (fs.existsSync(pkgPath)) {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  pkg.name = 'fivora-template-starter';
-  if (pkg.dependencies && pkg.dependencies['@deneb-ui/ui']) {
-    pkg.dependencies['@deneb-ui/ui'] = '^2.0.0';
-  }
-  if (pkg.dependencies && pkg.dependencies['@deneb/ui']) {
-    pkg.dependencies['@deneb/ui'] = '^2.0.0';
-  }
-  if (pkg.devDependencies && pkg.devDependencies['@deneb-ui/cli']) {
-    pkg.devDependencies['@deneb-ui/cli'] = '^2.0.0';
-  }
-  if (pkg.dependencies && pkg.dependencies['@fivora/editable-components']) {
-    pkg.dependencies['@fivora/editable-components'] = '^1.0.0';
-  }
-  if (pkg.devDependencies && pkg.devDependencies['@fivora/cli']) {
-    pkg.devDependencies['@fivora/cli'] = '^1.0.0';
-  }
+  pkg.name = 'deneb-template-starter';
+  pkg.dependencies ||= {};
+  pkg.devDependencies ||= {};
+
+  // Normalize legacy package names whenever an older template is synced.
+  delete pkg.dependencies['@deneb/ui'];
+  delete pkg.dependencies['@fivora/editable-components'];
+  delete pkg.devDependencies['@fivora/cli'];
+  pkg.dependencies['@deneb-ui/ui'] = '^2.0.0';
+  pkg.devDependencies['@deneb-ui/cli'] = '^2.0.0';
 
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 }

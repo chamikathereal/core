@@ -6,6 +6,7 @@ const rootDir = path.resolve(__dirname, '..');
 const targetType = process.argv[2] || 'patch'; // 'patch', 'minor', 'major'
 
 const packagePaths = [
+  path.join(rootDir, 'package.json'),
   path.join(rootDir, 'packages', 'deneb-ui', 'package.json'),
   path.join(rootDir, 'cli', 'deneb-cli', 'package.json'),
   path.join(rootDir, 'packages', 'create-template', 'package.json'),
@@ -44,6 +45,16 @@ for (const pkgPath of packagePaths) {
     console.log(`  ✔ Updated ${pkg.name} -> v${newVersion}`);
   }
 }
+
+console.log(`\n🔒 Refreshing package locks...`);
+execSync('npm install --package-lock-only --ignore-scripts', {
+  cwd: rootDir,
+  stdio: 'inherit',
+});
+execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', {
+  cwd: path.join(rootDir, 'cli', 'deneb-cli'),
+  stdio: 'inherit',
+});
 
 console.log(`\n📦 Rebuilding packages and syncing templates...`);
 execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });

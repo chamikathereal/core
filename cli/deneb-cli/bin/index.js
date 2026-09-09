@@ -66,7 +66,7 @@ function packageCleanZip(sourceDir, outputPath) {
       const projectRequire = createRequire(path.resolve(process.cwd(), 'package.json'));
       AdmZip = projectRequire('adm-zip');
     } catch {
-      console.error('Error: adm-zip is required to package templates. Run "npm install -D adm-zip" or install @fivora/cli with its dependencies.');
+      console.error('Error: adm-zip is required to package templates. Run "npm install -D adm-zip" or install @deneb-ui/cli with its dependencies.');
       process.exit(1);
     }
   }
@@ -1236,4 +1236,3 @@ Examples:
   deneb add all`);
   process.exit(1);
 }
-

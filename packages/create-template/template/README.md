@@ -1,6 +1,6 @@
 # Fivora Store Template
 
-A high-performance, conversion-engineered e-commerce storefront built with **Next.js (App Router)** and **`@fivora/editable-components`**, ready for **Fivora**.
+A high-performance, conversion-engineered e-commerce storefront built with **Next.js (App Router)** and **`@deneb-ui/ui`**, ready for **Fivora**.
 
 ---
 
@@ -61,7 +61,7 @@ Fivora allows merchants to click and visually edit any text, image, or product o
 To make an element visually editable, use **`data-preview-field-path`** pointing to its key in `src/data/site-data.json`:
 
 ```tsx
-import { EditableHeading, EditableText } from '@fivora/editable-components';
+import { EditableHeading, EditableText } from '@deneb-ui/ui';
 
 // In your component:
 <EditableHeading
