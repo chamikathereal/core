@@ -283,6 +283,16 @@ try {
   // The package build always creates it; retain a compact fallback for safety.
 }
 
+const RUNTIME_NAME_SHIM =
+  'var __name = typeof __name === "function" ? __name : ((target, value) => (typeof Object.defineProperty === "function" ? Object.defineProperty(target, "name", { value, configurable: true }) : target));\n';
+
+if (
+  LOCAL_VISUAL_BRIDGE_SCRIPT.includes('__name') &&
+  !LOCAL_VISUAL_BRIDGE_SCRIPT.includes('var __name')
+) {
+  LOCAL_VISUAL_BRIDGE_SCRIPT = `${RUNTIME_NAME_SHIM}${LOCAL_VISUAL_BRIDGE_SCRIPT}`;
+}
+
 function fail(message) {
   process.stderr.write(`Local Template Lab: ${message}\n`);
   process.exit(1);
@@ -760,7 +770,8 @@ function previewShellHtml() {
         try {
           const script = preview.contentDocument.createElement('script');
           script.setAttribute('data-fivora-local-visual-bridge', '');
-          script.textContent = BRIDGE_SOURCE;
+          const NAME_SHIM = "var __name = typeof __name === 'function' ? __name : ((target, value) => (typeof Object.defineProperty === 'function' ? Object.defineProperty(target, 'name', { value, configurable: true }) : target)); ";
+          script.textContent = (BRIDGE_SOURCE.includes('__name') && !BRIDGE_SOURCE.includes('var __name') ? NAME_SHIM : '') + BRIDGE_SOURCE;
           preview.contentDocument.head.appendChild(script);
           preview.contentWindow.__FIVORA_LOCAL_VISUAL_BRIDGE_ATTACHED__ = true;
           script.remove();

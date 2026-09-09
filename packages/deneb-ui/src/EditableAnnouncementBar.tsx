@@ -46,9 +46,9 @@ export function EditableAnnouncementBar({
   const badge = announcementData?.badge || defaultBadge;
   const linkText = announcementData?.linkText || defaultLinkText;
   const linkUrl = announcementData?.linkUrl || defaultLinkUrl;
-  const activeFieldPath = announcementData ? fieldPath : undefined;
+  const activeFieldPath = fieldPath || 'site.announcement';
 
-  if (isDismissed || !isEnabled) {
+  if (isDismissed || !announcementData || !isEnabled) {
     return null;
   }
 

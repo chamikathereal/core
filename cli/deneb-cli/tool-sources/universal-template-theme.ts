@@ -500,6 +500,79 @@ export function buildUniversalTemplateThemeCss(themeValue: unknown): string {
     );
   }
 
+  // Exact-path overrides power the click-to-style editor for every DENEB
+  // component. Attribute selectors keep this independent from template CSS
+  // classes and continue to work for inferred/legacy editable bindings.
+  const elementStyles = isRecord(theme.elementStyles)
+    ? theme.elementStyles
+    : {};
+  const elementProperties: Array<[string, string]> = [
+    ['fontFamily', 'font-family'],
+    ['fontSize', 'font-size'],
+    ['lineHeight', 'line-height'],
+    ['fontWeight', 'font-weight'],
+    ['letterSpacing', 'letter-spacing'],
+    ['color', 'color'],
+    ['backgroundColor', 'background-color'],
+    ['textAlign', 'text-align'],
+    ['width', 'width'],
+    ['height', 'height'],
+    ['minWidth', 'min-width'],
+    ['minHeight', 'min-height'],
+    ['maxWidth', 'max-width'],
+    ['maxHeight', 'max-height'],
+    ['marginTop', 'margin-top'],
+    ['marginRight', 'margin-right'],
+    ['marginBottom', 'margin-bottom'],
+    ['marginLeft', 'margin-left'],
+    ['paddingTop', 'padding-top'],
+    ['paddingRight', 'padding-right'],
+    ['paddingBottom', 'padding-bottom'],
+    ['paddingLeft', 'padding-left'],
+    ['borderRadius', 'border-radius'],
+  ];
+  for (const [path, rawStyle] of Object.entries(elementStyles).slice(0, 256)) {
+    if (!/^[a-zA-Z0-9_.:\[\]-]{1,180}$/.test(path) || !isRecord(rawStyle)) {
+      continue;
+    }
+    const selectorPath = path.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const selector = (() => {
+      if (path === 'site:all') return 'body';
+      if (path.startsWith('page:')) {
+        const pageKey = selectorPath.slice('page:'.length);
+        return `body :where([data-preview-page-key="${pageKey}"])`;
+      }
+      if (path.startsWith('section:')) {
+        const [, pageKey = 'all', sectionKey = ''] = selectorPath.split(':');
+        const pagePrefix =
+          pageKey === 'all'
+            ? 'body main'
+            : `body :where([data-preview-page-key="${pageKey}"])`;
+        const nth = sectionKey.match(/^nth-(\d+)$/)?.[1];
+        if (nth) return `${pagePrefix} > section:nth-of-type(${nth})`;
+        return `${pagePrefix} :where([data-design-section="${sectionKey}"],[data-section-id="${sectionKey}"],section#${sectionKey})`;
+      }
+      if (path.includes(':')) {
+        const [listPrefix, subPart] = selectorPath.split(':');
+        if (subPart === 'card') {
+          return `body :where([data-preview-list-path="${listPrefix}"]) :where([data-preview-item-path],[data-design-card],.card,[class*="card-"])`;
+        }
+        if (subPart) {
+          return `body :where([data-preview-list-path="${listPrefix}"]) :where([data-preview-field-path$=".${subPart}"],[data-field-path$=".${subPart}"],[data-content-path$=".${subPart}"])`;
+        }
+      }
+      return `body :where([data-preview-field-path="${selectorPath}"],[data-content-path="${selectorPath}"],[data-field-path="${selectorPath}"],[data-fivora-resolved-field-path="${selectorPath}"],[data-preview-list-path="${selectorPath}"],[data-preview-item-path="${selectorPath}"])`;
+    })();
+    css.push(
+      rule(
+        selector,
+        elementProperties.map(([key, property]) =>
+          declaration(property, safeValue(rawStyle[key])),
+        ),
+      ),
+    );
+  }
+
   return css.filter(Boolean).join('\n');
 }
 

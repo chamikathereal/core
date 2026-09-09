@@ -7,7 +7,7 @@ import { enforceSelectedTemplatePages } from './universal-page-selection';
 
 export const TEMPLATE_PREVIEW_FOCUS_BRIDGE_FILE =
   '__fivora-preview-focus-bridge.js';
-export const TEMPLATE_PREVIEW_FOCUS_BRIDGE_VERSION = '45';
+export const TEMPLATE_PREVIEW_FOCUS_BRIDGE_VERSION = '46';
 
 const PREVIOUS_PREVIEW_BRIDGE_ATTRIBUTE = `data-${['market', 'place'].join('')}-preview-focus-bridge`;
 
@@ -74,7 +74,7 @@ export function resolveTemplatePreviewParentOrigin(input: {
   );
 }
 
-function denebPreviewFocusBridge(
+function fivoraPreviewFocusBridge(
   resolveParentOrigin: typeof resolveTemplatePreviewParentOrigin,
   buildUniversalThemeCss: typeof buildUniversalTemplateThemeCss,
   replaceColorLiterals: typeof replaceTemplateColorLiterals,
@@ -116,11 +116,6 @@ function denebPreviewFocusBridge(
   const CONTENT_PATCH_MESSAGE = 'FIVORA_PREVIEW_CONTENT_PATCH';
   const LEGACY_CONTENT_PATCH_MESSAGE = previousPreviewMessage('CONTENT_PATCH');
   const STYLE_PATCH_MESSAGE = 'FIVORA_PREVIEW_STYLE_PATCH';
-  const DENEB_STYLE_PATCH_MESSAGE = 'DENEB_PREVIEW_STYLE_PATCH';
-  const LEGACY_STYLE_PATCH_MESSAGE = previousPreviewMessage('STYLE_PATCH');
-  const STYLE_TARGET_ATTRIBUTE = 'data-preview-style-target';
-  const STYLE_TYPE_ATTRIBUTE = 'data-preview-style-type';
-  const STYLE_LIVE_CACHE_KEY = '__FIVORA_STYLE_LIVE_CACHE__';
   const COLOR_REPLACEMENT_STYLE_ID = 'fivora-template-color-replacements';
   // One delayed relay is enough for late-mounting SiteDataProviders; more
   // relays re-merge large content payloads and freeze heavy templates.
@@ -556,205 +551,66 @@ function denebPreviewFocusBridge(
     scheduleContentOnlyPersist();
   }
 
-  const shadowPresets: Record<string, string> = {
-    none: 'none',
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-  };
-
-  function formatStyleUnit(value: unknown): string | undefined {
-    if (value === undefined || value === null || value === '') return undefined;
-    if (typeof value === 'number') return `${value}px`;
-    const text = String(value);
-    return /^\d+$/.test(text) ? `${text}px` : text;
-  }
-
-  function styleMarginVars(
-    style: Record<string, unknown>,
-    prefix: string,
-  ): Record<string, string> {
-    const vars: Record<string, string> = {};
-    const top = style.marginTop ?? style.spacingTop;
-    const bottom = style.marginBottom ?? style.spacingBottom;
-    const left = style.marginLeft ?? style.spacingLeft;
-    const right = style.marginRight ?? style.spacingRight;
-    const topUnit = formatStyleUnit(top);
-    const bottomUnit = formatStyleUnit(bottom);
-    const leftUnit = formatStyleUnit(left);
-    const rightUnit = formatStyleUnit(right);
-    if (topUnit) vars[`${prefix}-margin-top`] = topUnit;
-    if (bottomUnit) vars[`${prefix}-margin-bottom`] = bottomUnit;
-    if (leftUnit) vars[`${prefix}-margin-left`] = leftUnit;
-    if (rightUnit) vars[`${prefix}-margin-right`] = rightUnit;
-    return vars;
-  }
-
-  function styleToCssVariables(
-    styleKind: string,
-    style: Record<string, unknown>,
-  ): Record<string, string> {
-    const vars: Record<string, string> = {};
-    if (styleKind === 'text') {
-      Object.assign(vars, styleMarginVars(style, '--deneb'));
-      if (style.fontFamily) vars['--deneb-font-family'] = String(style.fontFamily);
-      const fontSize = formatStyleUnit(style.fontSize);
-      if (fontSize) vars['--deneb-font-size'] = fontSize;
-      if (style.fontWeight !== undefined) vars['--deneb-font-weight'] = String(style.fontWeight);
-      if (style.lineHeight !== undefined) vars['--deneb-line-height'] = String(style.lineHeight);
-      if (style.letterSpacing) vars['--deneb-letter-spacing'] = String(style.letterSpacing);
-      if (style.color) vars['--deneb-color'] = String(style.color);
-      if (style.textAlign) vars['--deneb-text-align'] = String(style.textAlign);
-      if (style.textTransform) vars['--deneb-text-transform'] = String(style.textTransform);
-      return vars;
-    }
-    if (styleKind === 'card') {
-      Object.assign(vars, styleMarginVars(style, '--deneb-card'));
-      const width = formatStyleUnit(style.width);
-      if (width) vars['--deneb-card-width'] = width;
-      const minWidth = formatStyleUnit(style.minWidth);
-      if (minWidth) vars['--deneb-card-min-width'] = minWidth;
-      const maxWidth = formatStyleUnit(style.maxWidth);
-      if (maxWidth) vars['--deneb-card-max-width'] = maxWidth;
-      const height = formatStyleUnit(style.height);
-      if (height) vars['--deneb-card-height'] = height;
-      if (style.aspectRatio) vars['--deneb-card-aspect-ratio'] = String(style.aspectRatio);
-      const pt = formatStyleUnit(style.paddingTop);
-      if (pt) vars['--deneb-card-pt'] = pt;
-      const pb = formatStyleUnit(style.paddingBottom);
-      if (pb) vars['--deneb-card-pb'] = pb;
-      const pl = formatStyleUnit(style.paddingLeft);
-      if (pl) vars['--deneb-card-pl'] = pl;
-      const pr = formatStyleUnit(style.paddingRight);
-      if (pr) vars['--deneb-card-pr'] = pr;
-      const radius = formatStyleUnit(style.borderRadius);
-      if (radius) vars['--deneb-card-radius'] = radius;
-      const borderW = formatStyleUnit(style.borderWidth);
-      if (borderW) vars['--deneb-card-border-w'] = borderW;
-      if (style.borderStyle) vars['--deneb-card-border-s'] = String(style.borderStyle);
-      if (style.borderColor) vars['--deneb-card-border-c'] = String(style.borderColor);
-      if (style.backgroundColor) vars['--deneb-card-bg'] = String(style.backgroundColor);
-      if (style.boxShadow) {
-        const shadow = String(style.boxShadow);
-        vars['--deneb-card-shadow'] = shadowPresets[shadow] ?? shadow;
-      }
-      const blur = formatStyleUnit(style.backdropBlur);
-      if (blur) vars['--deneb-card-blur'] = blur;
-      return vars;
-    }
-    if (styleKind === 'button') {
-      Object.assign(vars, styleMarginVars(style, '--deneb-btn'));
-      const radius = formatStyleUnit(style.borderRadius);
-      if (radius) vars['--deneb-btn-radius'] = radius;
-      const px = formatStyleUnit(style.paddingX);
-      if (px) vars['--deneb-btn-px'] = px;
-      const py = formatStyleUnit(style.paddingY);
-      if (py) vars['--deneb-btn-py'] = py;
-      if (style.backgroundColor) vars['--deneb-btn-bg'] = String(style.backgroundColor);
-      if (style.textColor) vars['--deneb-btn-color'] = String(style.textColor);
-      if (style.borderColor) vars['--deneb-btn-border-c'] = String(style.borderColor);
-      if (style.hoverBackgroundColor) vars['--deneb-btn-hover-bg'] = String(style.hoverBackgroundColor);
-      if (style.hoverTextColor) vars['--deneb-btn-hover-color'] = String(style.hoverTextColor);
-      return vars;
-    }
-    if (styleKind === 'grid') {
-      if (style.columns !== undefined) vars['--deneb-grid-cols'] = String(style.columns);
-      if (style.minCardWidth) vars['--deneb-grid-min-card'] = String(style.minCardWidth);
-      const gapX = formatStyleUnit(style.gapX);
-      if (gapX) vars['--deneb-grid-gap-x'] = gapX;
-      const gapY = formatStyleUnit(style.gapY);
-      if (gapY) vars['--deneb-grid-gap-y'] = gapY;
-      if (style.equalHeight !== undefined) {
-        vars['--deneb-grid-equal-height'] = style.equalHeight ? 'stretch' : 'start';
-      }
-      return vars;
-    }
-    if (styleKind === 'section') {
-      const pt = formatStyleUnit(style.paddingTop);
-      if (pt) vars['--deneb-section-pt'] = pt;
-      const pb = formatStyleUnit(style.paddingBottom);
-      if (pb) vars['--deneb-section-pb'] = pb;
-      const px = formatStyleUnit(style.paddingX);
-      if (px) vars['--deneb-section-px'] = px;
-      if (style.maxWidth) vars['--deneb-section-max-w'] = String(style.maxWidth);
-      if (style.backgroundColor) vars['--deneb-section-bg'] = String(style.backgroundColor);
-      if (style.backgroundImage) vars['--deneb-section-bg-image'] = String(style.backgroundImage);
-      return vars;
-    }
-    return vars;
-  }
-
-  function readStyleLiveCache(): Record<string, Record<string, unknown>> {
-    const globalStore = window as unknown as Record<string, unknown>;
-    const existing = globalStore[STYLE_LIVE_CACHE_KEY];
-    if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
-      return existing as Record<string, Record<string, unknown>>;
-    }
-    const created: Record<string, Record<string, unknown>> = {};
-    globalStore[STYLE_LIVE_CACHE_KEY] = created;
-    return created;
-  }
-
-  function findStyleTargetElement(
-    targetPath: string,
-    styleType?: string,
-  ): HTMLElement | null {
-    const selectors = [
-      `[${STYLE_TARGET_ATTRIBUTE}="${CSS.escape(targetPath)}"]`,
-      `[data-preview-field-path="${CSS.escape(targetPath)}"]`,
-      `[${ITEM_PATH_ATTRIBUTE}="${CSS.escape(targetPath)}"]`,
-    ];
-    if (styleType === 'card' && targetPath.endsWith('.card')) {
-      const itemPath = targetPath.slice(0, -'.card'.length);
-      selectors.push(`[${ITEM_PATH_ATTRIBUTE}="${CSS.escape(itemPath)}"]`);
-    }
-    for (const selector of selectors) {
-      const match = document.querySelector<HTMLElement>(selector);
-      if (match) return match;
-    }
-    return null;
-  }
-
-  function applyStylePatch(payload: {
-    targetPath?: string;
-    styleType?: string;
-    properties?: Record<string, unknown>;
-  }) {
-    const targetPath =
-      typeof payload.targetPath === 'string' ? payload.targetPath.trim() : '';
-    if (!targetPath) return;
-    const styleType =
-      typeof payload.styleType === 'string' ? payload.styleType : 'text';
-    const updates =
-      payload.properties && typeof payload.properties === 'object'
-        ? payload.properties
-        : {};
-    const element = findStyleTargetElement(targetPath, styleType);
-    if (!element) return;
-    const cache = readStyleLiveCache();
-    const previous = cache[targetPath] ?? {};
-    const merged = { ...previous, ...updates };
-    cache[targetPath] = merged;
-    const cssVars = styleToCssVariables(styleType, merged);
-    for (const [varName, varVal] of Object.entries(cssVars)) {
-      if (varVal) {
-        element.style.setProperty(varName, varVal);
-      } else {
-        element.style.removeProperty(varName);
-      }
-    }
-    if (!element.getAttribute(STYLE_TYPE_ATTRIBUTE)) {
-      element.setAttribute(STYLE_TYPE_ATTRIBUTE, styleType);
-    }
-  }
-
   function publishContentOnly(content: unknown) {
     writePublishedContent(content);
     // Do not relay on every keystroke — structured-clone + full SPA reconcile
     // freezes low-end phones and mid-range PCs. DOM patches + delayed relay.
     scheduleContentOnlyRelay();
+    scheduleContentOnlyPersist();
+  }
+
+  function publishElementStylePatch(fieldPath: string, styles: unknown) {
+    if (
+      !/^[a-zA-Z0-9_.:\[\]-]{1,180}$/.test(fieldPath) ||
+      !styles ||
+      typeof styles !== 'object' ||
+      Array.isArray(styles)
+    ) {
+      return;
+    }
+    const previous =
+      latestPublishedSiteData &&
+      typeof latestPublishedSiteData === 'object' &&
+      !Array.isArray(latestPublishedSiteData)
+        ? (latestPublishedSiteData as Record<string, unknown>)
+        : {};
+    const template =
+      previous.template &&
+      typeof previous.template === 'object' &&
+      !Array.isArray(previous.template)
+        ? (previous.template as Record<string, unknown>)
+        : {};
+    const structure =
+      template.structure &&
+      typeof template.structure === 'object' &&
+      !Array.isArray(template.structure)
+        ? (template.structure as Record<string, unknown>)
+        : {};
+    const theme =
+      structure.theme &&
+      typeof structure.theme === 'object' &&
+      !Array.isArray(structure.theme)
+        ? (structure.theme as Record<string, unknown>)
+        : {};
+    const elementStyles =
+      theme.elementStyles &&
+      typeof theme.elementStyles === 'object' &&
+      !Array.isArray(theme.elementStyles)
+        ? (theme.elementStyles as Record<string, unknown>)
+        : {};
+    const nextTheme = {
+      ...theme,
+      designCustomizationVersion: 1,
+      elementStyles: { ...elementStyles, [fieldPath]: styles },
+    };
+    const nextTemplate = {
+      ...template,
+      theme: nextTheme,
+      structure: { ...structure, theme: nextTheme },
+    };
+    const nextSiteData = { ...previous, template: nextTemplate };
+    latestPublishedSiteData = nextSiteData;
+    applyUniversalTheme(nextSiteData);
     scheduleContentOnlyPersist();
   }
 
@@ -1929,11 +1785,7 @@ function denebPreviewFocusBridge(
         const valuePosition = currentText
           .toLowerCase()
           .indexOf(fieldText.toLowerCase());
-        if (
-          fieldText &&
-          valuePosition >= 0 &&
-          currentText !== fieldText
-        ) {
+        if (fieldText && valuePosition >= 0 && currentText !== fieldText) {
           element.setAttribute(
             'data-fivora-value-prefix',
             currentText.slice(0, valuePosition),
@@ -2070,18 +1922,14 @@ function denebPreviewFocusBridge(
         }
         return;
       }
-      const isStylePatchMsg =
-        event.data?.type === STYLE_PATCH_MESSAGE ||
-        event.data?.type === DENEB_STYLE_PATCH_MESSAGE ||
-        event.data?.type === LEGACY_STYLE_PATCH_MESSAGE;
-      if (isStylePatchMsg) {
-        applyStylePatch(
-          event.data as {
-            targetPath?: string;
-            styleType?: string;
-            properties?: Record<string, unknown>;
-          },
-        );
+      if (event.data?.type === STYLE_PATCH_MESSAGE) {
+        const stylePatch = event.data as {
+          fieldPath?: unknown;
+          styles?: unknown;
+        };
+        if (typeof stylePatch.fieldPath === 'string') {
+          publishElementStylePatch(stylePatch.fieldPath, stylePatch.styles);
+        }
         return;
       }
       const isEditModeMsg =
@@ -2552,23 +2400,8 @@ function denebPreviewFocusBridge(
   function positionBadge(target: HTMLElement) {
     if (!hoverBadge) return;
     const rect = target.getBoundingClientRect();
-    const isImage =
-      target.tagName === 'IMG' ||
-      target.querySelector('img') !== null ||
-      target.classList.contains('animated-shoe') ||
-      target.closest('.animated-shoe') !== null ||
-      /image/i.test(target.getAttribute('data-preview-field-path') ?? '') ||
-      /image/i.test(target.getAttribute('data-content-path') ?? '') ||
-      /image/i.test(target.getAttribute('data-field-path') ?? '') ||
-      /image/i.test(target.getAttribute(RESOLVED_PATH_ATTRIBUTE) ?? '');
-
-    if (isImage) {
-      hoverBadge.style.top = `${Math.max(4, Math.min(window.innerHeight - 36, rect.bottom - 40))}px`;
-      hoverBadge.style.left = `${Math.max(4, rect.left + 16)}px`;
-    } else {
-      hoverBadge.style.top = `${Math.max(4, rect.top - 4)}px`;
-      hoverBadge.style.left = `${Math.min(window.innerWidth - 36, rect.right - 32)}px`;
-    }
+    hoverBadge.style.top = `${Math.max(4, rect.top - 4)}px`;
+    hoverBadge.style.left = `${Math.min(window.innerWidth - 36, rect.right - 32)}px`;
     hoverBadge.style.opacity = '1';
   }
 
@@ -2960,6 +2793,7 @@ function denebPreviewFocusBridge(
     relatedFields = findRelatedAncestorFields(element, field),
   ) {
     const rect = element.getBoundingClientRect();
+    const computed = window.getComputedStyle(element);
     const isImage = element.tagName === 'IMG';
     const fieldPath = field?.path ?? extractFieldPath(element);
     const fieldValue = isImage
@@ -2994,6 +2828,80 @@ function denebPreviewFocusBridge(
         ? `${collectionPath}[${itemIndex}]`
         : null);
 
+    const safeScopePart = (value: string | null | undefined) =>
+      String(value ?? '')
+        .trim()
+        .replace(/[^a-zA-Z0-9_.-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 64);
+    const styleScopes: Array<{
+      kind: 'element' | 'card' | 'grid' | 'section' | 'page' | 'site';
+      key: string;
+      label: string;
+    }> = [];
+    const pushStyleScope = (
+      kind: 'element' | 'card' | 'grid' | 'section' | 'page' | 'site',
+      key: string | null | undefined,
+      label: string,
+    ) => {
+      if (!key || styleScopes.some((scope) => scope.key === key)) return;
+      styleScopes.push({ kind, key, label });
+    };
+    pushStyleScope('element', fieldPath, 'This element');
+    const cardElement = element.closest<HTMLElement>(
+      `[${ITEM_PATH_ATTRIBUTE}]`,
+    );
+    pushStyleScope(
+      'card',
+      cardElement?.getAttribute(ITEM_PATH_ATTRIBUTE) ?? itemPath,
+      'This card',
+    );
+    const gridElement = element.closest<HTMLElement>(
+      `[${LIST_PATH_ATTRIBUTE}]`,
+    );
+    pushStyleScope(
+      'grid',
+      gridElement?.getAttribute(LIST_PATH_ATTRIBUTE) ?? collectionPath,
+      'Entire grid',
+    );
+    const pageElement = element.closest<HTMLElement>(
+      '[data-preview-page-key]',
+    );
+    const pageKey = safeScopePart(
+      pageElement?.getAttribute('data-preview-page-key'),
+    );
+    const sectionElement = element.closest<HTMLElement>(
+      'section,[data-design-section],[data-section-id]',
+    );
+    if (sectionElement) {
+      const explicitSectionKey = safeScopePart(
+        sectionElement.getAttribute('data-design-section') ??
+          sectionElement.getAttribute('data-section-id') ??
+          sectionElement.id,
+      );
+      const sectionSiblings = sectionElement.parentElement
+        ? Array.from(sectionElement.parentElement.children).filter(
+            (candidate) => candidate.tagName === 'SECTION',
+          )
+        : [];
+      const sectionIndex = sectionSiblings.indexOf(sectionElement) + 1;
+      const sectionKey =
+        explicitSectionKey || (sectionIndex > 0 ? `nth-${sectionIndex}` : '');
+      pushStyleScope(
+        'section',
+        sectionKey
+          ? `section:${pageKey || 'all'}:${sectionKey}`
+          : null,
+        'This section',
+      );
+    }
+    pushStyleScope(
+      'page',
+      pageKey ? `page:${pageKey}` : null,
+      'Current page',
+    );
+    pushStyleScope('site', 'site:all', 'Whole website');
+
     const clickPayload = {
       type: CLICK_MESSAGE,
       fieldPath,
@@ -3007,11 +2915,37 @@ function denebPreviewFocusBridge(
         width: rect.width,
         height: rect.height,
       },
+      computedStyle: {
+        fontFamily: computed.fontFamily,
+        fontSize: computed.fontSize,
+        lineHeight: computed.lineHeight,
+        fontWeight: computed.fontWeight,
+        letterSpacing: computed.letterSpacing,
+        color: computed.color,
+        backgroundColor: computed.backgroundColor,
+        textAlign: computed.textAlign,
+        width: computed.width,
+        height: computed.height,
+        minWidth: computed.minWidth,
+        minHeight: computed.minHeight,
+        maxWidth: computed.maxWidth,
+        maxHeight: computed.maxHeight,
+        marginTop: computed.marginTop,
+        marginRight: computed.marginRight,
+        marginBottom: computed.marginBottom,
+        marginLeft: computed.marginLeft,
+        paddingTop: computed.paddingTop,
+        paddingRight: computed.paddingRight,
+        paddingBottom: computed.paddingBottom,
+        paddingLeft: computed.paddingLeft,
+        borderRadius: computed.borderRadius,
+      },
       listPath: collectionPath,
       itemPath,
       collectionPath,
       itemIndex,
       relatedFields,
+      styleScopes,
     };
     postToParent(clickPayload);
     postToParent({ ...clickPayload, type: LEGACY_CLICK_MESSAGE });
@@ -3395,10 +3329,15 @@ function denebPreviewFocusBridge(
   announceReady();
 }
 
+const NAME_SHIM =
+  "var __name = typeof __name === 'function' ? __name : ((target, value) => (typeof Object.defineProperty === 'function' ? Object.defineProperty(target, 'name', { value, configurable: true }) : target));\n";
+
 export const TEMPLATE_PREVIEW_FOCUS_BRIDGE_SCRIPT =
-  `;(${denebPreviewFocusBridge.toString()})` +
+  NAME_SHIM +
+  `;(${fivoraPreviewFocusBridge.toString()})` +
   `(${resolveTemplatePreviewParentOrigin.toString()},` +
   `${buildUniversalTemplateThemeCss.toString()},` +
   `${replaceTemplateColorLiterals.toString()},` +
   `${JSON.stringify(UNIVERSAL_TEMPLATE_THEME_STYLE_ID)},` +
   `${enforceSelectedTemplatePages.toString()});`;
+
