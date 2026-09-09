@@ -261,7 +261,6 @@ export function EditableFooter({
           <div className="flex flex-col gap-4">
             <button
               type="button"
-              data-preview-static="footer-brand-link"
               onClick={() => navigate('/')}
               style={{
                 display: 'inline-flex',

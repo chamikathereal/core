@@ -31,7 +31,12 @@ export async function buildStandaloneTemplateValidator() {
 
 export async function buildTemplatePreviewBridge() {
   const outputPath = join(toolsDir, 'template-preview-focus-bridge.cjs');
-  const minified = await transform(TEMPLATE_PREVIEW_FOCUS_BRIDGE_SCRIPT, {
+  const nameShim =
+    "var __name = typeof __name === 'function' ? __name : ((target, value) => (typeof Object.defineProperty === 'function' ? Object.defineProperty(target, 'name', { value, configurable: true }) : target));\n";
+  const sourceToTransform = TEMPLATE_PREVIEW_FOCUS_BRIDGE_SCRIPT.includes('var __name')
+    ? TEMPLATE_PREVIEW_FOCUS_BRIDGE_SCRIPT
+    : `${nameShim}${TEMPLATE_PREVIEW_FOCUS_BRIDGE_SCRIPT}`;
+  const minified = await transform(sourceToTransform, {
     minify: true,
     target: 'es2020',
     legalComments: 'none',
