@@ -137,10 +137,6 @@ jobs:
           echo "✔ All requested packages processed!"
           echo "========================================================="
 
-          if [ "$TARGET_PACKAGE" = "all" ] && [ -z "$DRY_RUN_FLAG" ]; then
-            node "$GITHUB_WORKSPACE/scripts/verify-npm-lockstep.js" "${{ env.NEW_VERSION }}"
-          fi
-
       - name: Commit & Push Bumped Version Back to Repo
         if: env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
         run: |
@@ -159,3 +155,13 @@ jobs:
           event-type: core_package_published
           client-payload: '{"version": "${{ env.NEW_VERSION }}", "sha": "${{ github.sha }}", "actor": "${{ github.actor }}"}'
         continue-on-error: true
+
+      - name: Verify npm lockstep
+        if: >
+          env.BUMPED == 'true' &&
+          github.event.inputs.dry_run != 'true' &&
+          github.event.inputs.package != '@deneb-ui/core' &&
+          github.event.inputs.package != '@deneb-ui/ui' &&
+          github.event.inputs.package != '@deneb-ui/cli' &&
+          github.event.inputs.package != '@deneb-ui/create-template'
+        run: node scripts/verify-npm-lockstep.js "${{ env.NEW_VERSION }}"
