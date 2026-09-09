@@ -102,3 +102,24 @@ export function isSafeExternalLink(url?: string | null): boolean {
     trimmed.startsWith('#')
   );
 }
+
+/**
+ * Resolves static assets and routes with subpath prefix support (e.g. Fivora preview lab).
+ */
+export function withBasePath(value?: string | null): string {
+  const url = value?.trim() ?? '';
+  if (!url || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(url)) return url;
+  const basePath = (typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_SITE_BASE_PATH ?? '' : '').replace(
+    /\/$/,
+    ''
+  );
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return `${basePath}${path}`;
+}
+
+/**
+ * Resolves standard page route from pageKey.
+ */
+export function pageRoute(pageKey: string): string {
+  return pageKey === 'home' ? '/' : `/${pageKey}`;
+}

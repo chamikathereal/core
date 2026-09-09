@@ -1,4 +1,5 @@
 import React from 'react';
+import { withBasePath } from './utils';
 
 export type ImageAspectRatio =
   | 'square'
@@ -83,10 +84,13 @@ export function EditableImage({
     ...style,
   };
 
+  const imageSrc = src || fallbackSrc;
+  const finalSrc = typeof imageSrc === 'string' && imageSrc.startsWith('/') ? withBasePath(imageSrc) : imageSrc;
+
   return (
     <img
       data-preview-field-path={path}
-      src={src || fallbackSrc}
+      src={finalSrc}
       alt={alt}
       style={combinedStyle}
       className={`editable-image ${hoverZoom ? 'hover:scale-105' : ''} ${className}`.trim()}

@@ -199,6 +199,32 @@ function detectPages(projectDir) {
                 ...(isContact ? { required: true } : {}),
               });
             }
+
+            // Check for dynamic product detail routes (e.g. products/[slug] or shop/[id])
+            const subDirPath = path.join(cDir, routeName);
+            try {
+              if (fs.existsSync(subDirPath)) {
+                const subEntries = fs.readdirSync(subDirPath, { withFileTypes: true });
+                const hasDynamicSlug = subEntries.some((se) => se.isDirectory() && se.name.startsWith('['));
+                if (hasDynamicSlug && !foundRoutes.has('/' + routeName + '/detail')) {
+                  foundRoutes.add('/' + routeName + '/detail');
+                  let sampleSlug = 'vanta-aero-x';
+                  const siteDataPath = path.join(projectDir, 'src', 'data', 'site-data.json');
+                  if (fs.existsSync(siteDataPath)) {
+                    try {
+                      const sd = JSON.parse(fs.readFileSync(siteDataPath, 'utf8'));
+                      if (sd.content?.product?.slug) sampleSlug = sd.content.product.slug;
+                      else if (sd.content?.home?.product1Slug) sampleSlug = sd.content.home.product1Slug;
+                    } catch {}
+                  }
+                  pages.push({
+                    id: 'product',
+                    label: 'Product Detail',
+                    route: `/${routeName}/${sampleSlug}`,
+                  });
+                }
+              }
+            } catch {}
           }
         }
       } catch {
@@ -291,6 +317,28 @@ function getDefaultManifest(projectName, pages) {
             },
           ],
         },
+        ...(pages.some((p) => p.id === 'product')
+          ? [
+              {
+                id: 'product',
+                path: 'product',
+                type: 'object',
+                label: 'Product Detail Content',
+                fields: [
+                  { key: 'name', type: 'text', label: 'Product Title', required: true },
+                  { key: 'price', type: 'text', label: 'Product Price', required: true },
+                  { key: 'description', type: 'textarea', label: 'Product Description' },
+                  { key: 'badge', type: 'text', label: 'Product Badge' },
+                  { key: 'featuredImage', type: 'image', label: 'Featured Product Image' },
+                  { key: 'addToSelectionLabel', type: 'text', label: 'Add to Selection Label' },
+                  { key: 'specsTitle', type: 'text', label: 'Specifications Heading' },
+                  { key: 'shippingTitle', type: 'text', label: 'Shipping Heading' },
+                  { key: 'shippingSummary', type: 'text', label: 'Shipping Summary' },
+                  { key: 'shippingReturns', type: 'text', label: 'Shipping Returns Note' },
+                ],
+              },
+            ]
+          : []),
       ],
     },
   };
@@ -352,6 +400,24 @@ function getDefaultSiteData(projectName, pages) {
         primaryCtaLabel: 'Shop Now',
         secondaryCtaLabel: 'Learn More',
       },
+      ...(pages.some((p) => p.id === 'product')
+        ? {
+            product: {
+              name: 'Signature Performance Edition',
+              price: 'LKR 32,500',
+              description: 'Lightweight performance runner with responsive foam midsole and breathable engineered mesh.',
+              badge: 'NEW',
+              featuredImage: '/products/vanta-aero-x.jpg',
+              addToSelectionLabel: 'Add to Selection',
+              specsTitle: 'Specifications',
+              shippingTitle: 'Shipping & Returns',
+              shippingSummary: 'Free Islandwide Delivery within 2-3 business days. Cash on delivery available.',
+              shippingReturns: '14-day hassle-free exchanges for unworn footwear in original condition.',
+              relatedLabel: 'You May Also Like',
+              relatedTitle: 'Related Products',
+            },
+          }
+        : {}),
     },
   };
 }

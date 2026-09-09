@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { withBasePath } from './utils';
 
 export interface ProductQuickViewItem {
   id: string;
@@ -13,6 +14,7 @@ export interface ProductQuickViewItem {
   inStock?: boolean;
   rating?: number;
   reviewCount?: number;
+  [key: string]: unknown;
 }
 
 export interface ProductQuickViewProps {
@@ -21,6 +23,12 @@ export interface ProductQuickViewProps {
   onClose: () => void;
   onAddToCart?: (product: ProductQuickViewItem, quantity: number) => void;
   className?: string;
+  /**
+   * Field path prefix for live visual editing synchronization in Fivora Lab.
+   * e.g. "home.product1" or "product"
+   */
+  itemPath?: string;
+  addToCartLabel?: string;
 }
 
 /**
@@ -28,12 +36,7 @@ export interface ProductQuickViewProps {
  * 
  * High-converting instant lightbox inspection modal for products.
  * Enables shoppers to inspect details and buy without leaving page flow.
- * 
- * Features:
- * - Image gallery thumbnail preview
- * - Live quantity counter with bounds protection
- * - Accessible keyboard interaction (Esc key to close)
- * - Backdrop blur with smooth animation
+ * Fully synchronized with Fivora Visual Editing contract.
  * 
  * Created by Chamika Gayashan & Induranga Kawishwara
  */
@@ -43,6 +46,8 @@ export function ProductQuickView({
   onClose,
   onAddToCart,
   className = '',
+  itemPath,
+  addToCartLabel = 'Add to Selection',
 }: ProductQuickViewProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>('');
@@ -111,13 +116,17 @@ export function ProductQuickView({
         <div className="md:w-1/2 p-6 flex flex-col items-center justify-center bg-slate-50 border-b md:border-b-0 md:border-r border-slate-100">
           <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-white shadow-sm flex items-center justify-center">
             {product.badge && (
-              <span className="absolute top-3 left-3 px-2.5 py-1 text-xs font-bold text-white bg-red-500 rounded-lg shadow-sm">
+              <span
+                {...(itemPath ? { 'data-preview-field-path': `${itemPath}.badge` } : {})}
+                className="absolute top-3 left-3 px-2.5 py-1 text-xs font-bold text-white bg-red-500 rounded-lg shadow-sm"
+              >
                 {product.badge}
               </span>
             )}
             {selectedImage ? (
               <img
-                src={selectedImage}
+                {...(itemPath ? { 'data-preview-field-path': `${itemPath}.image` } : {})}
+                src={withBasePath(selectedImage)}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -138,7 +147,7 @@ export function ProductQuickView({
                     selectedImage === img ? 'border-primary shadow-sm' : 'border-slate-200 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={withBasePath(img)} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -161,13 +170,19 @@ export function ProductQuickView({
               )}
             </div>
 
-            <h3 className="text-xl font-bold text-slate-900 leading-tight">
+            <h3
+              {...(itemPath ? { 'data-preview-field-path': `${itemPath}.name` } : {})}
+              className="text-xl font-bold text-slate-900 leading-tight"
+            >
               {product.title}
             </h3>
 
             {/* Price */}
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900">
+              <span
+                {...(itemPath ? { 'data-preview-field-path': `${itemPath}.price` } : {})}
+                className="text-2xl font-black text-slate-900"
+              >
                 {currency}{product.price}
               </span>
               {product.originalPrice && (
@@ -179,7 +194,10 @@ export function ProductQuickView({
 
             {/* Description */}
             {product.description && (
-              <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+              <p
+                {...(itemPath ? { 'data-preview-field-path': `${itemPath}.description` } : {})}
+                className="mt-4 text-sm text-slate-600 leading-relaxed"
+              >
                 {product.description}
               </p>
             )}
@@ -224,7 +242,9 @@ export function ProductQuickView({
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              Add to Cart
+              <span {...(itemPath ? { 'data-preview-field-path': `${itemPath}.addToSelectionLabel` } : {})}>
+                {addToCartLabel}
+              </span>
             </button>
           </div>
         </div>

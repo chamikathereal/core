@@ -2,7 +2,7 @@
   "name": "vanta-shoes-store",
   "label": "Vanta Shoes Storefront",
   "description": "Calibrated Vanta shoes store recipe with WhatsApp CTA, Instagram social link, product grid, and hero slides.",
-  "savedAt": "2026-09-08T17:20:49.206Z",
+  "savedAt": "2026-09-09T04:15:03.327Z",
   "signatures": {
     "keywords": [
       "vanta-shoes-store",
@@ -53,7 +53,16 @@
       }
     ],
     "autoIndex": true,
-    "defaultCardPrefix": "product"
+    "defaultCardPrefix": "product",
+    "withBasePathImages": true,
+    "safeNavigationButtons": true
+  },
+  "productDetailRules": {
+    "enabled": true,
+    "sectionPath": "product",
+    "sampleRoute": "/products/vanta-aero-x",
+    "galleryWithBasePath": true,
+    "noStaticOnEditableAncestors": true
   },
   "actionRules": {
     "splitActionAndLabel": true,
@@ -89,6 +98,40 @@
     ],
     "targetPath": "common.footer"
   },
+  "pages": [
+    {
+      "id": "home",
+      "label": "Home",
+      "route": "/",
+      "required": true
+    },
+    {
+      "id": "about",
+      "label": "About",
+      "route": "/about"
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "route": "/contact",
+      "required": true
+    },
+    {
+      "id": "products",
+      "label": "Products",
+      "route": "/products"
+    },
+    {
+      "id": "shop",
+      "label": "Shop",
+      "route": "/shop"
+    },
+    {
+      "id": "product",
+      "label": "Product Detail",
+      "route": "/products/vanta-aero-x"
+    }
+  ],
   "sections": [
     {
       "id": "common",
@@ -937,6 +980,7 @@
     },
     {
       "id": "product",
+      "path": "product",
       "label": "Product Detail Page",
       "fields": [
         {
@@ -1119,7 +1163,7 @@
       "product2Name": "VANTA Flux 01",
       "product2Category": "Sneakers",
       "product2Price": "LKR 28,900",
-      "product2Badge": "",
+      "product2Badge": "Trending",
       "product2Image": "/products/vanta-flux-01.jpg",
       "product3Name": "VANTA Core Runner",
       "product3Category": "Performance",
@@ -1129,12 +1173,12 @@
       "product4Name": "VANTA Mono",
       "product4Category": "Lifestyle",
       "product4Price": "LKR 24,800",
-      "product4Badge": "",
+      "product4Badge": "Exclusive",
       "product4Image": "/products/vanta-mono.jpg",
       "product5Name": "VANTA Street 02",
       "product5Category": "Sneakers",
       "product5Price": "LKR 27,500",
-      "product5Badge": "",
+      "product5Badge": "Popular",
       "product5Image": "/products/vanta-street-02.jpg",
       "product6Name": "VANTA Velocity",
       "product6Category": "Performance",
@@ -1144,7 +1188,7 @@
       "product7Name": "VANTA Apex Hi",
       "product7Category": "Sneakers",
       "product7Price": "LKR 31,200",
-      "product7Badge": "",
+      "product7Badge": "Featured",
       "product7Image": "/products/vanta-apex-hi.jpg",
       "product8Name": "VANTA Train Pro",
       "product8Category": "Training",
@@ -1159,7 +1203,7 @@
       "product10Name": "VANTA Flux 01",
       "product10Category": "Sneakers",
       "product10Price": "LKR 28,900",
-      "product10Badge": "",
+      "product10Badge": "Trending",
       "product10Image": "/products/vanta-flux-01.jpg",
       "product11Name": "VANTA Core Runner",
       "product11Category": "Performance",
@@ -1169,7 +1213,7 @@
       "product12Name": "VANTA Mono",
       "product12Category": "Lifestyle",
       "product12Price": "LKR 24,800",
-      "product12Badge": "",
+      "product12Badge": "Exclusive",
       "product12Image": "/products/vanta-mono.jpg"
     },
     "product": {
