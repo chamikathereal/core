@@ -5,6 +5,7 @@ const { execSync } = require('node:child_process');
 const rootDir = path.resolve(__dirname, '..');
 
 const packagePaths = [
+  path.join(rootDir, 'packages', 'deneb-core', 'package.json'),
   path.join(rootDir, 'packages', 'deneb-ui', 'package.json'),
   path.join(rootDir, 'cli', 'deneb-cli', 'package.json'),
   path.join(rootDir, 'packages', 'create-template', 'package.json'),
@@ -39,6 +40,49 @@ function compareSemver(a, b) {
 function bumpPatch(v) {
   const s = parseSemver(v);
   return `${s.major}.${s.minor}.${s.patch + 1}`;
+}
+
+function syncInternalCoreRange(nextVersion) {
+  const range = `^${nextVersion}`;
+  for (const relative of [
+    path.join('packages', 'deneb-ui', 'package.json'),
+    path.join('cli', 'deneb-cli', 'package.json'),
+  ]) {
+    const file = path.join(rootDir, relative);
+    const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (pkg.dependencies && pkg.dependencies['@deneb-ui/core']) {
+      pkg.dependencies['@deneb-ui/core'] = range;
+      fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
+    }
+  }
+}
+
+function syncCliLockVersion(nextVersion) {
+  const lockPath = path.join(rootDir, 'cli', 'deneb-cli', 'package-lock.json');
+  if (!fs.existsSync(lockPath)) return;
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  lock.version = nextVersion;
+  if (lock.packages && lock.packages['']) lock.packages[''].version = nextVersion;
+  fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
+}
+
+function refreshLocks(nextVersion) {
+  console.log(`\n🔒 Refreshing package locks...`);
+  execSync('npm install --package-lock-only --ignore-scripts', {
+    cwd: rootDir,
+    stdio: 'inherit',
+  });
+  try {
+    execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', {
+      cwd: path.join(rootDir, 'cli', 'deneb-cli'),
+      stdio: 'inherit',
+    });
+  } catch {
+    console.log(
+      '   ⚠ @deneb-ui/core is not on npm yet; CLI lock will pin versions locally until the first core publish.',
+    );
+    syncCliLockVersion(nextVersion);
+  }
 }
 
 // 1. Get current local version
@@ -77,16 +121,10 @@ for (const p of packagePaths) {
   }
 }
 
+syncInternalCoreRange(nextVersion);
+
 // 6. Keep the root and standalone CLI lockfiles aligned with package metadata.
-console.log(`\n🔒 Refreshing package locks...`);
-execSync('npm install --package-lock-only --ignore-scripts', {
-  cwd: rootDir,
-  stdio: 'inherit',
-});
-execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', {
-  cwd: path.join(rootDir, 'cli', 'deneb-cli'),
-  stdio: 'inherit',
-});
+refreshLocks(nextVersion);
 
 // Dynamically prune any orphaned workspaces from root lockfile
 const rootLockPath = path.join(rootDir, 'package-lock.json');

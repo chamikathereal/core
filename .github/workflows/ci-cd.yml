@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - all
+          - '@deneb-ui/core'
           - '@deneb-ui/ui'
           - '@deneb-ui/cli'
           - '@deneb-ui/create-template'
@@ -101,6 +102,10 @@ jobs:
             echo "---------------------------------------------------------"
             npm publish --access public --provenance $DRY_RUN_FLAG
           }
+
+          if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/core" ]; then
+            publish_pkg "packages/deneb-core" "@deneb-ui/core"
+          fi
 
           if [ "$TARGET_PACKAGE" = "all" ] || [ "$TARGET_PACKAGE" = "@deneb-ui/ui" ]; then
             publish_pkg "packages/deneb-ui" "@deneb-ui/ui"

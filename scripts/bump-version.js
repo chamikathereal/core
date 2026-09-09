@@ -7,6 +7,7 @@ const targetType = process.argv[2] || 'patch'; // 'patch', 'minor', 'major'
 
 const packagePaths = [
   path.join(rootDir, 'package.json'),
+  path.join(rootDir, 'packages', 'deneb-core', 'package.json'),
   path.join(rootDir, 'packages', 'deneb-ui', 'package.json'),
   path.join(rootDir, 'cli', 'deneb-cli', 'package.json'),
   path.join(rootDir, 'packages', 'create-template', 'package.json'),
@@ -51,10 +52,23 @@ execSync('npm install --package-lock-only --ignore-scripts', {
   cwd: rootDir,
   stdio: 'inherit',
 });
-execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', {
-  cwd: path.join(rootDir, 'cli', 'deneb-cli'),
-  stdio: 'inherit',
-});
+try {
+  execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', {
+    cwd: path.join(rootDir, 'cli', 'deneb-cli'),
+    stdio: 'inherit',
+  });
+} catch {
+  console.log(
+    '   ⚠ @deneb-ui/core is not on npm yet; skipping CLI registry lock refresh.',
+  );
+  const lockPath = path.join(rootDir, 'cli', 'deneb-cli', 'package-lock.json');
+  if (fs.existsSync(lockPath)) {
+    const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+    lock.version = newVersion;
+    if (lock.packages && lock.packages['']) lock.packages[''].version = newVersion;
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
+  }
+}
 
 // Dynamically prune any orphaned workspaces from root lockfile
 const rootLockPath = path.join(rootDir, 'package-lock.json');
