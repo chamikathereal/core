@@ -4,6 +4,7 @@ import siteData from '@/data/site-data.json';
 import { SiteDataProvider } from '@/lib/siteDataContext';
 import SiteChrome from '@/components/SiteChrome';
 import './globals.css';
+import '../fonts/deneb-fonts.css';
 
 export const metadata: Metadata = {
   title: siteData.content.common.websiteTitle,
@@ -15,8 +16,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <SiteDataProvider>
           <SiteChrome>{children}</SiteChrome>
         </SiteDataProvider>

@@ -1,0 +1,7 @@
+/*
+ * DENEB Fonts — self-hosted via @fontsource
+ * `deneb fonts install` overwrites this file after scaffold.
+ */
+:root {
+  --deneb-fonts-selfhosted: 0;
+}
