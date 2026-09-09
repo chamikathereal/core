@@ -3,6 +3,8 @@
 const { CONFIDENCE } = require('./version.cjs');
 const { inferSection, inferFieldName, buildFieldPath, classifyFieldType, uniquePath } = require('./field-paths.cjs');
 const { classifyHref } = require('./adapters.cjs');
+const { loadFingerprintBoost } = require('./learning.cjs');
+const { appendStyleBindTransforms } = require('./style-candidates.cjs');
 
 function recipeBoost(candidate, recipe) {
   if (!recipe) return 0;
@@ -30,7 +32,21 @@ function planTransformations({ profile, analyses, recipe }) {
   for (const analysis of analyses) {
     const transformations = [];
     for (const candidate of analysis.candidates || []) {
-      const confidence = Math.min(0.99, (candidate.confidence || 0) + recipeBoost(candidate, recipe));
+      const fingerprintHint = loadFingerprintBoost(candidate.fingerprint);
+      if (fingerprintHint.skip) {
+        skipped.push({
+          file: candidate.file,
+          loc: candidate.loc,
+          reason: 'fingerprint-deprecated',
+          confidence: candidate.confidence || 0,
+          kind: candidate.kind,
+        });
+        continue;
+      }
+      const confidence = Math.min(
+        0.99,
+        (candidate.confidence || 0) + recipeBoost(candidate, recipe) + (fingerprintHint.boost || 0),
+      );
       const decision = decideThreshold(confidence, candidate);
       const section = inferSection({
         componentName: candidate.componentName,
@@ -75,6 +91,8 @@ function planTransformations({ profile, analyses, recipe }) {
           why: candidate.reason,
           recipe: recipe?.name || null,
           confidence,
+          fingerprintBoost: fingerprintHint.boost || 0,
+          fingerprintState: fingerprintHint.state || null,
         },
       };
 
@@ -188,6 +206,8 @@ function planTransformations({ profile, analyses, recipe }) {
     });
   }
 
+  appendStyleBindTransforms(filePlans);
+
   return {
     files: filePlans,
     skipped,
@@ -212,12 +232,17 @@ function summarizePlan(filePlans, skipped) {
   const auto = filePlans.reduce((n, f) => n + f.transformations.filter((t) => t.decision === 'auto').length, 0);
   const validate = filePlans.reduce((n, f) => n + f.transformations.filter((t) => t.decision === 'validate').length, 0);
   const filesAffected = filePlans.filter((f) => f.transformations.length > 0).length;
+  const styleBinds = filePlans.reduce(
+    (n, f) => n + f.transformations.filter((t) => t.operation === 'style-bind').length,
+    0,
+  );
   return {
     planned,
     auto,
     validate,
     skipped: skipped.length,
     filesAffected,
+    styleBinds,
   };
 }
 

@@ -48,7 +48,12 @@
   "license": "MIT",
   "dependencies": {
     "@babel/parser": "^7.28.0",
+    "@deneb-ui/core": "^2.0.22",
     "adm-zip": "^0.6.0",
     "recast": "^0.23.11"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3"
   }
 }

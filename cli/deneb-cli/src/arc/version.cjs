@@ -2,7 +2,7 @@
 
 const ARC_NAME = 'Deneb ARC';
 const ARC_FULL_NAME = 'Deneb Adaptive Refactoring Compiler';
-const ARC_VERSION = '1.0.0';
+const ARC_VERSION = '1.1.0';
 const SCHEMA_VERSION = 2;
 const ENGINE_ID = 'deneb-arc';
 

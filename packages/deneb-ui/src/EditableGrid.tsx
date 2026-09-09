@@ -1,4 +1,5 @@
 import React from 'react';
+import { useComponentStyle } from './hooks/useComponentStyle';
 import { resolveResponsiveColumns } from './utils/responsive';
 
 export type GridSpacing = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | (string & {}) | number;
@@ -75,6 +76,9 @@ export function EditableGrid({
 }: EditableGridProps) {
   const resolvedGap = gap !== undefined ? (SPACING_MAP[String(gap)] || String(gap)) : '1.25rem';
   const { template: templateCols, dataAttrs } = resolveResponsiveColumns(columns, minCardWidth);
+  const listPath = previewListPath || id;
+  const stylePath = listPath ? `${listPath}.grid` : undefined;
+  const { cssVars: styleVars } = useComponentStyle(stylePath, 'grid');
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
@@ -88,13 +92,16 @@ export function EditableGrid({
           '--deneb-cols-desktop': dataAttrs['data-cols-desktop'],
         } as React.CSSProperties)
       : {}),
+    ...styleVars,
     ...style,
   };
 
   return (
     <Component
-      data-preview-list-path={previewListPath || id}
-      className={`editable-grid ${className}`.trim()}
+      data-preview-list-path={listPath}
+      data-preview-style-target={stylePath}
+      data-preview-style-type="grid"
+      className={`deneb-grid editable-grid ${className}`.trim()}
       style={gridStyle}
       {...(dataAttrs || {})}
       {...(props as any)}

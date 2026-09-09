@@ -109,6 +109,19 @@ function runScaffolding(targetInput) {
 
       if (installRes.status === 0) {
         console.log(`\n\x1b[32m✔ All dependencies and DENEB UI components installed successfully!\x1b[0m\n`);
+        try {
+          const denebBin = path.join(targetPath, 'node_modules', '@deneb-ui', 'cli', 'bin', 'index.js');
+          if (fs.existsSync(denebBin)) {
+            console.log(`\x1b[36mAa Downloading and configuring DENEB Google Fonts...\x1b[0m\n`);
+            require('node:child_process').spawnSync(process.execPath, [denebBin, 'fonts', 'install', '.'], {
+              cwd: targetPath,
+              stdio: 'inherit',
+              shell: false,
+            });
+          }
+        } catch (err) {
+          console.log(`\x1b[33m! Fonts: run "npx deneb fonts install ." inside ${folderName} (${err.message})\x1b[0m\n`);
+        }
       } else {
         console.log(`\n\x1b[33m! Note: npm install exited with code ${installRes.status}. Run "npm install" inside ${folderName}.\x1b[0m\n`);
       }

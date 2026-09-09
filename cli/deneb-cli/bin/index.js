@@ -692,6 +692,7 @@ function initProject(targetInput, options = {}) {
     'validate-and-zip': 'deneb validate-and-zip .',
     'package:template': 'deneb package .',
     'update:deneb': 'deneb update',
+    'fonts:install': 'deneb fonts install .',
   };
   let addedCount = 0;
   for (const [key, val] of Object.entries(scriptsToAdd)) {
@@ -760,6 +761,16 @@ function initProject(targetInput, options = {}) {
         stdio: 'inherit',
         shell: process.platform === 'win32',
       });
+    }
+  }
+
+  if (!skipInstall) {
+    try {
+      const { runFontsInstall } = require('../src/tools/deneb-fonts.cjs');
+      console.log(`\n\x1b[36mAa Downloading and configuring DENEB Google Fonts...\x1b[0m`);
+      runFontsInstall(targetDir, []);
+    } catch (err) {
+      console.log(`\n\x1b[33m! Fonts were not installed automatically: ${err.message}. Run \x1b[1mdeneb fonts install .\x1b[0m\x1b[0m`);
     }
   }
 
@@ -1074,6 +1085,9 @@ if (command === 'init') {
   runValidateAndZip(commandArgs[0] || '.', commandArgs.slice(1));
 } else if (command === 'update' || command === 'upgrade') {
   updateDependencies(commandArgs);
+} else if (command === 'fonts') {
+  const { runFontsCommand } = require('../src/tools/deneb-fonts.cjs');
+  process.exit(runFontsCommand(commandArgs));
 } else if (command === 'save-recipe' || command === 'learn') {
   const targetDir = path.resolve(commandArgs[0] || '.');
   const recipeName = commandArgs[1] || path.basename(targetDir);
@@ -1098,6 +1112,7 @@ Core Commands:
   doctor            Run comprehensive environment, manifest, visual editing AST & asset diagnostic checks (flags: --fix, --json)
   save-recipe       Learn and save calibrated fixes & schemas into reusable recipe bank (e.g. deneb save-recipe . shoes-store)
   learn             Alias for save-recipe
+  fonts             Google Fonts catalog — list presets or install self-hosted @fontsource packages
   update            Update DENEB packages (@deneb-ui/ui, @deneb-ui/cli) and UI components
   validate          Validate website configuration and visual editing contracts with Fivora platform
   zip               Zip the project without unnecessary folders or files (node_modules, .next, .git, .env)
@@ -1121,6 +1136,9 @@ Examples:
   deneb init --recipe electronics
   deneb init --recipe cosmetics
   deneb init --legacy
+  deneb fonts list
+  deneb fonts install .
+  deneb fonts install . --font inter --font playfair-display
   deneb update
   deneb validate .
   deneb validate --zip

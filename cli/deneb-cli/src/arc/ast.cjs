@@ -229,13 +229,27 @@ function wrapTextInEditableSpan(fieldPath, fallback, fieldType) {
   return b.jsxElement(
     b.jsxOpeningElement(
       b.jsxIdentifier('span'),
-      [jsxPreviewAttr(fieldPath)],
+      [jsxPreviewAttr(fieldPath), ...jsxStyleAttrs(fieldPath, 'text')],
       false
     ),
     b.jsxClosingElement(b.jsxIdentifier('span')),
     [b.jsxExpressionContainer(siteDataBinding(fieldPath.split('.'), fallback, fieldType))],
     false
   );
+}
+
+function jsxStyleAttrs(stylePath, kind) {
+  if (!stylePath || !kind) return [];
+  return [
+    b.jsxAttribute(b.jsxIdentifier('data-preview-style-target'), b.stringLiteral(stylePath)),
+    b.jsxAttribute(b.jsxIdentifier('data-preview-style-type'), b.stringLiteral(kind)),
+  ];
+}
+
+function ensureStyleAttrs(node, stylePath, kind) {
+  if (!node || !node.openingElement || !stylePath || !kind) return;
+  if (hasJsxAttribute(node, 'data-preview-style-target')) return;
+  node.openingElement.attributes.push(...jsxStyleAttrs(stylePath, kind));
 }
 
 function hasDirective(ast, value) {
@@ -310,6 +324,8 @@ module.exports = {
   siteDataBinding,
   siteDataListBinding,
   jsxPreviewAttr,
+  jsxStyleAttrs,
+  ensureStyleAttrs,
   jsxStaticAttr,
   jsxTemplatePathAttr,
   wrapTextInEditableSpan,

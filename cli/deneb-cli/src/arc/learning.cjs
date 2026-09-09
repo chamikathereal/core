@@ -85,6 +85,29 @@ function recordExperience({ projectDir, profile, plan, validation, outcome, tele
   return records;
 }
 
+function loadFingerprintBoost(fingerprint) {
+  if (!fingerprint) {
+    return { boost: 0, skip: false, state: null };
+  }
+  try {
+    const store = readJsonSafe(fingerprintStorePath(), { fingerprints: {} }) || { fingerprints: {} };
+    const entry = store.fingerprints?.[fingerprint];
+    if (!entry) return { boost: 0, skip: false, state: null };
+    if (entry.state === 'deprecated') {
+      return { boost: 0, skip: true, state: 'deprecated' };
+    }
+    if (entry.state === 'verified') {
+      return { boost: 0.08, skip: false, state: 'verified' };
+    }
+    if (entry.state === 'candidate') {
+      return { boost: 0.03, skip: false, state: 'candidate' };
+    }
+    return { boost: 0, skip: false, state: entry.state || 'observed' };
+  } catch {
+    return { boost: 0, skip: false, state: null };
+  }
+}
+
 function mapOperation(operation) {
   switch (operation) {
     case 'extract-text':
@@ -96,6 +119,8 @@ function mapOperation(operation) {
       return 'url-extraction';
     case 'split-action-contract':
       return 'contract-split';
+    case 'style-bind':
+      return 'style-bind';
     case 'collection-conversion':
       return 'collection-conversion';
     default:
@@ -176,6 +201,7 @@ function redactSecrets(value) {
 
 module.exports = {
   recordExperience,
+  loadFingerprintBoost,
   registryArchitecture,
   redactSecrets,
   promoteState,

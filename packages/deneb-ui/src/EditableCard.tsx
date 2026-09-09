@@ -2,6 +2,7 @@ import React from 'react';
 import { EditableText } from './EditableText';
 import { EditableImage } from './EditableImage';
 import { BoxAspectRatio, BoxRadius, BoxShadow, BoxSpacing } from './EditableBox';
+import { useComponentStyle } from './hooks/useComponentStyle';
 
 export interface CardItem {
   id?: string | number;
@@ -136,6 +137,9 @@ export function EditableCard({
       ? border
       : undefined;
 
+  const stylePath = `${itemPath}.card`;
+  const { cssVars: styleVars } = useComponentStyle(stylePath, 'card');
+
   const cardStyle: React.CSSProperties = {
     ...(width !== undefined ? { width } : {}),
     ...(minWidth !== undefined ? { minWidth } : {}),
@@ -158,13 +162,16 @@ export function EditableCard({
     ...(resolvedBorder ? { border: resolvedBorder } : {}),
     ...(resolvedPadding ? { padding: resolvedPadding } : {}),
     ...(align ? { textAlign: align } : {}),
+    ...styleVars,
     ...style,
   };
 
   return (
     <Component
       data-preview-item-path={itemPath}
-      className={`editable-card ${className}`.trim()}
+      data-preview-style-target={stylePath}
+      data-preview-style-type="card"
+      className={`deneb-card editable-card ${balance ? 'deneb-card-balance' : ''} ${className}`.trim()}
       style={cardStyle}
       {...(props as any)}
     >
