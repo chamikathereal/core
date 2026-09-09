@@ -9,7 +9,7 @@ import {
 const toolsDir = join(__dirname, '..', 'src', 'tools');
 
 export async function buildStandaloneTemplateValidator() {
-  const outputPath = join(toolsDir, 'fivora-template-validator.cjs');
+  const outputPath = join(toolsDir, 'deneb-template-validator.cjs');
   await mkdir(toolsDir, { recursive: true });
   await build({
     entryPoints: [join(__dirname, 'template-preflight.ts')],
