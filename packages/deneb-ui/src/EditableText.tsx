@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFieldStyle } from './SiteDataProvider';
+import { useComponentStyle } from './hooks/useComponentStyle';
 
 export type TextSemanticColor =
   | 'primary'
@@ -277,6 +277,7 @@ export function EditableText({
   letterSpacing,
   fontFamily,
   style,
+  className = '',
   ...props
 }: EditableTextProps) {
   const path = previewFieldPath || id;
@@ -288,7 +289,7 @@ export function EditableText({
   const isPlaceholderActive = isContentEmpty && Boolean(placeholder);
   const displayContent = isPlaceholderActive ? placeholder : rawContent;
 
-  const dynamicStyle = useFieldStyle(path);
+  const { cssVars: styleVars } = useComponentStyle(path, 'text');
 
   const variantDefaults = variant ? VARIANT_DEFAULTS[variant] : undefined;
   const Component = ComponentOverride || variantDefaults?.as || 'span';
@@ -313,25 +314,6 @@ export function EditableText({
     ? (FONT_FAMILY_MAP[effectiveFontFamily] || effectiveFontFamily)
     : undefined;
 
-  // Dynamic visual editor overrides
-  const dynamicColor = dynamicStyle?.color
-    ? (COLOR_MAP[String(dynamicStyle.color)] || String(dynamicStyle.color))
-    : undefined;
-  const dynamicSize = dynamicStyle?.fontSize !== undefined && dynamicStyle?.fontSize !== ''
-    ? (SIZE_MAP[String(dynamicStyle.fontSize)] || toCssUnit(dynamicStyle.fontSize))
-    : undefined;
-  const dynamicLineHeight = dynamicStyle?.lineHeight !== undefined && dynamicStyle?.lineHeight !== ''
-    ? (LINE_HEIGHT_MAP[String(dynamicStyle.lineHeight)] || (dynamicStyle.lineHeight as any))
-    : undefined;
-  const dynamicFontFamily = dynamicStyle?.fontFamily
-    ? (FONT_FAMILY_MAP[String(dynamicStyle.fontFamily)] || String(dynamicStyle.fontFamily))
-    : undefined;
-  const dynamicAlign = dynamicStyle?.textAlign as 'left' | 'center' | 'right' | 'justify' | undefined;
-  const dynamicMarginTop = toCssUnit(dynamicStyle?.spacingTop);
-  const dynamicMarginBottom = toCssUnit(dynamicStyle?.spacingBottom);
-  const dynamicMarginLeft = toCssUnit(dynamicStyle?.spacingLeft);
-  const dynamicMarginRight = toCssUnit(dynamicStyle?.spacingRight);
-
   const typographyStyle: React.CSSProperties = {
     // Minimum dimensions ensure empty/placeholder elements never collapse to 0x0 and remain 100% clickable in Fivora
     minHeight: '1.2em',
@@ -346,23 +328,17 @@ export function EditableText({
     ...(effectiveTransform ? { textTransform: effectiveTransform } : {}),
     ...(resolvedLetterSpacing ? { letterSpacing: resolvedLetterSpacing } : {}),
     ...(resolvedFontFamily ? { fontFamily: resolvedFontFamily } : {}),
+    ...styleVars,
     ...style,
-    // Visual editor overrides take highest precedence:
-    ...(dynamicColor ? { color: dynamicColor } : {}),
-    ...(dynamicSize ? { fontSize: dynamicSize } : {}),
-    ...(dynamicLineHeight ? { lineHeight: dynamicLineHeight } : {}),
-    ...(dynamicAlign ? { textAlign: dynamicAlign } : {}),
-    ...(dynamicFontFamily ? { fontFamily: dynamicFontFamily } : {}),
-    ...(dynamicMarginTop !== undefined ? { marginTop: dynamicMarginTop } : {}),
-    ...(dynamicMarginBottom !== undefined ? { marginBottom: dynamicMarginBottom } : {}),
-    ...(dynamicMarginLeft !== undefined ? { marginLeft: dynamicMarginLeft } : {}),
-    ...(dynamicMarginRight !== undefined ? { marginRight: dynamicMarginRight } : {}),
   };
 
   return (
     <Component
       data-preview-field-path={path}
+      data-preview-style-target={path}
+      data-preview-style-type="text"
       data-preview-placeholder={isPlaceholderActive ? 'true' : undefined}
+      className={`deneb-text ${className}`.trim()}
       style={typographyStyle}
       {...(props as any)}
     >
@@ -573,6 +549,7 @@ export function EditableButton({
 }: EditableButtonProps) {
   const path = previewFieldPath || id;
   const content = children !== undefined ? children : defaultValue;
+  const { cssVars: styleVars } = useComponentStyle(path, 'button');
 
   const sizeStyles: Record<string, React.CSSProperties> = {
     sm: { padding: '0.375rem 0.875rem', fontSize: '0.875rem', borderRadius: '6px' },
@@ -625,13 +602,16 @@ export function EditableButton({
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     ...sizeStyles[size],
     ...variantStyles[btnVariant],
+    ...styleVars,
     ...style,
   };
 
   const buttonEl = (
     <button
+      data-preview-style-target={path}
+      data-preview-style-type="button"
       style={baseStyle}
-      className={`editable-btn ${className}`.trim()}
+      className={`deneb-btn editable-btn ${className}`.trim()}
       {...props}
     >
       {path ? (

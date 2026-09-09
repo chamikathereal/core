@@ -13,6 +13,13 @@ const { applyFilePlan } = require('../transformer.cjs');
 const { buildFieldPath, inferFieldName } = require('../field-paths.cjs');
 const { runDenebArc } = require('../index.cjs');
 const { parseSource } = require('../ast.cjs');
+const { loadFingerprintBoost } = require('../learning.cjs');
+
+test('unseen fingerprints do not change planner confidence', () => {
+  const hint = loadFingerprintBoost(null);
+  assert.equal(hint.boost, 0);
+  assert.equal(hint.skip, false);
+});
 const contract = require('../fivora-contract.cjs');
 const { ensureStaticExportConfig } = require('../next-config.cjs');
 
@@ -101,10 +108,36 @@ test('AST transformer preserves className and uses nullish fallbacks', () => {
   assert.match(result.code, /className="hero"/);
   assert.match(result.code, /data-preview-field-path=/);
   assert.match(result.code, /\?\?/);
-  assert.match(result.code, /<span data-preview-field-path="/);
+  assert.match(result.code, /<span[\s\S]*data-preview-field-path="/);
   assert.doesNotMatch(result.code, /'use client'/);
   assert.match(result.code, /site-data\.json|@\/data\/site-data\.json/);
+  assert.match(result.code, /data-preview-style-target=/);
+  assert.match(result.code, /data-preview-style-type="text"/);
   parseSource(result.code, relativeFile);
+});
+
+test('planner emits style-bind next to content transforms', () => {
+  const relativeFile = 'src/components/Hero.tsx';
+  const code = fs.readFileSync(path.join(FIXTURE, relativeFile), 'utf8');
+  const analysis = analyzeFile({
+    code,
+    relativeFile,
+    profile: scanProject(FIXTURE),
+    graph: { sharedFiles: [] },
+    ownerScope: 'home',
+    componentMeta: { name: 'Hero', role: 'hero' },
+  });
+  analysis.relativeFile = relativeFile;
+  analysis.code = code;
+  const plan = planTransformations({
+    profile: scanProject(FIXTURE),
+    analyses: [analysis],
+    recipe: { actionRules: { splitActionAndLabel: true } },
+  });
+  const binds = plan.files[0].transformations.filter((t) => t.operation === 'style-bind');
+  assert.ok(binds.length >= 1, 'expected style-bind operations');
+  assert.ok(binds.every((t) => t.stylePath && t.styleKind));
+  assert.ok(plan.stats.styleBinds >= 1);
 });
 
 test('dry-run does not modify source files', () => {
@@ -142,6 +175,11 @@ test('ARC converts a Next.js fixture into Fivora contracts without redesigning',
   assert.doesNotMatch(promo, /use client';;/);
   assert.doesNotMatch(JSON.stringify(siteData.content), /VANTA/);
   assert.ok(siteData.content.home.hero.title);
+  assert.ok(siteData.theme?.headingFont);
+  assert.ok(siteData.theme?.bodyFont);
+  assert.equal(typeof siteData.styles, 'object');
+  assert.ok(Object.keys(siteData.styles).length >= 1, 'style-bind seeds site-data.styles');
+  assert.match(hero, /data-preview-style-type=/);
   assert.ok(manifest.editorSchema.sections.length >= 1);
   assert.ok(manifest.editorSchema.sections.length < 12);
   assert.equal(manifest.arcVersion, result.arcVersion);
@@ -150,8 +188,8 @@ test('ARC converts a Next.js fixture into Fivora contracts without redesigning',
   const second = silence(() => runDenebArc(dir, 'arc-fixture', { telemetry: 'off' }));
   assert.equal(second.outcome, 'success');
   const hero2 = fs.readFileSync(path.join(dir, 'src', 'components', 'Hero.tsx'), 'utf8');
-  const spanCount1 = (hero.match(/<span data-preview-field-path=/g) || []).length;
-  const spanCount2 = (hero2.match(/<span data-preview-field-path=/g) || []).length;
+  const spanCount1 = (hero.match(/<span[\s\S]*?data-preview-field-path=/g) || []).length;
+  const spanCount2 = (hero2.match(/<span[\s\S]*?data-preview-field-path=/g) || []).length;
   assert.equal(spanCount2, spanCount1);
 });
 
@@ -301,6 +339,8 @@ test('static-array collections become list contracts without changing render log
   const grid = fs.readFileSync(path.join(dir, 'src', 'components', 'ProductGrid.tsx'), 'utf8');
 
   assert.match(grid, /data-preview-list-path="home\.products"/);
+  assert.match(grid, /data-preview-style-type="grid"/);
+  assert.match(grid, /data-preview-style-type="card"/);
   assert.match(grid, /data-preview-item-path=\{`home\.products\[\$\{index\}\]`\}/);
   assert.match(grid, /data-preview-field-path=\{`home\.products\[\$\{index\}\]\.title`\}/);
   // The array is site-data backed with the developer's literal as fallback.
@@ -332,7 +372,7 @@ test('literal text inside a broad container is wrapped instead of marked illegal
   const about = fs.readFileSync(path.join(dir, 'src', 'app', 'about', 'page.tsx'), 'utf8');
 
   // Fivora rejects data-preview-field-path on <div>, so the text gets a span.
-  assert.match(about, /<div className="mt-10 text-sm text-slate-500">\s*<span data-preview-field-path=/);
+  assert.match(about, /<div[\s\S]*className="mt-10 text-sm text-slate-500"[\s\S]*<span[\s\S]*data-preview-field-path=/);
   assert.ok(!/<div[^>]*data-preview-field-path/.test(about));
 });
 
@@ -343,7 +383,7 @@ test('shadcn Button asChild keeps the action on the link and the label in a span
 
   assert.match(hero, /<Button asChild>/);
   assert.match(hero, /href=\{siteData\?\.content\?\.home\?\.hero\?\.shopCollectionUrl \?\? "\/products"\}/);
-  assert.match(hero, /<span data-preview-field-path="home\.hero\.shopCollectionLabel">/);
+  assert.match(hero, /<span[\s\S]*data-preview-field-path="home\.hero\.shopCollectionLabel"/);
   // The decorative icon stays static.
   assert.match(hero, /<ArrowRight className="ml-2 size-4" aria-hidden="true" \/>/);
 });
@@ -385,7 +425,7 @@ test('Pages Router projects convert and satisfy the strict contract', () => {
   assert.match(index, /from "\.\.\/data\/site-data\.json"/);
   // tel: actions are split into url + label.
   assert.match(index, /href=\{siteData\?\.content\?\.home\?\.contact\?\.phoneUrl \?\? "tel:\+94771234567"\}/);
-  assert.match(index, /<span data-preview-field-path="home\.contact\.phoneLabel">/);
+  assert.match(index, /<span[\s\S]*data-preview-field-path="home\.contact\.phoneLabel"/);
   // Original class names are untouched.
   assert.match(index, /className="wrapper"/);
   assert.match(contact, /className="photo"/);

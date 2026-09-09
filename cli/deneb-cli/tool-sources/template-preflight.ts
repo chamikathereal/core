@@ -53,6 +53,7 @@ import {
   getTemplateValidationSelectedPages,
   normalizeTemplatePageDefinitions,
 } from '../src/sites/universal-page-selection';
+import { validateTemplateStyleContract } from '../src/common/style-validation';
 
 const CLI_NAME = 'deneb-template-validator';
 const CLI_VERSION = '1.0.0';
@@ -456,6 +457,17 @@ async function validateWorkspace(
       assertContractPassed(
         'Template visual-editing contract validation failed.',
         result.errors,
+      );
+    });
+
+    await reporter.step('Validate real-time style contract', () => {
+      const styleIssues = validateTemplateStyleContract({
+        siteData: probeContent,
+        artifacts: probeArtifacts,
+      });
+      assertContractPassed(
+        'Template real-time style validation failed.',
+        styleIssues.map((issue) => `${issue.path}: ${issue.message}`),
       );
     });
 

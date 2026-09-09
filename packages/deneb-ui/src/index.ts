@@ -35,6 +35,32 @@ export * from './EditableFilterSidebar';
 export * from './SiteDataProvider';
 export * from './ThemeStyles';
 export { ResponsiveBaseStyles } from './ResponsiveBaseStyles';
+export { DenebComponentStyles } from './DenebComponentStyles';
+export { FontLoader, DENEB_FONTS_LINK_ID } from './fonts/FontLoader';
+export { useDenebFonts } from './fonts/useDenebFonts';
+export * from './hooks/useComponentStyle';
+export {
+  DENEB_FONT_REGISTRY,
+  DENEB_GOOGLE_FONT_COUNT,
+  buildGoogleFontsStylesheetUrl,
+  collectFontIdsFromSiteData,
+  listFontsByCategory,
+  lookupFontDefinition,
+  normalizeFontId,
+  resolveInstallableFont,
+  formatResponsiveFontSize,
+} from '@deneb-ui/core';
+export {
+  STYLE_PATCH_MESSAGE,
+  DENEB_STYLE_PATCH_MESSAGE,
+  STYLE_TARGET_ATTRIBUTE,
+  STYLE_TYPE_ATTRIBUTE,
+  patchElementStyle,
+  patchStyleByPath,
+  styleToCssVariables,
+  validateStyleTree,
+  collectStyleTargetsFromHtml,
+} from '@deneb-ui/core';
 
 // Smart template components & actions
 export * from './utils';

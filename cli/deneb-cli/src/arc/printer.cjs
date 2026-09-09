@@ -67,6 +67,7 @@ function printPlan(plan) {
   if (plan.stats.validate) info(`${plan.stats.validate} transformations queued with extra validation`);
   const skippedDynamic = plan.skipped.filter((s) => /dynamic|api/.test(s.reason || '')).length;
   const skippedLow = plan.skipped.filter((s) => (s.confidence || 1) < 0.6).length;
+  if (plan.stats.styleBinds) ok(`${plan.stats.styleBinds} Fivora style-bind contracts`);
   if (skippedDynamic) ok(`${skippedDynamic} existing dynamic values preserved`);
   if (skippedLow) warn(`${skippedLow} low-confidence candidates skipped`);
 }
@@ -96,8 +97,12 @@ function printExplain(plan) {
     if (!file.transformations.length) continue;
     console.log(`  ${C.bold}${file.file}${C.reset}`);
     for (const t of file.transformations) {
-      console.log(`    - ${t.operation} ${t.field || t.urlField || ''}`);
-      console.log(`      ${C.dim}why: ${t.reason}  confidence: ${t.confidence}  recipe: ${t.recipeId || 'none'}${C.reset}`);
+      const target = t.stylePath || t.field || t.urlField || t.listField || '';
+      console.log(`    - ${t.operation} ${target}`);
+      const boost = t.explain?.fingerprintBoost
+        ? `  fingerprint: ${t.explain.fingerprintState}+${t.explain.fingerprintBoost}`
+        : '';
+      console.log(`      ${C.dim}why: ${t.reason}  confidence: ${t.confidence}  recipe: ${t.recipeId || 'none'}${boost}${C.reset}`);
     }
   }
 }
@@ -130,6 +135,29 @@ function printSuccess() {
   console.log(`\n${C.green}${C.bold}Deneb ARC completed successfully.${C.reset}\n`);
 }
 
+function printUncoveredText(findings = []) {
+  if (!findings.length) return;
+  warn(`${findings.length} visible text node(s) still uncovered — run deneb validate . before packaging`);
+  for (const item of findings.slice(0, 12)) {
+    const loc = item.filePath ? `${item.filePath}${item.line ? `:${item.line}` : ''}` : '';
+    const snippet = String(item.text || '').slice(0, 80);
+    console.log(`    ${C.dim}${loc}  <${item.tag}> ${snippet}${C.reset}`);
+  }
+  if (findings.length > 12) {
+    console.log(`    ${C.dim}... ${findings.length - 12} more in .deneb/report.json${C.reset}`);
+  }
+}
+
+function printDeveloperNextSteps() {
+  heading('Next steps for Fivora');
+  console.log(`  ${C.cyan}1.${C.reset} npm run lab              ${C.dim}preview visual editing locally${C.reset}`);
+  console.log(`  ${C.cyan}2.${C.reset} deneb fonts install .    ${C.dim}self-host Google Fonts used by this site${C.reset}`);
+  console.log(`  ${C.cyan}3.${C.reset} npm run validate         ${C.dim}same contract Fivora ingest uses${C.reset}`);
+  console.log(`  ${C.cyan}4.${C.reset} npm run validate-and-zip ${C.dim}upload-ready ZIP${C.reset}`);
+  console.log(`  ${C.dim}Style edits: Fivora sends FIVORA_PREVIEW_STYLE_PATCH to data-preview-style-target nodes.${C.reset}`);
+  console.log(`  ${C.dim}Re-run with --explain to see why each field/style was bound.${C.reset}\n`);
+}
+
 function printRollback(reason) {
   console.log(`\n${C.yellow}Deneb ARC rolled back the conversion.${C.reset}`);
   console.log(`${C.dim}${reason}${C.reset}\n`);
@@ -146,6 +174,8 @@ module.exports = {
   printDryRun,
   printError,
   printSuccess,
+  printUncoveredText,
+  printDeveloperNextSteps,
   printRollback,
   ok,
   warn,

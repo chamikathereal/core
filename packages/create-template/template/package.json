@@ -11,7 +11,8 @@
     "zip": "deneb zip .",
     "validate-and-zip": "deneb validate-and-zip .",
     "package:template": "deneb package .",
-    "update:deneb": "deneb update"
+    "update:deneb": "deneb update",
+    "fonts:install": "deneb fonts install ."
   },
   "dependencies": {
     "next": "15.5.23",

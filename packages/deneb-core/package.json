@@ -1,0 +1,52 @@
+{
+  "name": "@deneb-ui/core",
+  "version": "2.0.23",
+  "description": "Headless style engine for real-time Fivora visual editing — CSS variables, DOM patcher, and preview protocol.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./install-fonts": {
+      "types": "./dist/fonts/installProject.d.ts",
+      "default": "./dist/fonts/installProject.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deneb-ui/core.git",
+    "directory": "packages/deneb-core"
+  },
+  "homepage": "https://deneb.fivora.site",
+  "bugs": {
+    "url": "https://github.com/deneb-ui/core/issues"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test src/fonts/__tests__/fonts.test.cjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "deneb",
+    "deneb-ui",
+    "fivora",
+    "visual-editing",
+    "css-variables",
+    "style-engine"
+  ],
+  "author": "Chamika Gayashan & Induranga Kawishwara",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}

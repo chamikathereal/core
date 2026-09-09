@@ -1,5 +1,6 @@
 import React from 'react';
 import { BoxSpacing } from './EditableBox';
+import { useComponentStyle } from './hooks/useComponentStyle';
 import { RESPONSIVE_SECTION_PADDING } from './utils/responsive';
 
 const SECTION_PADDING_MAP: Record<string, string> = RESPONSIVE_SECTION_PADDING;
@@ -66,19 +67,25 @@ export function EditableSection({
       ? border
       : undefined;
 
+  const stylePath = `${name}.section`;
+  const { cssVars: styleVars } = useComponentStyle(stylePath, 'section');
+
   const sectionStyle: React.CSSProperties = {
     ...(resolvedPadding ? { padding: resolvedPadding } : {}),
     ...(bg ? { background: bg } : {}),
     ...(color ? { color } : {}),
     ...(maxWidth !== undefined ? { maxWidth, marginLeft: 'auto', marginRight: 'auto' } : {}),
     ...(resolvedBorder ? { borderBottom: resolvedBorder } : {}),
+    ...styleVars,
     ...style,
   };
 
   return (
     <Component
       data-design-section={name}
-      className={`editable-section ${className}`.trim()}
+      data-preview-style-target={stylePath}
+      data-preview-style-type="section"
+      className={`deneb-section editable-section ${className}`.trim()}
       style={sectionStyle}
       {...(props as any)}
     >

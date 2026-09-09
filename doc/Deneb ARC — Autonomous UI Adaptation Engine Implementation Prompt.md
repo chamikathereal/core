@@ -2,6 +2,12 @@
 
 ## Adaptive Refactoring Compiler for Autonomous Editable UI Conversion
 
+> **Living spec.** The repository is the source of truth. This prompt is the algorithm contract. When code and this document disagree, inspect `cli/deneb-cli/src/arc/` and `packages/` first, then update both together.
+>
+> **Implemented in core (as of this revision):** AST pipeline (`runDenebArc`), Fivora strict contract self-audit, real-time style runtime (`@deneb-ui/core` + `FontLoader` + `FIVORA_PREVIEW_STYLE_PATCH`), auto font install on `init` / `create-template` / `@deneb-ui/ui` postinstall.
+>
+> **Still required of ARC (the compiler):** emit style markers, seed `site-data.styles`, preserve typography as editable style rather than rewriting CSS, plan fonts from discovered families. Do not stop at content-only bindings.
+
 You are acting as a Principal Compiler Engineer, Staff Frontend Infrastructure Engineer, AST Transformation Specialist, and Platform Architect.
 
 You are working on **Deneb**, specifically the CLI command:
@@ -110,27 +116,67 @@ Deneb is a compiler/refactoring engine, not a page builder that recreates the we
 
 # 3. CURRENT DENEB BEHAVIOR
 
-The existing implementation includes concepts from:
+Default `npx @deneb-ui/cli init` runs **Deneb ARC** (`cli/deneb-cli/src/arc/index.cjs` → `runDenebArc`). Legacy regex conversion remains behind `--legacy`.
+
+### 3.1 Implemented ARC modules (do not replace)
 
 ```text
-template-converter.cjs
-recipe-engine.cjs
+scanner.cjs          project / route / stack discovery + dependency graph
+semantic.cjs         AST UI candidates (text, image, href, collections)
+field-paths.cjs      stable semantic field paths
+adapters.cjs         href / library-specific action classification
+planner.cjs          confidence thresholds + transformation plan
+transformer.cjs      Recast AST apply (markers, bindings, layout, pageKey)
+ast.cjs              parse/print, wrapTextInEditableSpan, preview attrs
+manifest.cjs         site-data.json + fivora-template.json merge
+fivora-contract.cjs  marker placement, action/label split, path coverage
+validator.cjs        AST validity, contracts, design snapshot
+next-config.cjs      static export without discarding existing config
+learning.cjs         experience records
+recipes-v2.cjs       recipe match
+printer.cjs          dry-run / explain / apply output
 ```
 
-The current implementation already performs parts of:
+Related runtime (not inside `src/arc/`, but ARC must compile *toward* it):
 
 ```text
-AST parsing
-text extraction
-URL extraction
+@deneb-ui/core     style schemas, CSS variables, DOM patcher, font registry
+@deneb-ui/ui       SiteDataProvider, FontLoader, useComponentStyle, editable components
+@deneb-ui/cli      deneb fonts install, focus bridge FIVORA_PREVIEW_STYLE_PATCH
+```
+
+### 3.2 Already working conversion behaviors
+
+```text
+AST parsing (Recast)
+text / URL / image extraction
 editable field generation
-site-data.json generation
-fivora-template.json generation
+site-data.json + fivora-template.json generation
 recipe matching
 action/label contract splitting
 social URL recognition
-fallback generation
-backup generation
+list/item collection markers
+span wrap for uncovered visible text
+control-only fields for unbound site-data keys
+pageKey reachability (no invented routes)
+idempotent schema merge
+static export next.config AST patch
+backup + rollback
+Fivora strict contract self-audit after apply
+```
+
+### 3.3 Gaps the algorithm must close next
+
+ARC still treats **content** as the only editable surface. Fivora visual editing also needs **style** and **fonts** without redesigning the site.
+
+```text
+SHIPPED (ARC 1.1): data-preview-style-target / data-preview-style-type on text, buttons, cards, grids
+SHIPPED (ARC 1.1): site-data.json "styles" keyed by style-bind paths (no empty dump of unused fields)
+SHIPPED (ARC 1.1): planner style-bind ops (text, card, button, grid); section bind not auto-emitted
+SHIPPED (ARC 1.1): transformer only adds style attributes; CSS variables stay in @deneb-ui/core
+SHIPPED (ARC 1.1): site-data.theme.headingFont / bodyFont seeded for `deneb fonts install`
+OPEN: design preservation should also score font-family / font-size / radius, not only classNames
+OPEN: planner does not yet emit a dedicated section style-bind for every <section>
 ```
 
 Do NOT destroy working functionality.
@@ -350,6 +396,13 @@ copyright
 payment icons
 legal links
 breadcrumbs
+typography tokens (font-family, font-size, font-weight, color)
+card geometry (radius, shadow, padding, width)
+button surface (variant, radius, colors)
+grid columns / gap
+section padding / max-width
+Google Font / @font-face / next/font usage
+```
 tabs
 accordions
 dialogs
@@ -475,6 +528,38 @@ Correct output concept:
 The outer interactive element owns the action/URL contract.
 
 The inner element owns the visible label contract.
+
+### 8.1 Style contract (third axis — do not collide with content)
+
+Content, action, and **style** are three different contracts.
+
+A headline may own:
+
+```text
+data-preview-field-path="home.heroTitle"     → visible text (content)
+data-preview-style-target="home.heroTitle"   → typography (style)
+data-preview-style-type="text"
+```
+
+A card / list item may own:
+
+```text
+data-preview-item-path="home.products[0]"
+data-preview-style-target="home.products[0].card"
+data-preview-style-type="card"
+```
+
+Rules:
+
+```text
+Never put a style target on an element that only owns an action URL.
+Never invent style paths that are not addressable in site-data.styles.
+Never restyle by rewriting Tailwind/CSS classes — that violates design preservation.
+Style overrides live in site-data.styles[path] and apply via CSS variables / DOM patcher.
+If the node is already a @deneb-ui/ui EditableText/Card/Button/Grid/Section, do not wrap it again.
+```
+
+Fivora preview applies live style with `FIVORA_PREVIEW_STYLE_PATCH` (0ms DOM patch). ARC's job is to **leave markers and data addresses** so that patcher can find the node. ARC must not implement a second iframe protocol.
 
 ---
 
@@ -720,9 +805,30 @@ mergeable
 schema-compatible
 ```
 
+Canonical shape after this revision:
+
+```json
+{
+  "manifestVersion": 2,
+  "theme": { "headingFont": "Inter", "bodyFont": "Inter" },
+  "content": {},
+  "styles": {
+    "home.heroTitle": { "fontFamily": "playfair-display", "fontSize": "48px" }
+  }
+}
+```
+
+```text
+content     merchant copy, URLs, images (existing ARC output)
+theme       global tokens including headingFont / bodyFont (font registry ids or labels)
+styles      per-path visual overrides (TextStyle / CardStyle / ButtonStyle / GridStyle / SectionStyle)
+```
+
+Seed `styles` only when a converted node has a style-bind operation. Do not dump empty style objects for every field.
+
 Do not erase manually configured existing Deneb fields.
 
-Implement intelligent merge behavior.
+Implement intelligent merge behavior: `content` and `styles` replace wholesale from parent preview snapshots; ARC merge on disk must deep-merge `styles` by path without dropping merchant overrides.
 
 ---
 
@@ -749,6 +855,8 @@ defaults
 constraints
 editable metadata
 action/label relationships
+style paths (kind: text | card | button | grid | section)
+theme typography (headingFont, bodyFont) using DENEB_FONT_REGISTRY ids
 ```
 
 Manifest generation must derive from the actual transformed project.
@@ -777,6 +885,15 @@ HeroUI Button link handling
 React Bits animated heading
 
 Tailwind hero image section
+
+Typography style-bind (h1–h6, lead) → data-preview-style-type="text"
+
+Card-like article/div in a map() → style-type="card" at `${itemPath}.card`
+
+CSS grid / flex product row → style-type="grid"
+
+Google Font family literal or class (font-playfair) → theme.headingFont + fonts install plan
+```
 
 social footer link group
 
@@ -931,6 +1048,8 @@ CSS file equality where no change was necessary
 layout component equality
 visual screenshot similarity
 responsive screenshot similarity
+font-family / computed typography unchanged unless styles[] override exists
+no wholesale Tailwind class rewrites for visual editing
 ```
 
 A transformed content binding is acceptable.
@@ -969,6 +1088,10 @@ Skipped dynamic values: 5
 Skipped low-confidence values: 2
 
 Action/link contracts validated: 31
+
+Style-bind markers: 48
+
+Font ids planned: inter, playfair-display
 
 Contract collisions: 0
 
@@ -1073,6 +1196,18 @@ Example:
       "urlField": "home.hero.primaryCta.url",
       "labelField": "home.hero.primaryCta.label",
       "confidence": 0.94
+    },
+    {
+      "operation": "style-bind",
+      "kind": "text",
+      "stylePath": "home.hero.title",
+      "confidence": 0.91
+    },
+    {
+      "operation": "font-plan",
+      "fontIds": ["inter", "playfair-display"],
+      "confidence": 0.93
+    }
     }
   ]
 }
@@ -1439,6 +1574,8 @@ Do not install every option.
 Choose the smallest appropriate toolchain.
 
 Preserve formatting and comments where reasonably possible.
+
+The repository already uses **Recast + @babel/parser**. Do not switch the transformer to ts-morph or jscodeshift unless a measured failure proves Recast cannot represent a required node. Extend `ast.cjs` helpers (`jsxPreviewAttr`, `wrapTextInEditableSpan`) with `jsxStyleAttrs(path, kind)` rather than a new AST stack.
 
 ---
 
@@ -1838,27 +1975,44 @@ Semantic UI Analyzer
      ↓
 Editable Candidate Classifier
      ↓
+Style Candidate Classifier          ← NEW: text/card/button/grid/section
+     ↓
+Font Discovery                      ← NEW: registry lookup from classes, CSS, next/font
+     ↓
 Structural Fingerprinter
      ↓
 Recipe Matcher
      ↓
-Contract Planner
+Contract Planner (content + action + style)
      ↓
 Confidence Engine
      ↓
 Transformation Planner
      ↓
-AST Transformer
+AST Transformer (markers + bindings, no visual rewrite)
      ↓
-Manifest Generator
+Manifest + styles tree Generator
      ↓
-Validation Engine
+Font Install Planner → installProjectFonts()
+     ↓
+Validation Engine (incl. style-target coverage)
      ↓
 Self-Evaluation Engine
      ↓
 Experience Recorder
      ↓
 Pattern Learning Pipeline
+```
+
+Runtime that ARC compiles *into* (already shipped; do not reimplement in ARC):
+
+```text
+SiteDataProvider     content + styles merge, STYLE_PATCH listener
+FontLoader           Google CDN fallback + --heading-font / --body-font
+useComponentStyle    siteData.styles[path] → CSS variables
+domPatcher           0ms FIVORA_PREVIEW_STYLE_PATCH
+focus bridge         same protocol in the iframe
+DENEB_FONT_REGISTRY  shared ids for Fivora + CLI + runtime
 ```
 
 The exact implementation may differ if the existing repository architecture suggests a better decomposition.
@@ -2048,9 +2202,11 @@ detect editable content
 extract content
 generate meaningful editable fields
 split conflicting editable contracts
+bind style contracts without rewriting CSS
+plan and install fonts via DENEB_FONT_REGISTRY
 preserve original styling
 preserve original behavior
-generate Deneb/Fivora manifests
+generate Deneb/Fivora manifests including styles[]
 validate the transformed project
 rollback unsafe operations
 report conversion quality
@@ -2070,13 +2226,16 @@ The finished architecture must prioritize these properties in this order:
 1. Do not break the developer's website.
 2. Preserve original visual design.
 3. Preserve application behavior.
-4. Produce valid editable contracts.
-5. Generate stable semantic field paths.
-6. Be idempotent.
+4. Produce valid editable contracts (content, action, style).
+5. Generate stable semantic field paths and style paths.
+6. Be idempotent (including style markers and fonts.css import).
 7. Validate every transformation.
 8. Be explainable.
 9. Improve reusable pattern knowledge.
-10. Increase editable coverage over time.
+10. Increase editable coverage over time (content AND style).
+11. Never download fonts into @deneb-ui/ui itself; install into the host project.
+12. Never invent a second preview protocol; use FIVORA_PREVIEW_STYLE_PATCH.
+```
 ```
 
 Never sacrifice priorities 1–7 merely to improve item 10.
@@ -2124,6 +2283,8 @@ M. Migration strategy from the existing algorithm
 N. Milestone implementation plan
 
 O. Risks and mitigations
+
+P. Style-bind + font-plan integration with @deneb-ui/core (do not fork the runtime)
 ```
 
 Then begin implementing the plan starting with the safest foundational milestone.
@@ -2149,6 +2310,119 @@ Think like you are building:
 > a specialized compiler for converting existing frontend applications into Deneb-native visually editable applications.
 
 The final system must be maintainable, testable, deterministic, extensible, measurable, privacy-conscious, and production-grade.
+
+---
+
+# 58. HOW RUNTIME UPDATES IMPROVE THE ARC ALGORITHM
+
+These packages are **not** a second converter. They raise the quality of what ARC is allowed to emit.
+
+| Runtime capability | How ARC should use it |
+| --- | --- |
+| `@deneb-ui/core` style schemas + `styleToCssVariables()` | Planner emits `style-bind` with `kind`. Transformer only adds attributes. No custom CSS strings in AST. |
+| `patchElementStyle` / `FIVORA_PREVIEW_STYLE_PATCH` | Success = marker present on the node. ARC does not write iframe listeners. Layout already gets SiteDataProvider via transformer. |
+| `useComponentStyle` + `siteData.styles` | Manifest generator writes `styles[path]` defaults extracted from existing class/style **as data**, leaving original classes in place (cascade: original CSS, then CSS variables). |
+| `DENEB_FONT_REGISTRY` + `resolveFontFamily` | Font discovery maps `font-serif`, `Playfair Display`, `next/font` to registry ids. Never invent font names. Satoshi → Space Grotesk substitute. |
+| `installProjectFonts()` / `deneb fonts install` | After apply (not dry-run), install discovered ids or `DEFAULT_PROJECT_FONT_IDS`. Skip with `DENEB_SKIP_FONTS=1`. |
+| `FontLoader` CDN fallback | Converted sites render fonts even before install. ARC still plans install for static export / offline. |
+| Fivora contract audit | Extend `fivora-contract.cjs` to optionally warn when many text markers have no style-target (coverage, not a hard fail on first milestone). |
+
+**Design preservation rule:** original `className` stays. Editable style is an overlay (`--deneb-*`). If a merchant never opens the Style tab, the site looks identical.
+
+---
+
+# 59. STYLE ADAPTATION ALGORITHM (ARC)
+
+Add a semantic candidate kind `style` with operations:
+
+```text
+style-bind-text
+style-bind-card
+style-bind-button
+style-bind-grid
+style-bind-section
+```
+
+Pipeline:
+
+```text
+1. After content candidates are planned, walk the same JSX nodes.
+2. Classify style kind:
+     heading/p/span/label with visible text → text
+     article/li mapped in collection → card
+     button/CTA (label already split) → button on the visual button, not the href owner
+     display:grid / mapped product grid → grid
+     <section> / data-design-section → section
+3. Confidence:
+     already has data-preview-style-target → skip (idempotent)
+     @deneb-ui/ui Editable* component → skip wrap; ensure style-target props if missing
+     raw h1 with field-path → auto style-bind-text (high confidence)
+     ambiguous wrapper div → skip or validate
+4. Transformer:
+     jsxStyleAttrs(stylePath, kind)
+     do not add className "deneb-text" unless the element is created by wrapTextInEditableSpan
+5. Manifest:
+     styles[stylePath] = {} or extracted tokens (fontSize from text-4xl map — optional, low confidence)
+6. Validate:
+     style path uniqueness
+     style-target exists in source after apply
+     kind ∈ { text, card, button, grid, section }
+```
+
+Do **not** convert arbitrary CSS to a full CardStyle object on the first pass. Empty `styles[path]` plus markers is enough for Fivora to start patching. Extraction of Tailwind tokens into styles[] is a later recipe.
+
+---
+
+# 60. FONT ADAPTATION ALGORITHM (ARC)
+
+```text
+1. Collect font signals:
+     theme.headingFont / bodyFont already in site-data
+     Tailwind font-sans / font-serif / font-[family]
+     CSS font-family declarations in scanned stylesheets (design snapshot)
+     next/font or @fontsource imports
+     literal "Playfair Display" in class or style
+2. Map each signal through lookupFontDefinition() / normalizeFontId().
+3. Union with DEFAULT_PROJECT_FONT_IDS if nothing found.
+4. Write theme.headingFont and theme.bodyFont as registry labels or ids (stable).
+5. Plan font-plan { fontIds: string[] }.
+6. On apply (never on --dry-run):
+     installProjectFonts({ projectDir, fontIds })
+     or rely on CLI init hook (already present) — ARC must pass the planned ids, not only defaults
+7. Do not add 50 @fontsource packages as dependencies of @deneb-ui/ui.
+8. Idempotent: skip npm install if packages already in package.json; do not duplicate layout import.
+```
+
+---
+
+# 61. CURRENT MODULE MAP (GRAPHIFY)
+
+Keep this map current with `graphify update .` after ARC edits.
+
+```text
+runDenebArc()                    cli/deneb-cli/src/arc/index.cjs
+  scanProject / buildDependencyGraph
+  analyzeFile                    semantic.cjs
+  planTransformations            planner.cjs
+  applyFilePlan                  transformer.cjs
+  buildSiteDataAndManifest       manifest.cjs
+  auditFivoraContract            fivora-contract.cjs
+  SiteDataProvider               packages/deneb-ui — content + STYLE_PATCH
+  installProjectFonts            packages/deneb-core/src/fonts/installProject.ts
+  DENEB_FONT_REGISTRY            packages/deneb-core/src/fonts/registry.ts
+  useComponentStyle              packages/deneb-ui/src/hooks/useComponentStyle.ts
+```
+
+New ARC files (when implementing §59–§60) should stay beside these, for example:
+
+```text
+cli/deneb-cli/src/arc/style-candidates.cjs
+cli/deneb-cli/src/arc/font-plan.cjs
+```
+
+Do not create a parallel converter.
+
+---
 
 # Final Product Name
 

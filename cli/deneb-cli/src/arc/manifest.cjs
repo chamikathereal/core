@@ -3,6 +3,7 @@
 const path = require('path');
 const { readJsonSafe, writeJson, deepMerge, isPlainObject } = require('./fs-utils.cjs');
 const { ARC_VERSION, SCHEMA_VERSION } = require('./version.cjs');
+const { collectFontIdsFromSiteData, applyFontTheme } = require('./font-plan.cjs');
 const { humanLabel, classifyFieldType } = require('./field-paths.cjs');
 const {
   enumerateContentPaths,
@@ -152,6 +153,18 @@ function collectFieldsFromPlan(plan) {
     }
   }
   return fields;
+}
+
+function collectStylesFromPlan(plan, existingStyles) {
+  const styles = isPlainObject(existingStyles) ? { ...existingStyles } : {};
+  for (const file of plan.files || []) {
+    for (const t of file.transformations || []) {
+      if (t.operation !== 'style-bind' || !t.stylePath) continue;
+      if (t.stylePath.includes('[*]')) continue;
+      if (!styles[t.stylePath]) styles[t.stylePath] = {};
+    }
+  }
+  return styles;
 }
 
 function baseContent(projectName, routes) {
@@ -339,7 +352,11 @@ function buildSiteDataAndManifest({
       requiredFeatures: [],
     },
     content,
+    styles: collectStylesFromPlan(plan, existingSiteData?.styles),
+    ...(isPlainObject(existingSiteData?.theme) ? { theme: { ...existingSiteData.theme } } : {}),
   };
+
+  applyFontTheme(siteData, collectFontIdsFromSiteData(siteData));
 
   if (!siteData.template.structure) siteData.template.structure = {};
   siteData.template.structure.pages = routes.map((p) => p.id);

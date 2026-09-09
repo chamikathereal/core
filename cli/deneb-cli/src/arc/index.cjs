@@ -477,11 +477,7 @@ function runDenebArc(projectDir, projectName, options = {}) {
   } else {
     console.log('  \x1b[32m✓\x1b[0m Fivora strict contract');
   }
-  if (fivoraAudit.uncoveredVisibleText.length) {
-    console.log(
-      `  \x1b[33m⚠\x1b[0m ${fivoraAudit.uncoveredVisibleText.length} visible text node(s) still uncovered — run \x1b[1mdeneb validate .\x1b[0m before packaging`
-    );
-  }
+  printer.printUncoveredText(fivoraAudit.uncoveredVisibleText);
   coverage.actionLinkContracts = contracts.fieldPaths.filter((p) => /Url$/.test(p)).length;
   coverage.contractCollisions = contracts.actionCollisions;
   console.log(`  Action/link contracts validated: ${coverage.actionLinkContracts}`);
@@ -560,7 +556,10 @@ function runDenebArc(projectDir, projectName, options = {}) {
   writeJson(path.join(journalDir, 'validation.json'), validation);
   writeJson(path.join(projectDir, '.deneb', 'report.json'), report);
 
-  if (outcome === 'success') printer.printSuccess();
+  if (outcome === 'success') {
+    printer.printSuccess();
+    printer.printDeveloperNextSteps();
+  }
   return result;
 }
 

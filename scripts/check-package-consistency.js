@@ -18,6 +18,7 @@ const rootPackage = readJson('package.json');
 const rootLock = readJson('package-lock.json');
 const cliPackage = readJson('cli/deneb-cli/package.json');
 const cliLock = readJson('cli/deneb-cli/package-lock.json');
+const corePackage = readJson('packages/deneb-core/package.json');
 const uiPackage = readJson('packages/deneb-ui/package.json');
 const createPackage = readJson('packages/create-template/package.json');
 const sourceTemplate = readJson('templates/nextjs/package.json');
@@ -26,6 +27,7 @@ const bundledTemplate = readJson('packages/create-template/template/package.json
 
 const releasePackages = [
   ['cli/deneb-cli', cliPackage, '@deneb-ui/cli'],
+  ['packages/deneb-core', corePackage, '@deneb-ui/core'],
   ['packages/deneb-ui', uiPackage, '@deneb-ui/ui'],
   ['packages/create-template', createPackage, '@deneb-ui/create-template'],
 ];

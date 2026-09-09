@@ -8,6 +8,13 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
+import {
+  DENEB_STYLE_PATCH_MESSAGE,
+  patchStyleByPath,
+  STYLE_PATCH_MESSAGE,
+} from '@deneb-ui/core';
+import { DenebComponentStyles } from './DenebComponentStyles';
+import { FontLoader } from './fonts/FontLoader';
 import { ResponsiveBaseStyles } from './ResponsiveBaseStyles';
 
 export const DENEB_PREVIEW_DATA_MESSAGE = 'DENEB_PREVIEW_SITE_DATA';
@@ -27,6 +34,7 @@ export const PREVIEW_FOCUS_MESSAGE = 'FIVORA_PREVIEW_FOCUS_PAGE';
 export const LEGACY_PREVIEW_FOCUS_MESSAGE =
   previousPreviewMessage('FOCUS_PAGE');
 export const PREVIEW_FIELD_ATTRIBUTE = 'data-preview-field-path';
+export { STYLE_PATCH_MESSAGE, DENEB_STYLE_PATCH_MESSAGE } from '@deneb-ui/core';
 
 const PARENT_ORIGIN_KEY = '__FIVORA_PREVIEW_PARENT_ORIGIN__';
 const LEGACY_PARENT_ORIGIN_KEY = previousPreviewStorageKey('PARENT_ORIGIN');
@@ -50,6 +58,7 @@ export type SiteData = {
   } | null;
   requirements?: { requiredPages?: string[] | null } | null;
   content?: GenericRecord | null;
+  styles?: GenericRecord | null;
   [key: string]: unknown;
 };
 
@@ -68,7 +77,7 @@ export function mergeSiteData(current: unknown, incoming: unknown): unknown {
   for (const key of Object.keys(incoming)) {
     // Parent preview always sends complete content/media snapshots. Replacing
     // them wholesale avoids deep-cloning large collections on every keystroke.
-    if (key === 'content' || key === 'media') {
+    if (key === 'content' || key === 'media' || key === 'styles') {
       next[key] = incoming[key];
       continue;
     }
@@ -241,7 +250,10 @@ export function SiteDataProvider<T extends SiteData = SiteData>({
         event.data.type === DENEB_PREVIEW_FOCUS_MESSAGE ||
         event.data.type === PREVIEW_FOCUS_MESSAGE ||
         event.data.type === LEGACY_PREVIEW_FOCUS_MESSAGE;
-      if (!isData && !isFocus) {
+      const isStylePatch =
+        event.data.type === STYLE_PATCH_MESSAGE ||
+        event.data.type === DENEB_STYLE_PATCH_MESSAGE;
+      if (!isData && !isFocus && !isStylePatch) {
         return;
       }
 
@@ -267,6 +279,22 @@ export function SiteDataProvider<T extends SiteData = SiteData>({
 
       if (isData && isRecord(event.data.siteData)) {
         applyIncomingSiteData(event.data.siteData);
+        return;
+      }
+
+      if (isStylePatch) {
+        const targetPath =
+          typeof event.data.targetPath === 'string' ? event.data.targetPath : '';
+        const styleType =
+          typeof event.data.styleType === 'string' ? event.data.styleType : 'text';
+        const properties = isRecord(event.data.properties) ? event.data.properties : {};
+        if (targetPath) {
+          patchStyleByPath(
+            targetPath,
+            styleType as 'text' | 'card' | 'button' | 'grid' | 'section',
+            properties,
+          );
+        }
         return;
       }
 
@@ -310,7 +338,9 @@ export function SiteDataProvider<T extends SiteData = SiteData>({
   const value = useMemo(() => siteData as SiteData, [siteData]);
   return (
     <SiteDataContext.Provider value={value}>
+      <FontLoader />
       <ResponsiveBaseStyles />
+      <DenebComponentStyles />
       {children}
     </SiteDataContext.Provider>
   );

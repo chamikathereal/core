@@ -17,6 +17,8 @@ const {
   jsxPreviewAttr,
   jsxTemplatePathAttr,
   wrapTextInEditableSpan,
+  jsxStyleAttrs,
+  ensureStyleAttrs,
   b,
 } = require('./ast.cjs');
 const { toPosix } = require('./fs-utils.cjs');
@@ -85,6 +87,7 @@ function splitActionChildren(node, labelField, labelFallback) {
     if (!child) continue;
     if (child.type === 'JSXElement' && getJsxName(child) === 'span' && !hasJsxAttribute(child, 'data-preview-field-path')) {
       ensurePreviewPath(child, labelField);
+      ensureStyleAttrs(child, labelField, 'text');
       replaceTextChildren(child, labelField, labelFallback, 'text');
       nextChildren.push(child);
       wrapped = true;
@@ -146,8 +149,19 @@ function applyTransformToElement(pathNode, transform) {
   }
   if (transform.operation === 'extract-text') {
     ensurePreviewPath(node, transform.field);
+    ensureStyleAttrs(node, transform.field, inferButtonKind(transform.tag));
     replaceTextChildren(node, transform.field, transform.fallback, transform.fieldType || 'text');
+    return;
   }
+  if (transform.operation === 'style-bind') {
+    if (transform.styleKind === 'grid' || transform.styleKind === 'card') return;
+    ensureStyleAttrs(node, transform.stylePath, transform.styleKind || 'text');
+  }
+}
+
+function inferButtonKind(tag) {
+  if (tag === 'button' || tag === 'Button') return 'button';
+  return 'text';
 }
 
 /**
@@ -210,6 +224,14 @@ function applyCollectionTransform(ast, transform) {
       jsxTemplatePathAttr('data-preview-item-path', listPath, indexName)
     );
   }
+  if (!hasJsxAttribute(itemRoot.node, 'data-preview-style-target')) {
+    itemRoot.node.openingElement.attributes.push(
+      jsxTemplatePathAttr('data-preview-style-target', listPath, indexName, '.card')
+    );
+    itemRoot.node.openingElement.attributes.push(
+      b.jsxAttribute(b.jsxIdentifier('data-preview-style-type'), b.stringLiteral('card'))
+    );
+  }
 
   markItemFields(callback, { listPath, binding, indexName });
 
@@ -217,6 +239,14 @@ function applyCollectionTransform(ast, transform) {
   if (container && !hasJsxAttribute(container, 'data-preview-list-path')) {
     container.openingElement.attributes.push(
       b.jsxAttribute(b.jsxIdentifier('data-preview-list-path'), b.stringLiteral(listPath))
+    );
+  }
+  if (container && !hasJsxAttribute(container, 'data-preview-style-target')) {
+    container.openingElement.attributes.push(
+      b.jsxAttribute(b.jsxIdentifier('data-preview-style-target'), b.stringLiteral(`${listPath}.grid`))
+    );
+    container.openingElement.attributes.push(
+      b.jsxAttribute(b.jsxIdentifier('data-preview-style-type'), b.stringLiteral('grid'))
     );
   }
 
@@ -425,6 +455,7 @@ function applyFilePlan(filePlan, profile) {
     'extract-text',
     'wrap-text-span',
     'collection-conversion',
+    'style-bind',
   ]);
 
   // Collections run first: they rewrite the array declaration and add an index

@@ -18,10 +18,12 @@
   },
   "files": [
     "dist",
+    "scripts",
     "README.md"
   ],
   "scripts": {
     "build": "tsc",
+    "postinstall": "node ./scripts/setup-fonts.cjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -46,7 +48,9 @@
     "Induranga Kawishwara <https://github.com/Induranga-kawishwara>"
   ],
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@deneb-ui/core": "^2.0.22"
+  },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
