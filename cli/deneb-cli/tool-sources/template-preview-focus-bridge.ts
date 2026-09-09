@@ -587,11 +587,15 @@ function fivoraPreviewFocusBridge(
         ? (template.structure as Record<string, unknown>)
         : {};
     const theme =
-      structure.theme &&
+      (structure.theme &&
       typeof structure.theme === 'object' &&
       !Array.isArray(structure.theme)
         ? (structure.theme as Record<string, unknown>)
-        : {};
+        : template.theme &&
+          typeof template.theme === 'object' &&
+          !Array.isArray(template.theme)
+        ? (template.theme as Record<string, unknown>)
+        : {}) || {};
     const elementStyles =
       theme.elementStyles &&
       typeof theme.elementStyles === 'object' &&
@@ -885,7 +889,16 @@ function fivoraPreviewFocusBridge(
       !Array.isArray(template.structure)
         ? (template.structure as Record<string, unknown>)
         : null;
-    const theme = structure?.theme;
+    const theme =
+      structure?.theme &&
+      typeof structure.theme === 'object' &&
+      !Array.isArray(structure.theme)
+        ? structure.theme
+        : template?.theme &&
+          typeof template.theme === 'object' &&
+          !Array.isArray(template.theme)
+        ? template.theme
+        : null;
     const themeSignature = (() => {
       try {
         return JSON.stringify(theme ?? null);

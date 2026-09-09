@@ -177,12 +177,18 @@ export function replaceTemplateColorLiterals(
 export function buildUniversalTemplateThemeCss(themeValue: unknown): string {
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-  if (!isRecord(themeValue) || themeValue.designCustomizationVersion !== 1) {
+  const hasCustomizations =
+    isRecord(themeValue) &&
+    (themeValue.designCustomizationVersion === 1 ||
+      Boolean(themeValue.elementStyles) ||
+      Boolean(themeValue.sections));
+  if (!isRecord(themeValue) || !hasCustomizations) {
     return '';
   }
 
   const theme = themeValue;
   const safeValue = (value: unknown) => {
+    if (typeof value === 'number') return `${value}px`;
     if (typeof value !== 'string') return '';
     const trimmed = value.trim();
     if (
@@ -249,25 +255,67 @@ export function buildUniversalTemplateThemeCss(themeValue: unknown): string {
     ['--accent-color', read('accentColor')],
     ['--page-background', read('backgroundColor')],
     ['--page-text', read('textColor')],
-    ['--surface-color', read('surfaceColor')],
-    ['--surface-alt-color', read('surfaceAltColor')],
-    ['--heading-color', read('headingColor')],
-    ['--muted-text-color', read('mutedTextColor')],
-    ['--border-color', read('borderColor')],
-    ['--card-background', read('cardBackgroundColor')],
-    ['--hero-min-height', read('heroMinHeight')],
-    ['--section-padding', read('sectionPadding')],
-    ['--content-max-width', read('contentMaxWidth')],
-    ['--container-padding', read('containerPadding')],
-    ['--section-gap', read('sectionGap')],
-    ['--element-gap', read('elementGap')],
-    ['--grid-gap', read('gridGap')],
+    ['--bg-primary', read('canvasColor')],
+    ['--bg-secondary', read('surfaceColor')],
+    ['--surface', read('surfaceColor')],
+    ['--card-bg', read('surfaceColor')],
+    ['--background', read('canvasColor')],
+    ['--brand-primary', read('brandPrimary')],
+    ['--brand-secondary', read('brandSecondary')],
+    ['--brand-accent', read('brandAccent')],
+    ['--primary', read('brandPrimary')],
+    ['--secondary', read('brandSecondary')],
+    ['--accent', read('brandAccent')],
+    ['--text-primary', read('textPrimary')],
+    ['--text-secondary', read('textSecondary')],
+    ['--text-muted', read('textMuted')],
+    ['--muted', read('textMuted')],
+    ['--border-primary', read('borderColor')],
+    ['--border-secondary', read('borderColor')],
+    ['--border', read('borderColor')],
     ['--card-radius', read('cardRadius')],
     ['--button-radius', read('buttonRadius')],
     ['--image-radius', read('imageRadius')],
   ];
 
+  const NON_GOOGLE_FONTS = new Set([
+    'sans-serif',
+    'serif',
+    'monospace',
+    'inherit',
+    'initial',
+    'system-ui',
+    'system sans',
+    'editorial serif',
+  ]);
+  const customFonts = new Set<string>();
+  const addFont = (f: unknown) => {
+    if (typeof f === 'string' && f.trim()) {
+      const cleanFont = f.split(',')[0].replace(/['"]/g, '').trim();
+      if (
+        cleanFont &&
+        !NON_GOOGLE_FONTS.has(cleanFont.toLowerCase()) &&
+        !cleanFont.toLowerCase().includes('system')
+      ) {
+        customFonts.add(cleanFont);
+      }
+    }
+  };
+  addFont(theme.headingFont);
+  addFont(theme.bodyFont);
+  const rawElementStyles = isRecord(theme.elementStyles)
+    ? theme.elementStyles
+    : {};
+  for (const es of Object.values(rawElementStyles)) {
+    if (isRecord(es)) addFont(es.fontFamily);
+  }
+  const fontImports = Array.from(customFonts).map((font) => {
+    const fontParam = encodeURIComponent(font).replace(/%20/g, '+');
+    return `@import url('https://fonts.googleapis.com/css2?family=${fontParam}:wght@300;400;500;600;700;800&display=swap');`;
+  });
+
   const css: string[] = [
+    ...fontImports,
     rule(
       ':root,body',
       colorVariables.map(([name, value]) => declaration(name, value)),
@@ -529,7 +577,12 @@ export function buildUniversalTemplateThemeCss(themeValue: unknown): string {
     ['paddingRight', 'padding-right'],
     ['paddingBottom', 'padding-bottom'],
     ['paddingLeft', 'padding-left'],
+    ['padding', 'padding'],
     ['borderRadius', 'border-radius'],
+    ['borderWidth', 'border-width'],
+    ['borderColor', 'border-color'],
+    ['borderStyle', 'border-style'],
+    ['boxShadow', 'box-shadow'],
   ];
   for (const [path, rawStyle] of Object.entries(elementStyles).slice(0, 256)) {
     if (!/^[a-zA-Z0-9_.:\[\]-]{1,180}$/.test(path) || !isRecord(rawStyle)) {
