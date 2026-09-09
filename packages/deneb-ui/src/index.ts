@@ -29,7 +29,9 @@ export * from './StickyMobileBar';
 export * from './TrustBadges';
 export * from './ProductQuickView';
 export * from './CookieConsentBanner';
-export * from './ThemeStyles';
+export * from './cart/useCart';
+export * from './EditableCartDrawer';
+export * from './EditableFilterSidebar';
 export * from './SiteDataProvider';
 
 // Smart template components & actions
@@ -73,6 +75,8 @@ export { TrustBadges } from './TrustBadges';
 export { ProductQuickView } from './ProductQuickView';
 export { CookieConsentBanner } from './CookieConsentBanner';
 export { FloatingContactWidget } from './contact/FloatingContactWidget';
+export { EditableCartDrawer as CartDrawer } from './EditableCartDrawer';
+export { EditableFilterSidebar as FilterSidebar } from './EditableFilterSidebar';
 
 
 /**
