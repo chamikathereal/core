@@ -77,7 +77,18 @@ for (const p of packagePaths) {
   }
 }
 
-// 6. Rebuild packages and sync templates
+// 6. Keep the root and standalone CLI lockfiles aligned with package metadata.
+console.log(`\n🔒 Refreshing package locks...`);
+execSync('npm install --package-lock-only --ignore-scripts', {
+  cwd: rootDir,
+  stdio: 'inherit',
+});
+execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', {
+  cwd: path.join(rootDir, 'cli', 'deneb-cli'),
+  stdio: 'inherit',
+});
+
+// 7. Rebuild packages and sync templates
 console.log(`\n📦 Rebuilding packages and syncing templates for v${nextVersion}...`);
 execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
 

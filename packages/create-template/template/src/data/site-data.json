@@ -52,7 +52,7 @@
     "home": {
       "heroEyebrow": "⚡ Fivora Template Starter",
       "heroTitle": "Design Stores That Captivate",
-      "heroSummary": "Built with @fivora/editable-components. Hot-reload locally, simulate merchant visual editing in the Lab, validate preflight contracts, and package with 1-click.",
+      "heroSummary": "Built with @deneb-ui/ui. Hot-reload locally, simulate merchant visual editing in the Lab, validate preflight contracts, and package with 1-click.",
       "bannerImageUrl": "/fivora-icon.svg",
       "primaryCtaLabel": "Explore Services",
       "secondaryCtaLabel": "About This Starter",

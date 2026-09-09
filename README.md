@@ -105,10 +105,10 @@ npm run bump
 npm run bump:minor
 
 # Run preflight compliance validation on reference template
-node cli/fivora-cli/bin/index.js validate templates/nextjs --skip-install
+node cli/deneb-cli/bin/index.js validate templates/nextjs --skip-install
 
 # Test CLI component registry
-node cli/fivora-cli/bin/index.js add list
+node cli/deneb-cli/bin/index.js add list
 ```
 
 ---

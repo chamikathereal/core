@@ -9,7 +9,8 @@
     "templates/*"
   ],
   "scripts": {
-    "build": "npm run --workspace=@deneb-ui/ui build && npm run --workspace=@deneb-ui/create-template sync-template",
+    "build": "npm run --workspace=@deneb-ui/ui build && npm run --workspace=@deneb-ui/create-template sync-template && npm run check:packages",
+    "check:packages": "node scripts/check-package-consistency.js",
     "publish:dry-run": "npm publish --workspace=@deneb-ui/ui --workspace=@deneb-ui/cli --workspace=@deneb-ui/create-template --access public --dry-run",
     "publish:all": "npm publish --workspace=@deneb-ui/ui --workspace=@deneb-ui/cli --workspace=@deneb-ui/create-template --access public",
     "bump": "node scripts/bump-version.js patch",
