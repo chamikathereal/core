@@ -615,7 +615,110 @@ function fivoraPreviewFocusBridge(
     const nextSiteData = { ...previous, template: nextTemplate };
     latestPublishedSiteData = nextSiteData;
     applyUniversalTheme(nextSiteData);
+    applyElementStyleDirectly(fieldPath, styles);
     scheduleContentOnlyPersist();
+  }
+
+  function applyElementStyleDirectly(fieldPath: string, styles: unknown) {
+    if (!fieldPath || !styles || typeof styles !== 'object' || Array.isArray(styles)) {
+      return;
+    }
+    const raw = styles as Record<string, unknown>;
+    let targets: HTMLElement[] = [];
+    if (fieldPath.includes(':')) {
+      const [listPrefix, subPart] = fieldPath.split(':');
+      if (subPart === 'card') {
+        targets = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            `[data-preview-list-path="${CSS.escape(listPrefix)}"] [data-preview-item-path], ` +
+            `[data-preview-list-path="${CSS.escape(listPrefix)}"] .card, ` +
+            `[data-preview-list-path="${CSS.escape(listPrefix)}"] article`
+          )
+        );
+      } else if (subPart) {
+        targets = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            `[data-preview-list-path="${CSS.escape(listPrefix)}"] [data-preview-field-path$=".${CSS.escape(subPart)}"], ` +
+            `[data-preview-list-path="${CSS.escape(listPrefix)}"] [data-field-path$=".${CSS.escape(subPart)}"]`
+          )
+        );
+      }
+    } else {
+      targets = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          `[data-preview-field-path="${CSS.escape(fieldPath)}"], ` +
+          `[data-preview-item-path="${CSS.escape(fieldPath)}"], ` +
+          `[data-preview-style-target="${CSS.escape(fieldPath)}"], ` +
+          `[data-field-path="${CSS.escape(fieldPath)}"], ` +
+          `[data-content-path="${CSS.escape(fieldPath)}"]`
+        )
+      );
+    }
+    const toCssVal = (v: unknown) => {
+      if (v === undefined || v === null || v === '') return '';
+      if (typeof v === 'number') return `${v}px`;
+      return String(v);
+    };
+    for (const el of targets) {
+      if (raw.color) {
+        el.style.setProperty('color', String(raw.color), 'important');
+        el.style.setProperty('--deneb-color', String(raw.color));
+      }
+      if (raw.textAlign) {
+        el.style.setProperty('text-align', String(raw.textAlign), 'important');
+        el.style.setProperty('--deneb-text-align', String(raw.textAlign));
+      }
+      if (raw.fontSize) {
+        const sz = toCssVal(raw.fontSize);
+        el.style.setProperty('font-size', sz, 'important');
+        el.style.setProperty('--deneb-font-size', sz);
+      }
+      if (raw.fontFamily) {
+        el.style.setProperty('font-family', String(raw.fontFamily), 'important');
+        el.style.setProperty('--deneb-font-family', String(raw.fontFamily));
+      }
+      if (raw.lineHeight) {
+        el.style.setProperty('line-height', String(raw.lineHeight), 'important');
+        el.style.setProperty('--deneb-line-height', String(raw.lineHeight));
+      }
+      if (raw.fontWeight) {
+        el.style.setProperty('font-weight', String(raw.fontWeight), 'important');
+        el.style.setProperty('--deneb-font-weight', String(raw.fontWeight));
+      }
+      if (raw.backgroundColor) {
+        el.style.setProperty('background-color', String(raw.backgroundColor), 'important');
+        el.style.setProperty('background', String(raw.backgroundColor), 'important');
+        el.style.setProperty('--deneb-card-bg', String(raw.backgroundColor));
+      }
+      if (raw.borderRadius) {
+        const rad = toCssVal(raw.borderRadius);
+        el.style.setProperty('border-radius', rad, 'important');
+        el.style.setProperty('--deneb-card-radius', rad);
+      }
+      if (raw.padding) {
+        const p = toCssVal(raw.padding);
+        el.style.setProperty('padding', p, 'important');
+        el.style.setProperty('--deneb-card-pt', p);
+      }
+      if (raw.boxShadow) {
+        el.style.setProperty('box-shadow', String(raw.boxShadow), 'important');
+        el.style.setProperty('--deneb-card-shadow', String(raw.boxShadow));
+      }
+      if (raw.borderColor) {
+        el.style.setProperty('border-color', String(raw.borderColor), 'important');
+        el.style.setProperty('--deneb-card-border-c', String(raw.borderColor));
+      }
+      if (raw.borderWidth) {
+        const bw = toCssVal(raw.borderWidth);
+        el.style.setProperty('border-width', bw, 'important');
+        el.style.setProperty('border-style', 'solid', 'important');
+        el.style.setProperty('--deneb-card-border-w', bw);
+      }
+      if (raw.marginTop) el.style.setProperty('margin-top', toCssVal(raw.marginTop), 'important');
+      if (raw.marginBottom) el.style.setProperty('margin-bottom', toCssVal(raw.marginBottom), 'important');
+      if (raw.marginLeft) el.style.setProperty('margin-left', toCssVal(raw.marginLeft), 'important');
+      if (raw.marginRight) el.style.setProperty('margin-right', toCssVal(raw.marginRight), 'important');
+    }
   }
 
   function publishSiteData(
@@ -1935,13 +2038,27 @@ function fivoraPreviewFocusBridge(
         }
         return;
       }
-      if (event.data?.type === STYLE_PATCH_MESSAGE) {
+      if (
+        event.data?.type === STYLE_PATCH_MESSAGE ||
+        event.data?.type === 'DENEB_PREVIEW_STYLE_PATCH'
+      ) {
         const stylePatch = event.data as {
           fieldPath?: unknown;
+          targetPath?: unknown;
           styles?: unknown;
+          properties?: unknown;
         };
-        if (typeof stylePatch.fieldPath === 'string') {
-          publishElementStylePatch(stylePatch.fieldPath, stylePatch.styles);
+        const path =
+          typeof stylePatch.fieldPath === 'string'
+            ? stylePatch.fieldPath
+            : typeof stylePatch.targetPath === 'string'
+              ? stylePatch.targetPath
+              : '';
+        const styles = (stylePatch.styles ?? stylePatch.properties) as
+          | Record<string, unknown>
+          | undefined;
+        if (path && styles) {
+          publishElementStylePatch(path, styles);
         }
         return;
       }

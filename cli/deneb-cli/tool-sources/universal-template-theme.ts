@@ -608,13 +608,13 @@ export function buildUniversalTemplateThemeCss(themeValue: unknown): string {
       if (path.includes(':')) {
         const [listPrefix, subPart] = selectorPath.split(':');
         if (subPart === 'card') {
-          return `body :where([data-preview-list-path="${listPrefix}"]) :where([data-preview-item-path],[data-design-card],.card,[class*="card-"])`;
+          return `body [data-preview-list-path="${listPrefix}"] :is([data-preview-item-path],[data-design-card],.card,[class*="card-"])`;
         }
         if (subPart) {
-          return `body :where([data-preview-list-path="${listPrefix}"]) :where([data-preview-field-path$=".${subPart}"],[data-field-path$=".${subPart}"],[data-content-path$=".${subPart}"])`;
+          return `body [data-preview-list-path="${listPrefix}"] :is([data-preview-field-path$=".${subPart}"],[data-field-path$=".${subPart}"],[data-content-path$=".${subPart}"])`;
         }
       }
-      return `body :where([data-preview-field-path="${selectorPath}"],[data-content-path="${selectorPath}"],[data-field-path="${selectorPath}"],[data-fivora-resolved-field-path="${selectorPath}"],[data-preview-list-path="${selectorPath}"],[data-preview-item-path="${selectorPath}"])`;
+      return `body :is([data-preview-field-path="${selectorPath}"],[data-content-path="${selectorPath}"],[data-field-path="${selectorPath}"],[data-fivora-resolved-field-path="${selectorPath}"],[data-preview-list-path="${selectorPath}"],[data-preview-item-path="${selectorPath}"])`;
     })();
     css.push(
       rule(

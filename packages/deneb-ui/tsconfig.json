@@ -14,7 +14,8 @@
       "@deneb-ui/core": [
         "../deneb-core/dist/index.d.ts"
       ]
-    }
+    },
+    "rootDir": "./src"
   },
   "include": [
     "src/**/*"

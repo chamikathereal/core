@@ -734,15 +734,19 @@ function previewShellHtml() {
             portalOrigin = event.origin;
           }
           if (portalOrigin !== '*' && event.origin !== portalOrigin) return;
-          if (event.data.type === 'FIVORA_PREVIEW_EDIT_MODE' ||
+          if (event.data.type === 'FIVORA_PREVIEW_STYLE_PATCH') {
+            const key = 'STYLE_PATCH:' + (event.data.fieldPath || event.data.targetPath || 'default');
+            savedMessages.set(key, event.data);
+          } else if (event.data.type === 'FIVORA_PREVIEW_EDIT_MODE' ||
               event.data.type === previousPreviewMessage('EDIT_MODE') ||
               event.data.type === 'FIVORA_PREVIEW_SITE_DATA' ||
               event.data.type === previousPreviewMessage('SITE_DATA') ||
               event.data.type === 'FIVORA_PREVIEW_FOCUS_PAGE' ||
-              event.data.type === previousPreviewMessage('FOCUS_PAGE')) {
+              event.data.type === previousPreviewMessage('FOCUS_PAGE') ||
+              event.data.type === 'FIVORA_PREVIEW_CONTENT_PATCH') {
             savedMessages.set(event.data.type, event.data);
           }
-          if (childReady && (String(event.data.type || '').startsWith('FIVORA_PREVIEW_') || String(event.data.type || '').startsWith(PREVIOUS_PREVIEW_PREFIX))) {
+          if (String(event.data.type || '').startsWith('FIVORA_PREVIEW_') || String(event.data.type || '').startsWith(PREVIOUS_PREVIEW_PREFIX)) {
             sendToChild(event.data);
           }
           return;

@@ -28,5 +28,19 @@ export function buildStyleFallbackSelectors(
     const itemPath = targetPath.slice(0, -'.card'.length);
     selectors.push(`[${PREVIEW_ITEM_ATTRIBUTE}="${escapeAttributeValue(itemPath)}"]`);
   }
+  if (targetPath.includes(':')) {
+    const [listPrefix, subPart] = targetPath.split(':');
+    if (subPart === 'card') {
+      selectors.push(
+        `[${PREVIEW_LIST_ATTRIBUTE}="${escapeAttributeValue(listPrefix)}"] [${PREVIEW_ITEM_ATTRIBUTE}]`,
+        `[${PREVIEW_LIST_ATTRIBUTE}="${escapeAttributeValue(listPrefix)}"] .card`,
+        `[${PREVIEW_LIST_ATTRIBUTE}="${escapeAttributeValue(listPrefix)}"] article`,
+      );
+    } else if (subPart) {
+      selectors.push(
+        `[${PREVIEW_LIST_ATTRIBUTE}="${escapeAttributeValue(listPrefix)}"] [${PREVIEW_FIELD_ATTRIBUTE}$=".${escapeAttributeValue(subPart)}"]`,
+      );
+    }
+  }
   return selectors;
 }
