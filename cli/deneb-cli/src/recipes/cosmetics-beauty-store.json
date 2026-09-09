@@ -1,0 +1,1097 @@
+{
+  "name": "cosmetics-beauty-store",
+  "label": "Clean Skincare & Botanical Cosmetics Storefront",
+  "description": "Specialized recipe for skincare, dermatological cosmetics, clean makeup, and botanical beauty with routine builders, clinical claim badges, INCI ingredients transparency, and WhatsApp beauty consultation.",
+  "signatures": {
+    "keywords": [
+      "cosmetics",
+      "beauty",
+      "skincare",
+      "makeup",
+      "glow",
+      "serum",
+      "lotion",
+      "clean-beauty",
+      "botanical",
+      "dermatology",
+      "organic",
+      "moisturizer",
+      "toner",
+      "spf",
+      "cleanser",
+      "hyaluronic",
+      "retinol",
+      "wellness"
+    ],
+    "componentRoles": [
+      "Navbar",
+      "Hero",
+      "RoutineSteps",
+      "ProductGrid",
+      "ProductCard",
+      "IngredientsModal",
+      "Reviews",
+      "CartDrawer",
+      "SkinQuizBanner",
+      "DermatologistBadge",
+      "Footer",
+      "ProductDetail"
+    ]
+  },
+  "gridRules": {
+    "cardComponentNames": [
+      "ProductCard",
+      "BeautyCard",
+      "SerumCard",
+      "SkincareCard",
+      "ItemCard",
+      "Card",
+      "CosmeticsCard"
+    ],
+    "cardFields": [
+      {
+        "suffix": "Image",
+        "type": "image",
+        "label": "Formula Photograph"
+      },
+      {
+        "suffix": "Badge",
+        "type": "text",
+        "label": "Badge"
+      },
+      {
+        "suffix": "Category",
+        "type": "text",
+        "label": "Routine Step / Category"
+      },
+      {
+        "suffix": "Name",
+        "type": "text",
+        "label": "Formula Title"
+      },
+      {
+        "suffix": "Price",
+        "type": "text",
+        "label": "Price"
+      },
+      {
+        "suffix": "SkinType",
+        "type": "text",
+        "label": "Skin Type Suitability"
+      }
+    ],
+    "autoIndex": true,
+    "defaultCardPrefix": "product",
+    "withBasePathImages": true,
+    "safeNavigationButtons": true
+  },
+  "productDetailRules": {
+    "enabled": true,
+    "sectionPath": "product",
+    "sampleRoute": "/products/luminous-niacinamide-glow-serum",
+    "galleryWithBasePath": true,
+    "noStaticOnEditableAncestors": true
+  },
+  "actionRules": {
+    "splitActionAndLabel": true,
+    "whatsappKeywords": [
+      "whatsapp",
+      "wa.me",
+      "order via whatsapp",
+      "beauty consultation",
+      "ask esthetician",
+      "skin advisor",
+      "skincare consultation"
+    ],
+    "actionFieldMapping": {
+      "whatsapp": {
+        "urlField": "whatsappCtaUrl",
+        "labelField": "whatsappCtaLabel"
+      },
+      "order": {
+        "urlField": "orderCtaUrl",
+        "labelField": "orderCtaLabel"
+      },
+      "promo": {
+        "urlField": "promoCtaUrl",
+        "labelField": "promoCtaLabel"
+      },
+      "routine": {
+        "urlField": "routineUrl",
+        "labelField": "routineLabel"
+      }
+    }
+  },
+  "socialRules": {
+    "platforms": [
+      "instagram",
+      "tiktok",
+      "youtube",
+      "pinterest",
+      "facebook"
+    ],
+    "targetPath": "common.footer"
+  },
+  "pages": [
+    {
+      "id": "home",
+      "label": "Home",
+      "route": "/",
+      "required": true
+    },
+    {
+      "id": "shop",
+      "label": "All Formulas",
+      "route": "/shop"
+    },
+    {
+      "id": "routine",
+      "label": "The 3-Step Routine",
+      "route": "/routine"
+    },
+    {
+      "id": "ingredients",
+      "label": "Botanical Actives & INCI",
+      "route": "/ingredients"
+    },
+    {
+      "id": "about",
+      "label": "Clean Science & Ethos",
+      "route": "/about"
+    },
+    {
+      "id": "contact",
+      "label": "Skin Consultation",
+      "route": "/contact",
+      "required": true
+    },
+    {
+      "id": "product",
+      "label": "Formula Detail",
+      "route": "/products/luminous-niacinamide-glow-serum"
+    }
+  ],
+  "sections": [
+    {
+      "id": "common",
+      "path": "common",
+      "type": "object",
+      "label": "Shared Storefront Content",
+      "fields": [
+        {
+          "key": "websiteTitle",
+          "type": "text",
+          "label": "Beauty Brand Name",
+          "required": true
+        },
+        {
+          "key": "shortDescription",
+          "type": "textarea",
+          "label": "Brand Philosophy"
+        },
+        {
+          "key": "tagline",
+          "type": "text",
+          "label": "Clean Beauty Tagline"
+        },
+        {
+          "key": "announcementText",
+          "type": "text",
+          "label": "Header Announcement Bar"
+        },
+        {
+          "key": "logoUrl",
+          "type": "image",
+          "label": "Brand Logo",
+          "recommendedWidth": 512,
+          "recommendedHeight": 512
+        },
+        {
+          "key": "brandUrl",
+          "type": "text",
+          "label": "Home Link URL"
+        },
+        {
+          "key": "headerCtaLabel",
+          "type": "text",
+          "label": "Header Action Label"
+        },
+        {
+          "key": "navLabels",
+          "type": "object",
+          "label": "Navigation Links",
+          "fields": [
+            {
+              "key": "home",
+              "type": "text",
+              "label": "Home Link"
+            },
+            {
+              "key": "shop",
+              "type": "text",
+              "label": "Shop All Link"
+            },
+            {
+              "key": "routine",
+              "type": "text",
+              "label": "Routine Guide Link"
+            },
+            {
+              "key": "ingredients",
+              "type": "text",
+              "label": "Clean Ingredients Link"
+            },
+            {
+              "key": "about",
+              "type": "text",
+              "label": "Science & Ethos Link"
+            },
+            {
+              "key": "contact",
+              "type": "text",
+              "label": "Skin Advisor Link"
+            }
+          ]
+        },
+        {
+          "key": "business",
+          "type": "object",
+          "label": "Consultation Desk & Salon",
+          "fields": [
+            {
+              "key": "phone",
+              "type": "tel",
+              "label": "Skin Care Hotline"
+            },
+            {
+              "key": "whatsapp",
+              "type": "text",
+              "label": "WhatsApp Esthetician Desk"
+            },
+            {
+              "key": "email",
+              "type": "email",
+              "label": "Customer Care Email"
+            },
+            {
+              "key": "location",
+              "type": "object",
+              "label": "Botanical Studio Address",
+              "fields": [
+                {
+                  "key": "address",
+                  "type": "text",
+                  "label": "Street Address"
+                },
+                {
+                  "key": "city",
+                  "type": "text",
+                  "label": "City"
+                },
+                {
+                  "key": "country",
+                  "type": "text",
+                  "label": "Country"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "footer",
+          "type": "object",
+          "label": "Footer Columns & Certifications",
+          "fields": [
+            {
+              "key": "routinesHeading",
+              "type": "text",
+              "label": "Routines Column Heading"
+            },
+            {
+              "key": "routinesLink1",
+              "type": "text",
+              "label": "Routine Link 1"
+            },
+            {
+              "key": "routinesLink2",
+              "type": "text",
+              "label": "Routine Link 2"
+            },
+            {
+              "key": "routinesLink3",
+              "type": "text",
+              "label": "Routine Link 3"
+            },
+            {
+              "key": "routinesLink4",
+              "type": "text",
+              "label": "Routine Link 4"
+            },
+            {
+              "key": "scienceHeading",
+              "type": "text",
+              "label": "Science & Standards Heading"
+            },
+            {
+              "key": "scienceLink1",
+              "type": "text",
+              "label": "Science Link 1"
+            },
+            {
+              "key": "scienceLink2",
+              "type": "text",
+              "label": "Science Link 2"
+            },
+            {
+              "key": "scienceLink3",
+              "type": "text",
+              "label": "Science Link 3"
+            },
+            {
+              "key": "supportHeading",
+              "type": "text",
+              "label": "Skin Support Heading"
+            },
+            {
+              "key": "supportLink1",
+              "type": "text",
+              "label": "Support Link 1"
+            },
+            {
+              "key": "supportLink2",
+              "type": "text",
+              "label": "Support Link 2"
+            },
+            {
+              "key": "supportLink3",
+              "type": "text",
+              "label": "Support Link 3"
+            },
+            {
+              "key": "instagramUrl",
+              "type": "text",
+              "label": "Instagram Profile URL"
+            },
+            {
+              "key": "tiktokUrl",
+              "type": "text",
+              "label": "TikTok Profile URL"
+            },
+            {
+              "key": "pinterestUrl",
+              "type": "text",
+              "label": "Pinterest Profile URL"
+            }
+          ]
+        },
+        {
+          "key": "copyright",
+          "type": "text",
+          "label": "Copyright Text"
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "path": "home",
+      "type": "object",
+      "label": "Home Page Content",
+      "fields": [
+        {
+          "key": "heroBadge",
+          "type": "text",
+          "label": "Hero Clinical Claim"
+        },
+        {
+          "key": "heroTitle",
+          "type": "text",
+          "label": "Hero Headline"
+        },
+        {
+          "key": "heroSummary",
+          "type": "textarea",
+          "label": "Hero Subtitle"
+        },
+        {
+          "key": "heroImage",
+          "type": "image",
+          "label": "Hero Botanical Skin Photo",
+          "recommendedWidth": 1920,
+          "recommendedHeight": 1080
+        },
+        {
+          "key": "heroStat1",
+          "type": "text",
+          "label": "Clinical Proof Metric 1"
+        },
+        {
+          "key": "heroStat2",
+          "type": "text",
+          "label": "Clinical Proof Metric 2"
+        },
+        {
+          "key": "primaryCtaLabel",
+          "type": "text",
+          "label": "Hero Primary Button"
+        },
+        {
+          "key": "secondaryCtaLabel",
+          "type": "text",
+          "label": "Hero Secondary Button"
+        },
+        {
+          "key": "tickerItem1",
+          "type": "text",
+          "label": "Clean Claim Ticker 1"
+        },
+        {
+          "key": "tickerItem2",
+          "type": "text",
+          "label": "Clean Claim Ticker 2"
+        },
+        {
+          "key": "tickerItem3",
+          "type": "text",
+          "label": "Clean Claim Ticker 3"
+        },
+        {
+          "key": "tickerItem4",
+          "type": "text",
+          "label": "Clean Claim Ticker 4"
+        },
+        {
+          "key": "categoryLabel",
+          "type": "text",
+          "label": "Catalog Section Eyebrow"
+        },
+        {
+          "key": "categoryTitle",
+          "type": "text",
+          "label": "Catalog Section Headline"
+        },
+        {
+          "key": "categoryDesc",
+          "type": "textarea",
+          "label": "Catalog Section Description"
+        },
+        {
+          "key": "categoryLabel1",
+          "type": "text",
+          "label": "Routine Step Tab 1"
+        },
+        {
+          "key": "categoryLabel2",
+          "type": "text",
+          "label": "Routine Step Tab 2"
+        },
+        {
+          "key": "categoryLabel3",
+          "type": "text",
+          "label": "Routine Step Tab 3"
+        },
+        {
+          "key": "categoryLabel4",
+          "type": "text",
+          "label": "Routine Step Tab 4"
+        },
+        {
+          "key": "product1Name",
+          "type": "text",
+          "label": "Formula 1 Title"
+        },
+        {
+          "key": "product1Category",
+          "type": "text",
+          "label": "Formula 1 Category"
+        },
+        {
+          "key": "product1Price",
+          "type": "text",
+          "label": "Formula 1 Price"
+        },
+        {
+          "key": "product1Badge",
+          "type": "text",
+          "label": "Formula 1 Badge"
+        },
+        {
+          "key": "product1SkinType",
+          "type": "text",
+          "label": "Formula 1 Skin Types"
+        },
+        {
+          "key": "product1Image",
+          "type": "image",
+          "label": "Formula 1 Photo"
+        },
+        {
+          "key": "product2Name",
+          "type": "text",
+          "label": "Formula 2 Title"
+        },
+        {
+          "key": "product2Category",
+          "type": "text",
+          "label": "Formula 2 Category"
+        },
+        {
+          "key": "product2Price",
+          "type": "text",
+          "label": "Formula 2 Price"
+        },
+        {
+          "key": "product2Badge",
+          "type": "text",
+          "label": "Formula 2 Badge"
+        },
+        {
+          "key": "product2SkinType",
+          "type": "text",
+          "label": "Formula 2 Skin Types"
+        },
+        {
+          "key": "product2Image",
+          "type": "image",
+          "label": "Formula 2 Photo"
+        },
+        {
+          "key": "product3Name",
+          "type": "text",
+          "label": "Formula 3 Title"
+        },
+        {
+          "key": "product3Category",
+          "type": "text",
+          "label": "Formula 3 Category"
+        },
+        {
+          "key": "product3Price",
+          "type": "text",
+          "label": "Formula 3 Price"
+        },
+        {
+          "key": "product3Badge",
+          "type": "text",
+          "label": "Formula 3 Badge"
+        },
+        {
+          "key": "product3SkinType",
+          "type": "text",
+          "label": "Formula 3 Skin Types"
+        },
+        {
+          "key": "product3Image",
+          "type": "image",
+          "label": "Formula 3 Photo"
+        },
+        {
+          "key": "product4Name",
+          "type": "text",
+          "label": "Formula 4 Title"
+        },
+        {
+          "key": "product4Category",
+          "type": "text",
+          "label": "Formula 4 Category"
+        },
+        {
+          "key": "product4Price",
+          "type": "text",
+          "label": "Formula 4 Price"
+        },
+        {
+          "key": "product4Badge",
+          "type": "text",
+          "label": "Formula 4 Badge"
+        },
+        {
+          "key": "product4SkinType",
+          "type": "text",
+          "label": "Formula 4 Skin Types"
+        },
+        {
+          "key": "product4Image",
+          "type": "image",
+          "label": "Formula 4 Photo"
+        },
+        {
+          "key": "product5Name",
+          "type": "text",
+          "label": "Formula 5 Title"
+        },
+        {
+          "key": "product5Category",
+          "type": "text",
+          "label": "Formula 5 Category"
+        },
+        {
+          "key": "product5Price",
+          "type": "text",
+          "label": "Formula 5 Price"
+        },
+        {
+          "key": "product5Badge",
+          "type": "text",
+          "label": "Formula 5 Badge"
+        },
+        {
+          "key": "product5SkinType",
+          "type": "text",
+          "label": "Formula 5 Skin Types"
+        },
+        {
+          "key": "product5Image",
+          "type": "image",
+          "label": "Formula 5 Photo"
+        },
+        {
+          "key": "product6Name",
+          "type": "text",
+          "label": "Formula 6 Title"
+        },
+        {
+          "key": "product6Category",
+          "type": "text",
+          "label": "Formula 6 Category"
+        },
+        {
+          "key": "product6Price",
+          "type": "text",
+          "label": "Formula 6 Price"
+        },
+        {
+          "key": "product6Badge",
+          "type": "text",
+          "label": "Formula 6 Badge"
+        },
+        {
+          "key": "product6SkinType",
+          "type": "text",
+          "label": "Formula 6 Skin Types"
+        },
+        {
+          "key": "product6Image",
+          "type": "image",
+          "label": "Formula 6 Photo"
+        },
+        {
+          "key": "product7Name",
+          "type": "text",
+          "label": "Formula 7 Title"
+        },
+        {
+          "key": "product7Category",
+          "type": "text",
+          "label": "Formula 7 Category"
+        },
+        {
+          "key": "product7Price",
+          "type": "text",
+          "label": "Formula 7 Price"
+        },
+        {
+          "key": "product7Badge",
+          "type": "text",
+          "label": "Formula 7 Badge"
+        },
+        {
+          "key": "product7SkinType",
+          "type": "text",
+          "label": "Formula 7 Skin Types"
+        },
+        {
+          "key": "product7Image",
+          "type": "image",
+          "label": "Formula 7 Photo"
+        },
+        {
+          "key": "product8Name",
+          "type": "text",
+          "label": "Formula 8 Title"
+        },
+        {
+          "key": "product8Category",
+          "type": "text",
+          "label": "Formula 8 Category"
+        },
+        {
+          "key": "product8Price",
+          "type": "text",
+          "label": "Formula 8 Price"
+        },
+        {
+          "key": "product8Badge",
+          "type": "text",
+          "label": "Formula 8 Badge"
+        },
+        {
+          "key": "product8SkinType",
+          "type": "text",
+          "label": "Formula 8 Skin Types"
+        },
+        {
+          "key": "product8Image",
+          "type": "image",
+          "label": "Formula 8 Photo"
+        },
+        {
+          "key": "botanicalEyebrow",
+          "type": "text",
+          "label": "Actives Spotlight Eyebrow"
+        },
+        {
+          "key": "botanicalTitle",
+          "type": "text",
+          "label": "Actives Spotlight Title"
+        },
+        {
+          "key": "botanicalDesc",
+          "type": "textarea",
+          "label": "Actives Spotlight Description"
+        },
+        {
+          "key": "botanicalCtaLabel",
+          "type": "text",
+          "label": "Actives Spotlight Action"
+        },
+        {
+          "key": "botanicalImage",
+          "type": "image",
+          "label": "Botanical Extraction Image"
+        },
+        {
+          "key": "storyLabel",
+          "type": "text",
+          "label": "Science & Origin Eyebrow"
+        },
+        {
+          "key": "storyTitle",
+          "type": "text",
+          "label": "Science & Origin Headline"
+        },
+        {
+          "key": "storyDesc",
+          "type": "textarea",
+          "label": "Science & Origin Story"
+        },
+        {
+          "key": "storyImage",
+          "type": "image",
+          "label": "Clean Lab Formulation Photo"
+        },
+        {
+          "key": "stat1Value",
+          "type": "text",
+          "label": "Clinical Stat 1 Metric"
+        },
+        {
+          "key": "stat1Label",
+          "type": "text",
+          "label": "Clinical Stat 1 Label"
+        },
+        {
+          "key": "stat2Value",
+          "type": "text",
+          "label": "Clinical Stat 2 Metric"
+        },
+        {
+          "key": "stat2Label",
+          "type": "text",
+          "label": "Clinical Stat 2 Label"
+        },
+        {
+          "key": "stat3Value",
+          "type": "text",
+          "label": "Clinical Stat 3 Metric"
+        },
+        {
+          "key": "stat3Label",
+          "type": "text",
+          "label": "Clinical Stat 3 Label"
+        },
+        {
+          "key": "whatsappLabel",
+          "type": "text",
+          "label": "Beauty Consultation Eyebrow"
+        },
+        {
+          "key": "whatsappTitle",
+          "type": "text",
+          "label": "Beauty Consultation Headline"
+        },
+        {
+          "key": "whatsappDesc",
+          "type": "textarea",
+          "label": "Beauty Consultation Description"
+        },
+        {
+          "key": "whatsappCtaLabel",
+          "type": "text",
+          "label": "Consult Esthetician Button"
+        },
+        {
+          "key": "whatsappCtaUrl",
+          "type": "text",
+          "label": "Consult Esthetician WhatsApp URL"
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "path": "product",
+      "type": "object",
+      "label": "Product Detail Content",
+      "fields": [
+        {
+          "key": "name",
+          "type": "text",
+          "label": "Formula Title",
+          "required": true
+        },
+        {
+          "key": "price",
+          "type": "text",
+          "label": "Formula Price",
+          "required": true
+        },
+        {
+          "key": "badge",
+          "type": "text",
+          "label": "Clinical Tag / Badge"
+        },
+        {
+          "key": "description",
+          "type": "textarea",
+          "label": "Formula Editorial Overview"
+        },
+        {
+          "key": "featuredImage",
+          "type": "image",
+          "label": "Main Dropper / Bottle Photograph"
+        },
+        {
+          "key": "addToSelectionLabel",
+          "type": "text",
+          "label": "Add to Routine Button"
+        },
+        {
+          "key": "skinTypeLabel",
+          "type": "text",
+          "label": "Target Skin Types"
+        },
+        {
+          "key": "activesTitle",
+          "type": "text",
+          "label": "Key Botanical Actives Heading"
+        },
+        {
+          "key": "activesDetails",
+          "type": "textarea",
+          "label": "Active Concentrations Breakdown"
+        },
+        {
+          "key": "usageTitle",
+          "type": "text",
+          "label": "How to Use & Routine Placement"
+        },
+        {
+          "key": "usageDetails",
+          "type": "textarea",
+          "label": "Morning & Night Application Steps"
+        },
+        {
+          "key": "inciTitle",
+          "type": "text",
+          "label": "Full Ingredient Transparency (INCI)"
+        },
+        {
+          "key": "inciDetails",
+          "type": "textarea",
+          "label": "Full Ingredient List"
+        },
+        {
+          "key": "shippingTitle",
+          "type": "text",
+          "label": "Eco Delivery & Packaging Promise"
+        },
+        {
+          "key": "shippingSummary",
+          "type": "textarea",
+          "label": "Islandwide Delivery & Temperature Controlled Shipping"
+        },
+        {
+          "key": "shippingReturns",
+          "type": "textarea",
+          "label": "30-Day Happiness Guarantee"
+        },
+        {
+          "key": "relatedLabel",
+          "type": "text",
+          "label": "SYNERGISTIC FORMULAS"
+        },
+        {
+          "key": "relatedTitle",
+          "type": "text",
+          "label": "Pair With This Routine Step"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "common": {
+      "websiteTitle": "AURA BOTANICA",
+      "shortDescription": "Bio-fermented active botanicals and dermatologically proven clean clinical skincare. Formulated to fortify your skin barrier and restore luminous cellular vitality.",
+      "tagline": "Clean Botanical Dermatology",
+      "announcementText": "Complimentary Deluxe Mini Trio with orders over LKR 10,000 — 100% Recyclable Glass Packaging",
+      "logoUrl": "/logo.svg",
+      "brandUrl": "/",
+      "headerCtaLabel": "Find Your Routine",
+      "copyright": "© 2026 AURA BOTANICA Laboratories. All rights reserved.",
+      "navLabels": {
+        "home": "Home",
+        "shop": "All Formulas",
+        "routine": "The 3-Step Routine",
+        "ingredients": "Clean Actives",
+        "about": "Our Science",
+        "contact": "Skin Advisor"
+      },
+      "business": {
+        "phone": "+94 11 765 4321",
+        "whatsapp": "94777654321",
+        "email": "esthetician@aurabotanica.com",
+        "location": {
+          "address": "25 Ward Place, Cinnamon Gardens",
+          "city": "Colombo 07",
+          "country": "Sri Lanka"
+        }
+      },
+      "footer": {
+        "routinesHeading": "Targeted Routines",
+        "routinesLink1": "Barrier Defense Routine",
+        "routinesLink2": "Cellular Glow & Brightening",
+        "routinesLink3": "Blemish & Pore Balance",
+        "routinesLink4": "Overnight Deep Recovery",
+        "scienceHeading": "Clean Dermatology",
+        "scienceLink1": "Clinical Efficacy Studies",
+        "scienceLink2": "INCI Ingredient Dictionary",
+        "scienceLink3": "Dermatologist Panel Review",
+        "supportHeading": "Client Concierge",
+        "supportLink1": "Personalized Routine Assessment",
+        "supportLink2": "Glass Bottle Recycle Program",
+        "supportLink3": "Shipping & Climate Assurance",
+        "instagramUrl": "https://instagram.com",
+        "tiktokUrl": "https://tiktok.com",
+        "pinterestUrl": "https://pinterest.com"
+      }
+    },
+    "home": {
+      "heroBadge": "CLINICALLY PROVEN · DERMATOLOGIST TESTED · 100% VEGAN",
+      "heroTitle": "Restore Your Barrier. Awaken Luminous Skin.",
+      "heroSummary": "High-potency 10% Niacinamide paired with bio-fermented Centella and triple-weight Hyaluronic Acid. Designed to strengthen delicate skin barriers and impart an undeniable dewy glow.",
+      "heroImage": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1920&q=85",
+      "heroStat1": "+92% Barrier Hydration in 7 Days",
+      "heroStat2": "-38% Hyperpigmentation in 4 Weeks",
+      "primaryCtaLabel": "Shop The Serum",
+      "secondaryCtaLabel": "Build Your 3-Step Routine",
+      "tickerItem1": "Cruelty-Free & Leaping Bunny Certified",
+      "tickerItem2": "Zero Sulfates, Parabens, Synthetic Fragrance",
+      "tickerItem3": "Amber UV-Protected Glass Packaging",
+      "tickerItem4": "Free WhatsApp Esthetician Consultation",
+      "categoryLabel": "FORMULA CATALOG",
+      "categoryTitle": "The Botanical Collection",
+      "categoryDesc": "Every formula is calibrated to physiological skin pH (5.0 - 5.5) for optimal microbiome balance.",
+      "categoryLabel1": "Cleanse",
+      "categoryLabel2": "Treat (Serums)",
+      "categoryLabel3": "Hydrate & Lock",
+      "categoryLabel4": "Daily Shield (SPF)",
+      "product1Name": "Luminous 10% Niacinamide Glow Serum",
+      "product1Category": "Treat (Serums)",
+      "product1Price": "LKR 7,800",
+      "product1Badge": "Cult Favorite",
+      "product1SkinType": "All Skin Types · Dull & Dehydrated",
+      "product1Image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&q=85",
+      "product2Name": "Ceramide Barrier Defense Soufflé",
+      "product2Category": "Hydrate & Lock",
+      "product2Price": "LKR 9,200",
+      "product2Badge": "Derm Pick",
+      "product2SkinType": "Dry · Sensitive · Compromised Barrier",
+      "product2Image": "https://images.unsplash.com/photo-1608248597359-299d63c5a146?w=800&q=85",
+      "product3Name": "Botanical Rosehip & Bakuchiol Facial Oil",
+      "product3Category": "Hydrate & Lock",
+      "product3Price": "LKR 8,400",
+      "product3Badge": "Natural Retinol",
+      "product3SkinType": "Mature · Dry · Uneven Texture",
+      "product3Image": "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?w=800&q=85",
+      "product4Name": "Velvet Cloud Amino Acid Gentle Cleanser",
+      "product4Category": "Cleanse",
+      "product4Price": "LKR 5,600",
+      "product4Badge": "Bestseller",
+      "product4SkinType": "Sensitive · Combination · Normal",
+      "product4Image": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&q=85",
+      "product5Name": "Mineral Dew Invisible Glow SPF 50+ PA++++",
+      "product5Category": "Daily Shield (SPF)",
+      "product5Price": "LKR 7,200",
+      "product5Badge": "Zero White Cast",
+      "product5SkinType": "All Skin Types · Non-Comedogenic",
+      "product5Image": "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=800&q=85",
+      "product6Name": "Centella & Green Tea Calming Essence",
+      "product6Category": "Cleanse",
+      "product6Price": "LKR 6,400",
+      "product6Badge": "Soothing",
+      "product6SkinType": "Acne-Prone · Reactive · Redness",
+      "product6Image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=800&q=85",
+      "product7Name": "Multi-Peptide Eye Contour Sculpting Gel",
+      "product7Category": "Treat (Serums)",
+      "product7Price": "LKR 8,900",
+      "product7Badge": "New",
+      "product7SkinType": "Dark Circles · Puffiness · Fine Lines",
+      "product7Image": "https://images.unsplash.com/photo-1512290900672-1f023075b637?w=800&q=85",
+      "product8Name": "Bio-Enzyme Radiance Resurfacing Mask",
+      "product8Category": "Treat (Serums)",
+      "product8Price": "LKR 7,500",
+      "product8Badge": "Weekly Reset",
+      "product8SkinType": "Congested · Rough Texture",
+      "product8Image": "https://images.unsplash.com/photo-1567928815104-b7980ee5032e?w=800&q=85",
+      "botanicalEyebrow": "CONSCIOUS EXTRACTION",
+      "botanicalTitle": "Cold-Pressed Actives. Maximum Bio-Availability.",
+      "botanicalDesc": "High heat extraction degrades fragile vitamins. We use low-temperature supercritical CO2 extraction to preserve 100% of the phytonutrients, antioxidants, and essential omegas present in our botanical harvests.",
+      "botanicalCtaLabel": "Read Our Extraction Standard",
+      "botanicalImage": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&q=85",
+      "storyLabel": "LABORATORY ETHOS",
+      "storyTitle": "Clean Science Backed by Independent Dermatologists",
+      "storyDesc": "AURA BOTANICA was founded by a team of cosmetic chemists and dermatologists tired of greenwashed skincare. Every active ingredient in our dispensary is clinically verified for skin penetration and barrier reinforcement.",
+      "storyImage": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=900&q=85",
+      "stat1Value": "5.2 pH",
+      "stat1Label": "Biocompatible Physiological Acid Mantle",
+      "stat2Value": "100%",
+      "stat2Label": "Glass Bottles & Sugar Cane PCR Caps",
+      "stat3Value": "0%",
+      "stat3Label": "Artificial Fragrances or Essential Oil Irritants",
+      "whatsappLabel": "ESTHETICIAN CONSULTATION",
+      "whatsappTitle": "Receive a Tailored Skincare Regimen",
+      "whatsappDesc": "Struggling with breakouts, moisture barrier damage, or finding the right SPF? Share your skin concerns with our licensed esthetician on WhatsApp for an ingredient-matched routine and direct ordering.",
+      "whatsappCtaLabel": "Chat with Our Esthetician",
+      "whatsappCtaUrl": "https://wa.me/94777654321?text=Hi%20AURA%20BOTANICA%2C%20I'd%20like%20a%20skincare%20consultation%20and%20personalized%20routine%20recommendation."
+    },
+    "product": {
+      "name": "Luminous 10% Niacinamide Glow Serum",
+      "price": "LKR 7,800",
+      "badge": "CULT FAVORITE",
+      "description": "A featherlight multi-tasking treatment formulated with pure clinical-grade 10% Niacinamide (Vitamin B3), 2% Zinc PCA, and fermented Centella Asiatica to visibly minimize pores, balance sebum, and amplify radiance.",
+      "featuredImage": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=1000&q=85",
+      "addToSelectionLabel": "Add to Routine",
+      "skinTypeLabel": "Suitable for all skin types including reactive, blemish-prone, and sensitized skin.",
+      "activesTitle": "Key Botanical & Clinical Actives",
+      "activesDetails": "10% Pure Niacinamide: Boosts ceramide synthesis and evens skin tone | 2% Zinc PCA: Normalizes oil production without dehydrating | Bio-Fermented Centella Asiatica: Calms redness and repairs compromised micro-vessels | Triple Molecular Weight Hyaluronic Acid: Multi-depth cellular hydration.",
+      "usageTitle": "How to Use in Your Routine",
+      "usageDetails": "Apply 3-4 drops onto cleansed, slightly damp face and neck morning and evening. Gently press into skin with fingertips until absorbed. Follow with your Ceramide Defense Soufflé and daytime SPF 50+.",
+      "inciTitle": "Full Ingredient Transparency (INCI)",
+      "inciDetails": "Water (Aqua), Niacinamide, Glycerin, Propanediol, Zinc PCA, Centella Asiatica Extract, Sodium Hyaluronate, Hydrolyzed Hyaluronic Acid, Camellia Sinensis Leaf Extract, Panthenol, Allantoin, Hydroxyethylcellulose, Caprylyl Glycol, Ethylhexylglycerin, Citric Acid.",
+      "shippingTitle": "Eco Packaging & Climate-Safe Delivery",
+      "shippingSummary": "Shipped in temperature-controlled couriers to protect raw antioxidants from heat degradation. Packaged in recyclable amber UV-blocking glass.",
+      "shippingReturns": "30-Day Radiant Skin Guarantee. If this formula does not suit your skin type, our esthetician will exchange it for an alternative formula free of charge.",
+      "relatedLabel": "SYNERGISTIC ROUTINE STEPS",
+      "relatedTitle": "Recommended to Follow With"
+    }
+  }
+}

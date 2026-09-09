@@ -177,8 +177,38 @@ function saveRecipeFromProject(projectDir, recipeName = 'custom-storefront', opt
   return { recipe, globalDest, localDest };
 }
 
+/**
+ * Retrieve recipe by name or slug alias (e.g. 'fashion', 'electronics', 'cosmetics', 'vanta')
+ */
+function getRecipeByName(recipeName, projectDir) {
+  if (!recipeName) return null;
+  const allRecipes = loadAllRecipes(projectDir);
+  const target = String(recipeName).trim().toLowerCase();
+
+  // 1. Exact name match
+  let match = allRecipes.find((r) => r.name.toLowerCase() === target);
+  if (match) return match;
+
+  // 2. Partial or slug match
+  match = allRecipes.find((r) => {
+    const rName = r.name.toLowerCase();
+    const rLabel = (r.label || '').toLowerCase();
+    return rName.includes(target) || target.includes(rName) || rLabel.includes(target);
+  });
+  if (match) return match;
+
+  // 3. Keyword signature match
+  match = allRecipes.find((r) => {
+    const kws = r.signatures?.keywords || [];
+    return kws.some((kw) => kw.toLowerCase() === target);
+  });
+
+  return match || null;
+}
+
 module.exports = {
   loadAllRecipes,
   matchRecipeForProject,
   saveRecipeFromProject,
+  getRecipeByName,
 };

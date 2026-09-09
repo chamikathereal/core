@@ -572,7 +572,7 @@ function getComponentRegistry(importPkg) {
   };
 }
 
-function initProject(targetInput) {
+function initProject(targetInput, options = {}) {
   const targetDir = path.resolve(process.cwd(), targetInput || '.');
   const pkgPath = path.join(targetDir, 'package.json');
 
@@ -621,7 +621,7 @@ function initProject(targetInput) {
   let conversionRes = null;
   try {
     const { runUniversalTemplateConversion } = require('../src/tools/template-converter.cjs');
-    conversionRes = runUniversalTemplateConversion(targetDir, projectName, detectedPages);
+    conversionRes = runUniversalTemplateConversion(targetDir, projectName, detectedPages, options);
   } catch (err) {
     console.error(`\x1b[33m⚠ Note:\x1b[0m Automated conversion encountered an issue: ${err.message}. Falling back to default generation.`);
   }
@@ -1161,7 +1161,19 @@ if (command === 'validate' && (commandArgs[0] === 'and' || commandArgs[0] === '&
 }
 
 if (command === 'init') {
-  initProject(commandArgs[0]);
+  let targetInput = '.';
+  let recipeName = null;
+  for (let i = 0; i < commandArgs.length; i++) {
+    const arg = commandArgs[i];
+    if (arg === '--recipe' || arg === '-r') {
+      recipeName = commandArgs[++i];
+    } else if (arg.startsWith('--recipe=')) {
+      recipeName = arg.split('=')[1];
+    } else if (!arg.startsWith('-')) {
+      targetInput = arg;
+    }
+  }
+  initProject(targetInput, { recipeName });
 } else if (command === 'create') {
   createTemplate(commandArgs[0]);
 } else if (command === 'add') {
@@ -1208,7 +1220,7 @@ if (command === 'init') {
   DENEB UI Framework — Powered by DENEB-UI Collaborate with FIVORA
 
 Core Commands:
-  init              Auto-convert & configure existing Next.js (shadcn/HeroUI/Tailwind) into editable Fivora template
+  init              Auto-convert & configure existing Next.js into editable Fivora storefront (e.g. deneb init --recipe fashion)
   save-recipe       Learn and save calibrated fixes & schemas into reusable recipe bank (e.g. deneb save-recipe . shoes-store)
   learn             Alias for save-recipe
   update            Update DENEB packages (@deneb-ui/ui, @deneb-ui/cli) and UI components
@@ -1227,6 +1239,9 @@ Development & Scaffolding:
 Examples:
   deneb doctor
   deneb init
+  deneb init --recipe fashion
+  deneb init --recipe electronics
+  deneb init --recipe cosmetics
   deneb update
   deneb validate .
   deneb validate --zip
