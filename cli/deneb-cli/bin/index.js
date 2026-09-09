@@ -957,198 +957,9 @@ Options:
   ], 58) + '\n');
 }
 
-function runDoctor(targetDirInput) {
-  const targetDir = path.resolve(targetDirInput || '.');
-
-  console.log('\n' + createBox([
-    '\x1b[1m\x1b[36m🩺 DENEB SYSTEM & TEMPLATE DOCTOR\x1b[0m',
-    '\x1b[90mComprehensive diagnostic analysis for Fivora & Next.js\x1b[0m',
-    `\x1b[37mTarget:\x1b[0m ${targetDir}`
-  ], 60) + '\n');
-
-  let passed = 0;
-  let warnings = 0;
-  let errors = 0;
-
-  function report(type, title, detail) {
-    if (type === 'pass') {
-      passed++;
-      console.log(`  \x1b[32m✔\x1b[0m \x1b[1m${title}\x1b[0m${detail ? ` \x1b[90m(${detail})\x1b[0m` : ''}`);
-    } else if (type === 'warn') {
-      warnings++;
-      console.log(`  \x1b[33m⚠\x1b[0m \x1b[33m${title}\x1b[0m${detail ? ` \x1b[90m- ${detail}\x1b[0m` : ''}`);
-    } else {
-      errors++;
-      console.log(`  \x1b[31m✖\x1b[0m \x1b[31m${title}\x1b[0m${detail ? ` \x1b[90m- ${detail}\x1b[0m` : ''}`);
-    }
-  }
-
-  console.log('\x1b[1m[1/6] System & Runtime Environment:\x1b[0m');
-  const nodeVersion = process.version;
-  const majorNode = parseInt(nodeVersion.replace(/^v/, '').split('.')[0], 10);
-  if (majorNode >= 18) {
-    report('pass', 'Node.js Runtime', `${nodeVersion} (Supported)`);
-  } else {
-    report('err', 'Node.js Runtime', `${nodeVersion} (Requires Node.js >= 18.0.0)`);
-  }
-
-  const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const npmCheck = spawnSync(npmBin, ['--version'], { encoding: 'utf-8', shell: process.platform === 'win32' });
-  if (!npmCheck.error && npmCheck.status === 0) {
-    report('pass', 'Package Manager', `npm v${npmCheck.stdout.trim()}`);
-  } else {
-    report('warn', 'Package Manager', 'npm not found in system PATH');
-  }
-
-  console.log('\n\x1b[1m[2/6] Project Package Configuration:\x1b[0m');
-  const pkgPath = path.join(targetDir, 'package.json');
-  let pkg = null;
-  if (fs.existsSync(pkgPath)) {
-    try {
-      pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-      report('pass', 'package.json', `Found "${pkg.name || 'unnamed'}"`);
-      const allDeps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-
-      if (allDeps['next']) {
-        report('pass', 'Next.js Framework', allDeps['next']);
-      } else {
-        report('err', 'Next.js Framework', 'next dependency missing in package.json');
-      }
-
-      if (allDeps['@deneb-ui/ui']) {
-        report('pass', '@deneb-ui/ui Library', allDeps['@deneb-ui/ui']);
-      } else {
-        report('warn', '@deneb-ui/ui Library', 'Not installed (run "npm i @deneb-ui/ui")');
-      }
-
-      if (allDeps['@deneb-ui/cli']) {
-        report('pass', '@deneb-ui/cli Tooling', allDeps['@deneb-ui/cli']);
-      } else {
-        report('warn', '@deneb-ui/cli Tooling', 'Recommended for local CLI scripts');
-      }
-    } catch (e) {
-      report('err', 'package.json Syntax', e.message);
-    }
-  } else {
-    report('err', 'package.json', `Not found at ${pkgPath}`);
-  }
-
-  console.log('\n\x1b[1m[3/6] Static Export Configuration:\x1b[0m');
-  const nextConfigTs = path.join(targetDir, 'next.config.ts');
-  const nextConfigMjs = path.join(targetDir, 'next.config.mjs');
-  const nextConfigJs = path.join(targetDir, 'next.config.js');
-  let nextConfigFile = [nextConfigTs, nextConfigMjs, nextConfigJs].find((p) => fs.existsSync(p));
-
-  if (nextConfigFile) {
-    const content = fs.readFileSync(nextConfigFile, 'utf-8');
-    if (content.includes("output: 'export'") || content.includes('output: "export"')) {
-      report('pass', 'Next.js Static Export', `output: 'export' verified in ${path.basename(nextConfigFile)}`);
-    } else {
-      report('err', 'Next.js Static Export', `Missing output: 'export' in ${path.basename(nextConfigFile)} (Required by Fivora)`);
-    }
-  } else {
-    report('err', 'Next.js Config', 'No next.config.ts, next.config.mjs, or next.config.js found');
-  }
-
-  console.log('\n\x1b[1m[4/6] Fivora Manifest v2 Contract:\x1b[0m');
-  const manifestPath = path.join(targetDir, 'fivora-template.json');
-  let manifestData = null;
-  if (fs.existsSync(manifestPath)) {
-    try {
-      manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-      report('pass', 'fivora-template.json', `Valid JSON (strict=${manifestData.strict !== false})`);
-
-      if (manifestData.version === 2 || manifestData.version === '2') {
-        report('pass', 'Manifest Version', 'Version 2 (Current standard)');
-      } else {
-        report('warn', 'Manifest Version', `Version ${manifestData.version} detected (Recommend version 2)`);
-      }
-
-      const hasHome = Array.isArray(manifestData.pages) && manifestData.pages.some((p) =>
-        p.route === '/' || p.slug === '/' || p.path === '/' || p.id === 'home'
-      );
-      if (hasHome) {
-        report('pass', 'Home Page Entry', 'Home page ("/") declared in manifest');
-      } else {
-        report('err', 'Home Page Entry', 'Manifest pages array missing root slug or route: "/"');
-      }
-
-      if (manifestData.theme && (manifestData.theme.primary || manifestData.theme.accent)) {
-        report('pass', 'Theme Configuration', 'Primary and accent color tokens declared');
-      } else {
-        // Will check site-data.json below as alternative
-      }
-    } catch (e) {
-      report('err', 'fivora-template.json Syntax', e.message);
-    }
-  } else {
-    report('err', 'fivora-template.json', 'File not found. Run "deneb init" to generate it');
-  }
-
-  console.log('\n\x1b[1m[5/6] Reactive Site Data & Visual Editing:\x1b[0m');
-  const siteDataPath = path.join(targetDir, 'src', 'data', 'site-data.json');
-  if (fs.existsSync(siteDataPath)) {
-    try {
-      const siteData = JSON.parse(fs.readFileSync(siteDataPath, 'utf-8'));
-      report('pass', 'site-data.json', 'src/data/site-data.json exists & valid');
-      const merchantName = (siteData.merchant && (siteData.merchant.businessName || siteData.merchant.name)) || null;
-      if (merchantName) {
-        report('pass', 'Merchant Metadata', `Name: "${merchantName}"`);
-      } else {
-        report('warn', 'Merchant Metadata', 'Missing merchant name in site-data.json');
-      }
-
-      const themeTokens = manifestData?.theme || siteData?.template?.structure?.theme;
-      if (themeTokens && (themeTokens.primaryColor || themeTokens.primary || themeTokens.accentColor || themeTokens.accent)) {
-        report('pass', 'Theme Design Tokens', 'Theme color tokens declared');
-      } else {
-        report('warn', 'Theme Design Tokens', 'No theme color tokens found in manifest or site-data.json');
-      }
-
-      if (siteData.content) {
-        report('pass', 'Visual Content Bindings', 'Content section ready for live sync');
-      } else {
-        report('warn', 'Visual Content Bindings', 'Missing content section in site-data.json');
-      }
-    } catch (e) {
-      report('err', 'site-data.json Syntax', e.message);
-    }
-  } else {
-    report('warn', 'site-data.json', 'src/data/site-data.json not found. Recommended for Fivora live editor');
-  }
-
-  console.log('\n\x1b[1m[6/6] Cleanliness & Security Check:\x1b[0m');
-  const envFiles = ['.env', '.env.local', '.env.production', '.env.development'];
-  const foundEnv = envFiles.filter((f) => fs.existsSync(path.join(targetDir, f)));
-  if (foundEnv.length === 0) {
-    report('pass', 'Secrets Isolation', 'No raw .env files detected in root directory');
-  } else {
-    report('warn', 'Secrets Isolation', `Active env files: ${foundEnv.join(', ')} (Excluded during packaging)`);
-  }
-
-  const previewExists = fs.existsSync(path.join(targetDir, 'preview.png')) ||
-    fs.existsSync(path.join(targetDir, 'thumbnail.png')) ||
-    fs.existsSync(path.join(targetDir, 'public', 'fivora-logo.png'));
-  if (previewExists) {
-    report('pass', 'Storefront Assets', 'Brand/preview graphics verified');
-  } else {
-    report('warn', 'Storefront Assets', 'preview.png not found in template root');
-  }
-
-  // Summary
-  console.log('\n' + createBox([
-    '\x1b[1mDOCTOR DIAGNOSTIC SUMMARY\x1b[0m',
-    `\x1b[32m✔ Passed:\x1b[0m   ${passed}`,
-    `\x1b[33m⚠ Warnings:\x1b[0m ${warnings}`,
-    `\x1b[31m✖ Errors:\x1b[0m   ${errors}`,
-    errors === 0
-      ? '\x1b[32mStatus: HEALTHY — Ready for Fivora packaging & build!\x1b[0m'
-      : '\x1b[31mStatus: ATTENTION REQUIRED — Fix errors before deployment\x1b[0m'
-  ], 58) + '\n');
-
-  if (errors > 0) {
-    process.exit(1);
-  }
+function runDoctor(targetDirInput, options = {}) {
+  const { runDoctor: executeDoctor } = require('../src/tools/deneb-doctor.cjs');
+  return executeDoctor(targetDirInput, options);
 }
 
 // Normalize multi-word "validate and zip" or "validate & zip"
@@ -1179,7 +990,23 @@ if (command === 'init') {
 } else if (command === 'add') {
   addComponent(commandArgs[0], commandArgs[1]);
 } else if (command === 'doctor' || command === 'check') {
-  runDoctor(commandArgs[0]);
+  let targetInput = '.';
+  let fix = false;
+  let json = false;
+  for (let i = 0; i < commandArgs.length; i++) {
+    const arg = commandArgs[i];
+    if (arg === '--fix' || arg === '-f') {
+      fix = true;
+    } else if (arg === '--json') {
+      json = true;
+    } else if (!arg.startsWith('-')) {
+      targetInput = arg;
+    }
+  }
+  const res = runDoctor(targetInput, { fix, json });
+  if (res && res.errors > 0) {
+    process.exit(1);
+  }
 } else if (command === 'lab') {
   const script = path.join(toolsDir, 'local-template-lab.cjs');
   const res = spawnSync(process.execPath, [script, ...commandArgs], { stdio: 'inherit' });
@@ -1221,11 +1048,11 @@ if (command === 'init') {
 
 Core Commands:
   init              Auto-convert & configure existing Next.js into editable Fivora storefront (e.g. deneb init --recipe fashion)
+  doctor            Run comprehensive environment, manifest, visual editing AST & asset diagnostic checks (flags: --fix, --json)
   save-recipe       Learn and save calibrated fixes & schemas into reusable recipe bank (e.g. deneb save-recipe . shoes-store)
   learn             Alias for save-recipe
   update            Update DENEB packages (@deneb-ui/ui, @deneb-ui/cli) and UI components
   validate          Validate website configuration and visual editing contracts with Fivora platform
-  doctor            Run comprehensive environment, manifest & asset diagnostic checks
   zip               Zip the project without unnecessary folders or files (node_modules, .next, .git, .env)
   validate-and-zip  Validate website configuration and immediately package clean upload-ready ZIP
 
@@ -1238,6 +1065,8 @@ Development & Scaffolding:
 
 Examples:
   deneb doctor
+  deneb doctor --fix
+  deneb doctor --json
   deneb init
   deneb init --recipe fashion
   deneb init --recipe electronics
