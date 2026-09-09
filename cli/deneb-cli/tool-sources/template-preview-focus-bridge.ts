@@ -74,7 +74,7 @@ export function resolveTemplatePreviewParentOrigin(input: {
   );
 }
 
-function fivoraPreviewFocusBridge(
+function denebPreviewFocusBridge(
   resolveParentOrigin: typeof resolveTemplatePreviewParentOrigin,
   buildUniversalThemeCss: typeof buildUniversalTemplateThemeCss,
   replaceColorLiterals: typeof replaceTemplateColorLiterals,
@@ -3182,7 +3182,7 @@ function fivoraPreviewFocusBridge(
 }
 
 export const TEMPLATE_PREVIEW_FOCUS_BRIDGE_SCRIPT =
-  `;(${fivoraPreviewFocusBridge.toString()})` +
+  `;(${denebPreviewFocusBridge.toString()})` +
   `(${resolveTemplatePreviewParentOrigin.toString()},` +
   `${buildUniversalTemplateThemeCss.toString()},` +
   `${replaceTemplateColorLiterals.toString()},` +

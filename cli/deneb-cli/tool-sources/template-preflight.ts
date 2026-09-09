@@ -54,7 +54,7 @@ import {
   normalizeTemplatePageDefinitions,
 } from '../src/sites/universal-page-selection';
 
-const CLI_NAME = 'fivora-template-validator';
+const CLI_NAME = 'deneb-template-validator';
 const CLI_VERSION = '1.0.0';
 const MANIFEST_FILE_NAME = 'fivora-template.json';
 const MAX_SOURCE_FILES = 2_500;

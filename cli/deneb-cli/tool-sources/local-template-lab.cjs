@@ -422,10 +422,11 @@ const controllerToken = crypto.randomBytes(24).toString('base64url');
 const apiUrl = `http://${LOOPBACK_HOST}:${options.apiPort}`;
 const sourcePreviewUrl = `http://${LOOPBACK_HOST}:${options.previewPort}`;
 const previewUrl = `${apiUrl}${LOCAL_PREVIEW_ROUTE}`;
-const validatorPath = path.join(
-  __dirname,
-  'fivora-template-validator.cjs',
-);
+const validatorPath = fs.existsSync(
+  path.join(__dirname, 'deneb-template-validator.cjs'),
+)
+  ? path.join(__dirname, 'deneb-template-validator.cjs')
+  : path.join(__dirname, 'fivora-template-validator.cjs');
 
 let shuttingDown = false;
 let devProcess = null;

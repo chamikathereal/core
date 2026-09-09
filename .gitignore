@@ -36,3 +36,7 @@ Thumbs.db
 # Zip archives
 *.zip
 *.tar.gz
+
+# Graphify knowledge graph outputs
+graphify-out/
+

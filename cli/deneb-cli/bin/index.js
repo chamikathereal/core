@@ -935,7 +935,7 @@ Options:
 
   console.log(`[Step 1/2] Running Fivora preflight validation in ${targetDir}...\n`);
 
-  const validatorScript = path.join(toolsDir, 'fivora-template-validator.cjs');
+  const validatorScript = path.join(toolsDir, 'deneb-template-validator.cjs');
   const valRes = spawnSync(process.execPath, [validatorScript, 'validate', targetDir, ...extraArgs], {
     stdio: 'inherit',
   });
@@ -1177,7 +1177,7 @@ if (command === 'init') {
     const cleanArgs = commandArgs.filter((a) => a !== '--zip' && a !== '-z');
     runValidateAndZip(cleanArgs[0] || '.', cleanArgs.slice(1));
   } else {
-    const script = path.join(toolsDir, 'fivora-template-validator.cjs');
+    const script = path.join(toolsDir, 'deneb-template-validator.cjs');
     const res = spawnSync(process.execPath, [script, 'validate', ...commandArgs], { stdio: 'inherit' });
     process.exit(res.status ?? 0);
   }
