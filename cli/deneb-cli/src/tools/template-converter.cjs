@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { matchRecipeForProject, saveRecipeFromProject } = require('./recipe-engine.cjs');
+const { matchRecipeForProject, saveRecipeFromProject, getRecipeByName } = require('./recipe-engine.cjs');
 
 /**
  * 1. Detect CSS and Component Frameworks
@@ -885,7 +885,7 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
 /**
  * Main Conversion Pipeline
  */
-function runUniversalTemplateConversion(projectDir, projectName, detectedPages) {
+function runUniversalTemplateConversion(projectDir, projectName, detectedPages, options = {}) {
   console.log(`\n🔍 Analyzing existing UI and CSS frameworks in project...`);
   const detection = detectProjectFrameworks(projectDir);
   for (const framework of detection.detected) {
@@ -894,10 +894,22 @@ function runUniversalTemplateConversion(projectDir, projectName, detectedPages) 
 
   const allSourceFiles = findSourceFiles(projectDir);
 
-  // Match optimal recipe (or custom saved fixes)
-  const matchedRecipe = matchRecipeForProject(projectDir, detection.pkg, allSourceFiles);
-  if (matchedRecipe) {
-    console.log(`  \x1b[35m🎯 Matched Recipe:\x1b[0m ${matchedRecipe.label} (${matchedRecipe.name})`);
+  // Match optimal recipe (either explicitly specified by --recipe flag or auto-detected by signatures)
+  let matchedRecipe = null;
+  if (options.recipeName && typeof getRecipeByName === 'function') {
+    matchedRecipe = getRecipeByName(options.recipeName, projectDir);
+    if (matchedRecipe) {
+      console.log(`  \x1b[35m🎯 Selected Recipe:\x1b[0m ${matchedRecipe.label} (${matchedRecipe.name})`);
+    } else {
+      console.log(`  \x1b[33m⚠ Recipe "${options.recipeName}" not found. Falling back to signature detection...\x1b[0m`);
+    }
+  }
+
+  if (!matchedRecipe) {
+    matchedRecipe = matchRecipeForProject(projectDir, detection.pkg, allSourceFiles);
+    if (matchedRecipe) {
+      console.log(`  \x1b[35m🎯 Matched Recipe:\x1b[0m ${matchedRecipe.label} (${matchedRecipe.name})`);
+    }
   }
 
   const backupDir = createBackup(projectDir);
@@ -973,4 +985,5 @@ module.exports = {
   generateTemplateData,
   runUniversalTemplateConversion,
   saveRecipeFromProject,
+  getRecipeByName,
 };

@@ -1,0 +1,1080 @@
+{
+  "name": "electronics-gadgets-store",
+  "label": "Precision Electronics & Smart Gadgets Storefront",
+  "description": "Specialized recipe for consumer electronics, audio acoustics, gaming gear, and smart devices with technical spec matrices, trust badges, device comparison, and WhatsApp tech support.",
+  "signatures": {
+    "keywords": [
+      "electronics",
+      "gadget",
+      "tech",
+      "device",
+      "audio",
+      "phone",
+      "headphones",
+      "earbuds",
+      "wireless",
+      "hardware",
+      "gaming",
+      "specs",
+      "charger",
+      "monitor",
+      "anc",
+      "bluetooth",
+      "hifi",
+      "smart"
+    ],
+    "componentRoles": [
+      "Navbar",
+      "Hero",
+      "SpecsGrid",
+      "ProductGrid",
+      "ProductCard",
+      "CompareDrawer",
+      "TrustBadges",
+      "CartDrawer",
+      "TechSpecTable",
+      "WarrantyInfo",
+      "Footer",
+      "ProductDetail"
+    ]
+  },
+  "gridRules": {
+    "cardComponentNames": [
+      "ProductCard",
+      "TechCard",
+      "DeviceCard",
+      "GadgetCard",
+      "ItemCard",
+      "Card",
+      "HardwareCard"
+    ],
+    "cardFields": [
+      {
+        "suffix": "Image",
+        "type": "image",
+        "label": "Device Photograph"
+      },
+      {
+        "suffix": "Badge",
+        "type": "text",
+        "label": "Badge"
+      },
+      {
+        "suffix": "Category",
+        "type": "text",
+        "label": "Device Category"
+      },
+      {
+        "suffix": "Name",
+        "type": "text",
+        "label": "Device Model Title"
+      },
+      {
+        "suffix": "Price",
+        "type": "text",
+        "label": "Price"
+      },
+      {
+        "suffix": "KeySpec",
+        "type": "text",
+        "label": "Key Specification"
+      }
+    ],
+    "autoIndex": true,
+    "defaultCardPrefix": "product",
+    "withBasePathImages": true,
+    "safeNavigationButtons": true
+  },
+  "productDetailRules": {
+    "enabled": true,
+    "sectionPath": "product",
+    "sampleRoute": "/products/sonic-pro-wireless-anc-headphones",
+    "galleryWithBasePath": true,
+    "noStaticOnEditableAncestors": true
+  },
+  "actionRules": {
+    "splitActionAndLabel": true,
+    "whatsappKeywords": [
+      "whatsapp",
+      "wa.me",
+      "order via whatsapp",
+      "tech support",
+      "chat with expert",
+      "ask tech support",
+      "order hardware"
+    ],
+    "actionFieldMapping": {
+      "whatsapp": {
+        "urlField": "whatsappCtaUrl",
+        "labelField": "whatsappCtaLabel"
+      },
+      "order": {
+        "urlField": "orderCtaUrl",
+        "labelField": "orderCtaLabel"
+      },
+      "promo": {
+        "urlField": "promoCtaUrl",
+        "labelField": "promoCtaLabel"
+      },
+      "warranty": {
+        "urlField": "warrantyUrl",
+        "labelField": "warrantyLabel"
+      }
+    }
+  },
+  "socialRules": {
+    "platforms": [
+      "youtube",
+      "twitter",
+      "instagram",
+      "facebook",
+      "linkedin"
+    ],
+    "targetPath": "common.footer"
+  },
+  "pages": [
+    {
+      "id": "home",
+      "label": "Home",
+      "route": "/",
+      "required": true
+    },
+    {
+      "id": "products",
+      "label": "Devices & Gear",
+      "route": "/products"
+    },
+    {
+      "id": "specs",
+      "label": "Technical Specifications",
+      "route": "/specs"
+    },
+    {
+      "id": "warranty",
+      "label": "Warranty & Support",
+      "route": "/warranty"
+    },
+    {
+      "id": "contact",
+      "label": "Tech Support Hotline",
+      "route": "/contact",
+      "required": true
+    },
+    {
+      "id": "product",
+      "label": "Device Detail",
+      "route": "/products/sonic-pro-wireless-anc-headphones"
+    }
+  ],
+  "sections": [
+    {
+      "id": "common",
+      "path": "common",
+      "type": "object",
+      "label": "Shared Storefront Content",
+      "fields": [
+        {
+          "key": "websiteTitle",
+          "type": "text",
+          "label": "Tech Brand Name",
+          "required": true
+        },
+        {
+          "key": "shortDescription",
+          "type": "textarea",
+          "label": "Hardware Brand Overview"
+        },
+        {
+          "key": "tagline",
+          "type": "text",
+          "label": "Tech Tagline"
+        },
+        {
+          "key": "announcementText",
+          "type": "text",
+          "label": "Header Announcement Bar"
+        },
+        {
+          "key": "logoUrl",
+          "type": "image",
+          "label": "Brand Logo",
+          "recommendedWidth": 512,
+          "recommendedHeight": 512
+        },
+        {
+          "key": "brandUrl",
+          "type": "text",
+          "label": "Home Link URL"
+        },
+        {
+          "key": "headerCtaLabel",
+          "type": "text",
+          "label": "Header Button Label"
+        },
+        {
+          "key": "navLabels",
+          "type": "object",
+          "label": "Navigation Links",
+          "fields": [
+            {
+              "key": "home",
+              "type": "text",
+              "label": "Home Link"
+            },
+            {
+              "key": "products",
+              "type": "text",
+              "label": "All Devices Link"
+            },
+            {
+              "key": "specs",
+              "type": "text",
+              "label": "Spec Sheets Link"
+            },
+            {
+              "key": "warranty",
+              "type": "text",
+              "label": "Warranty Portal Link"
+            },
+            {
+              "key": "contact",
+              "type": "text",
+              "label": "Tech Support Link"
+            }
+          ]
+        },
+        {
+          "key": "business",
+          "type": "object",
+          "label": "Hardware Support Channels",
+          "fields": [
+            {
+              "key": "phone",
+              "type": "tel",
+              "label": "Tech Support Hotline"
+            },
+            {
+              "key": "whatsapp",
+              "type": "text",
+              "label": "Direct WhatsApp Order Desk"
+            },
+            {
+              "key": "email",
+              "type": "email",
+              "label": "Enterprise Inquiry Email"
+            },
+            {
+              "key": "location",
+              "type": "object",
+              "label": "Service Center Address",
+              "fields": [
+                {
+                  "key": "address",
+                  "type": "text",
+                  "label": "Street Address"
+                },
+                {
+                  "key": "city",
+                  "type": "text",
+                  "label": "City"
+                },
+                {
+                  "key": "country",
+                  "type": "text",
+                  "label": "Country"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "footer",
+          "type": "object",
+          "label": "Footer Columns & Specs",
+          "fields": [
+            {
+              "key": "devicesHeading",
+              "type": "text",
+              "label": "Devices Column Heading"
+            },
+            {
+              "key": "devicesLink1",
+              "type": "text",
+              "label": "Device Link 1"
+            },
+            {
+              "key": "devicesLink2",
+              "type": "text",
+              "label": "Device Link 2"
+            },
+            {
+              "key": "devicesLink3",
+              "type": "text",
+              "label": "Device Link 3"
+            },
+            {
+              "key": "devicesLink4",
+              "type": "text",
+              "label": "Device Link 4"
+            },
+            {
+              "key": "supportHeading",
+              "type": "text",
+              "label": "Tech Support Heading"
+            },
+            {
+              "key": "supportLink1",
+              "type": "text",
+              "label": "Support Link 1"
+            },
+            {
+              "key": "supportLink2",
+              "type": "text",
+              "label": "Support Link 2"
+            },
+            {
+              "key": "supportLink3",
+              "type": "text",
+              "label": "Support Link 3"
+            },
+            {
+              "key": "warrantyHeading",
+              "type": "text",
+              "label": "Warranty & Claims Heading"
+            },
+            {
+              "key": "warrantyLink1",
+              "type": "text",
+              "label": "Warranty Link 1"
+            },
+            {
+              "key": "warrantyLink2",
+              "type": "text",
+              "label": "Warranty Link 2"
+            },
+            {
+              "key": "warrantyLink3",
+              "type": "text",
+              "label": "Warranty Link 3"
+            },
+            {
+              "key": "youtubeUrl",
+              "type": "text",
+              "label": "YouTube Reviews URL"
+            },
+            {
+              "key": "twitterUrl",
+              "type": "text",
+              "label": "X / Twitter URL"
+            },
+            {
+              "key": "instagramUrl",
+              "type": "text",
+              "label": "Instagram Profile URL"
+            }
+          ]
+        },
+        {
+          "key": "copyright",
+          "type": "text",
+          "label": "Copyright Text"
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "path": "home",
+      "type": "object",
+      "label": "Home Page Content",
+      "fields": [
+        {
+          "key": "heroBadge",
+          "type": "text",
+          "label": "Hero Tech Badge"
+        },
+        {
+          "key": "heroTitle",
+          "type": "text",
+          "label": "Hero Headline"
+        },
+        {
+          "key": "heroSummary",
+          "type": "textarea",
+          "label": "Hero Hardware Summary"
+        },
+        {
+          "key": "heroImage",
+          "type": "image",
+          "label": "Hero Flagship Hardware Render",
+          "recommendedWidth": 1920,
+          "recommendedHeight": 1080
+        },
+        {
+          "key": "heroKeySpec1",
+          "type": "text",
+          "label": "Hero Spec Callout 1"
+        },
+        {
+          "key": "heroKeySpec2",
+          "type": "text",
+          "label": "Hero Spec Callout 2"
+        },
+        {
+          "key": "heroKeySpec3",
+          "type": "text",
+          "label": "Hero Spec Callout 3"
+        },
+        {
+          "key": "primaryCtaLabel",
+          "type": "text",
+          "label": "Hero Buy / Order Button"
+        },
+        {
+          "key": "secondaryCtaLabel",
+          "type": "text",
+          "label": "Hero View Specs Button"
+        },
+        {
+          "key": "tickerItem1",
+          "type": "text",
+          "label": "Trust Ticker 1"
+        },
+        {
+          "key": "tickerItem2",
+          "type": "text",
+          "label": "Trust Ticker 2"
+        },
+        {
+          "key": "tickerItem3",
+          "type": "text",
+          "label": "Trust Ticker 3"
+        },
+        {
+          "key": "tickerItem4",
+          "type": "text",
+          "label": "Trust Ticker 4"
+        },
+        {
+          "key": "categoryLabel",
+          "type": "text",
+          "label": "Gear Catalog Eyebrow"
+        },
+        {
+          "key": "categoryTitle",
+          "type": "text",
+          "label": "Gear Catalog Headline"
+        },
+        {
+          "key": "categoryDesc",
+          "type": "textarea",
+          "label": "Gear Catalog Description"
+        },
+        {
+          "key": "categoryLabel1",
+          "type": "text",
+          "label": "Category Tab 1"
+        },
+        {
+          "key": "categoryLabel2",
+          "type": "text",
+          "label": "Category Tab 2"
+        },
+        {
+          "key": "categoryLabel3",
+          "type": "text",
+          "label": "Category Tab 3"
+        },
+        {
+          "key": "categoryLabel4",
+          "type": "text",
+          "label": "Category Tab 4"
+        },
+        {
+          "key": "product1Name",
+          "type": "text",
+          "label": "Device 1 Title"
+        },
+        {
+          "key": "product1Category",
+          "type": "text",
+          "label": "Device 1 Category"
+        },
+        {
+          "key": "product1Price",
+          "type": "text",
+          "label": "Device 1 Price"
+        },
+        {
+          "key": "product1Badge",
+          "type": "text",
+          "label": "Device 1 Badge"
+        },
+        {
+          "key": "product1KeySpec",
+          "type": "text",
+          "label": "Device 1 Key Spec"
+        },
+        {
+          "key": "product1Image",
+          "type": "image",
+          "label": "Device 1 Photo"
+        },
+        {
+          "key": "product2Name",
+          "type": "text",
+          "label": "Device 2 Title"
+        },
+        {
+          "key": "product2Category",
+          "type": "text",
+          "label": "Device 2 Category"
+        },
+        {
+          "key": "product2Price",
+          "type": "text",
+          "label": "Device 2 Price"
+        },
+        {
+          "key": "product2Badge",
+          "type": "text",
+          "label": "Device 2 Badge"
+        },
+        {
+          "key": "product2KeySpec",
+          "type": "text",
+          "label": "Device 2 Key Spec"
+        },
+        {
+          "key": "product2Image",
+          "type": "image",
+          "label": "Device 2 Photo"
+        },
+        {
+          "key": "product3Name",
+          "type": "text",
+          "label": "Device 3 Title"
+        },
+        {
+          "key": "product3Category",
+          "type": "text",
+          "label": "Device 3 Category"
+        },
+        {
+          "key": "product3Price",
+          "type": "text",
+          "label": "Device 3 Price"
+        },
+        {
+          "key": "product3Badge",
+          "type": "text",
+          "label": "Device 3 Badge"
+        },
+        {
+          "key": "product3KeySpec",
+          "type": "text",
+          "label": "Device 3 Key Spec"
+        },
+        {
+          "key": "product3Image",
+          "type": "image",
+          "label": "Device 3 Photo"
+        },
+        {
+          "key": "product4Name",
+          "type": "text",
+          "label": "Device 4 Title"
+        },
+        {
+          "key": "product4Category",
+          "type": "text",
+          "label": "Device 4 Category"
+        },
+        {
+          "key": "product4Price",
+          "type": "text",
+          "label": "Device 4 Price"
+        },
+        {
+          "key": "product4Badge",
+          "type": "text",
+          "label": "Device 4 Badge"
+        },
+        {
+          "key": "product4KeySpec",
+          "type": "text",
+          "label": "Device 4 Key Spec"
+        },
+        {
+          "key": "product4Image",
+          "type": "image",
+          "label": "Device 4 Photo"
+        },
+        {
+          "key": "product5Name",
+          "type": "text",
+          "label": "Device 5 Title"
+        },
+        {
+          "key": "product5Category",
+          "type": "text",
+          "label": "Device 5 Category"
+        },
+        {
+          "key": "product5Price",
+          "type": "text",
+          "label": "Device 5 Price"
+        },
+        {
+          "key": "product5Badge",
+          "type": "text",
+          "label": "Device 5 Badge"
+        },
+        {
+          "key": "product5KeySpec",
+          "type": "text",
+          "label": "Device 5 Key Spec"
+        },
+        {
+          "key": "product5Image",
+          "type": "image",
+          "label": "Device 5 Photo"
+        },
+        {
+          "key": "product6Name",
+          "type": "text",
+          "label": "Device 6 Title"
+        },
+        {
+          "key": "product6Category",
+          "type": "text",
+          "label": "Device 6 Category"
+        },
+        {
+          "key": "product6Price",
+          "type": "text",
+          "label": "Device 6 Price"
+        },
+        {
+          "key": "product6Badge",
+          "type": "text",
+          "label": "Device 6 Badge"
+        },
+        {
+          "key": "product6KeySpec",
+          "type": "text",
+          "label": "Device 6 Key Spec"
+        },
+        {
+          "key": "product6Image",
+          "type": "image",
+          "label": "Device 6 Photo"
+        },
+        {
+          "key": "product7Name",
+          "type": "text",
+          "label": "Device 7 Title"
+        },
+        {
+          "key": "product7Category",
+          "type": "text",
+          "label": "Device 7 Category"
+        },
+        {
+          "key": "product7Price",
+          "type": "text",
+          "label": "Device 7 Price"
+        },
+        {
+          "key": "product7Badge",
+          "type": "text",
+          "label": "Device 7 Badge"
+        },
+        {
+          "key": "product7KeySpec",
+          "type": "text",
+          "label": "Device 7 Key Spec"
+        },
+        {
+          "key": "product7Image",
+          "type": "image",
+          "label": "Device 7 Photo"
+        },
+        {
+          "key": "product8Name",
+          "type": "text",
+          "label": "Device 8 Title"
+        },
+        {
+          "key": "product8Category",
+          "type": "text",
+          "label": "Device 8 Category"
+        },
+        {
+          "key": "product8Price",
+          "type": "text",
+          "label": "Device 8 Price"
+        },
+        {
+          "key": "product8Badge",
+          "type": "text",
+          "label": "Device 8 Badge"
+        },
+        {
+          "key": "product8KeySpec",
+          "type": "text",
+          "label": "Device 8 Key Spec"
+        },
+        {
+          "key": "product8Image",
+          "type": "image",
+          "label": "Device 8 Photo"
+        },
+        {
+          "key": "featureEyebrow",
+          "type": "text",
+          "label": "Engineering Highlight Eyebrow"
+        },
+        {
+          "key": "featureTitle",
+          "type": "text",
+          "label": "Engineering Highlight Title"
+        },
+        {
+          "key": "featureDesc",
+          "type": "textarea",
+          "label": "Engineering Highlight Description"
+        },
+        {
+          "key": "featureCtaLabel",
+          "type": "text",
+          "label": "Engineering Highlight Action"
+        },
+        {
+          "key": "featureImage",
+          "type": "image",
+          "label": "Engineering Blueprint / Exploded View"
+        },
+        {
+          "key": "storyLabel",
+          "type": "text",
+          "label": "Acoustic Lab Eyebrow"
+        },
+        {
+          "key": "storyTitle",
+          "type": "text",
+          "label": "Acoustic Lab Headline"
+        },
+        {
+          "key": "storyDesc",
+          "type": "textarea",
+          "label": "Acoustic Lab Story"
+        },
+        {
+          "key": "storyImage",
+          "type": "image",
+          "label": "Lab Testing Image"
+        },
+        {
+          "key": "stat1Value",
+          "type": "text",
+          "label": "Spec 1 Metric"
+        },
+        {
+          "key": "stat1Label",
+          "type": "text",
+          "label": "Spec 1 Metric Label"
+        },
+        {
+          "key": "stat2Value",
+          "type": "text",
+          "label": "Spec 2 Metric"
+        },
+        {
+          "key": "stat2Label",
+          "type": "text",
+          "label": "Spec 2 Metric Label"
+        },
+        {
+          "key": "stat3Value",
+          "type": "text",
+          "label": "Spec 3 Metric"
+        },
+        {
+          "key": "stat3Label",
+          "type": "text",
+          "label": "Spec 3 Metric Label"
+        },
+        {
+          "key": "whatsappLabel",
+          "type": "text",
+          "label": "Tech Hotline Eyebrow"
+        },
+        {
+          "key": "whatsappTitle",
+          "type": "text",
+          "label": "Tech Hotline Headline"
+        },
+        {
+          "key": "whatsappDesc",
+          "type": "textarea",
+          "label": "Tech Hotline Description"
+        },
+        {
+          "key": "whatsappCtaLabel",
+          "type": "text",
+          "label": "Tech Hotline Button Label"
+        },
+        {
+          "key": "whatsappCtaUrl",
+          "type": "text",
+          "label": "Tech Hotline WhatsApp Link"
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "path": "product",
+      "type": "object",
+      "label": "Product Detail Content",
+      "fields": [
+        {
+          "key": "name",
+          "type": "text",
+          "label": "Device Model Name",
+          "required": true
+        },
+        {
+          "key": "price",
+          "type": "text",
+          "label": "Device Retail Price",
+          "required": true
+        },
+        {
+          "key": "badge",
+          "type": "text",
+          "label": "Device Status Tag"
+        },
+        {
+          "key": "description",
+          "type": "textarea",
+          "label": "Device Overview"
+        },
+        {
+          "key": "featuredImage",
+          "type": "image",
+          "label": "Main Hardware Render"
+        },
+        {
+          "key": "addToSelectionLabel",
+          "type": "text",
+          "label": "Add to Cart Label"
+        },
+        {
+          "key": "warrantyLabel",
+          "type": "text",
+          "label": "Warranty Claim Label"
+        },
+        {
+          "key": "specsTitle",
+          "type": "text",
+          "label": "Technical Specifications Heading"
+        },
+        {
+          "key": "specsDetails",
+          "type": "textarea",
+          "label": "Technical Specs Summary"
+        },
+        {
+          "key": "boxTitle",
+          "type": "text",
+          "label": "What's In The Box Heading"
+        },
+        {
+          "key": "boxDetails",
+          "type": "textarea",
+          "label": "Included In Box Items"
+        },
+        {
+          "key": "shippingTitle",
+          "type": "text",
+          "label": "Fast Delivery & Warranty Heading"
+        },
+        {
+          "key": "shippingSummary",
+          "type": "textarea",
+          "label": "Delivery Times & Express Courier Guarantee"
+        },
+        {
+          "key": "shippingReturns",
+          "type": "textarea",
+          "label": "Direct 1-to-1 Replacement Warranty Policy"
+        },
+        {
+          "key": "relatedLabel",
+          "type": "text",
+          "label": "Compatible Gear Eyebrow"
+        },
+        {
+          "key": "relatedTitle",
+          "type": "text",
+          "label": "Recommended Ecosystem Additions"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "common": {
+      "websiteTitle": "NEXUS HARDWARE",
+      "shortDescription": "Audiophile acoustics, ultra-fast charging matrices, and high-performance computing peripherals built for creators and gamers.",
+      "tagline": "Precision Hardware & Acoustics",
+      "announcementText": "Official 2-Year Direct Replacement Warranty On All Devices — Islandwide 24h Express Dispatch",
+      "logoUrl": "/logo.svg",
+      "brandUrl": "/",
+      "headerCtaLabel": "Browse Gear",
+      "copyright": "© 2026 NEXUS Technologies Lab. All rights reserved.",
+      "navLabels": {
+        "home": "Home",
+        "products": "Devices & Gear",
+        "specs": "Spec Sheets",
+        "warranty": "2-Year Warranty",
+        "contact": "Tech Support"
+      },
+      "business": {
+        "phone": "+94 11 234 5678",
+        "whatsapp": "94771234567",
+        "email": "support@nexushardware.com",
+        "location": {
+          "address": "104 Galle Road, Kollupitiya",
+          "city": "Colombo 03",
+          "country": "Sri Lanka"
+        }
+      },
+      "footer": {
+        "devicesHeading": "Hardware Ecosystem",
+        "devicesLink1": "Spatial ANC Headphones",
+        "devicesLink2": "GaN Fast Power Delivery",
+        "devicesLink3": "Precision Gaming Mice",
+        "devicesLink4": "Mechanical Keyboards",
+        "supportHeading": "Tech Support",
+        "supportLink1": "Firmware & Driver Downloads",
+        "supportLink2": "Live Diagnostics Chat",
+        "supportLink3": "Authorized Repair Centers",
+        "warrantyHeading": "Protection",
+        "warrantyLink1": "Register Serial Number",
+        "warrantyLink2": "1-to-1 Replacement Policy",
+        "warrantyLink3": "Extended Care Coverage",
+        "youtubeUrl": "https://youtube.com",
+        "twitterUrl": "https://x.com",
+        "instagramUrl": "https://instagram.com"
+      }
+    },
+    "home": {
+      "heroBadge": "FLAGSHIP ACOUSTICS · BT 5.4 · 48H ANC",
+      "heroTitle": "Sonic Pro Wireless. Pure Silence. Pure Detail.",
+      "heroSummary": "Engineered with 45mm beryllium-coated dynamic drivers and dual hybrid active noise cancellation chips for studio-master fidelity anywhere in the world.",
+      "heroImage": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1920&q=85",
+      "heroKeySpec1": "-42dB Active Noise Cancellation",
+      "heroKeySpec2": "48 Hours High-Fidelity Playback",
+      "heroKeySpec3": "Lossless LDAC & aptX Adaptive",
+      "primaryCtaLabel": "Order via WhatsApp",
+      "secondaryCtaLabel": "Compare Specifications",
+      "tickerItem1": "Genuine Direct Manufacturer Warranty",
+      "tickerItem2": "Zero Latency 2.4GHz & Bluetooth 5.4",
+      "tickerItem3": "Complimentary Priority Tech Support",
+      "tickerItem4": "Islandwide Cash on Delivery Verified",
+      "categoryLabel": "PERFORMANCE MATRICES",
+      "categoryTitle": "The Hardware Catalog",
+      "categoryDesc": "Tested in rigorous acoustic and thermal chambers to exceed professional studio and gaming standards.",
+      "categoryLabel1": "Audio & ANC",
+      "categoryLabel2": "Power & GaN",
+      "categoryLabel3": "Gaming Gear",
+      "categoryLabel4": "Smart Wearables",
+      "product1Name": "Sonic Pro Wireless ANC Headphones",
+      "product1Category": "Audio & ANC",
+      "product1Price": "LKR 46,500",
+      "product1Badge": "Flagship",
+      "product1KeySpec": "45mm Beryllium · -42dB ANC · 48h Battery",
+      "product1Image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=85",
+      "product2Name": "AeroBuds Neo True Wireless",
+      "product2Category": "Audio & ANC",
+      "product2Price": "LKR 18,900",
+      "product2Badge": "New",
+      "product2KeySpec": "Spatial Audio · IPX5 Water Resistance · 32h Case",
+      "product2Image": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&q=85",
+      "product3Name": "Titan 140W GaN 4-Port Fast Charger",
+      "product3Category": "Power & GaN",
+      "product3Price": "LKR 14,200",
+      "product3Badge": "Bestseller",
+      "product3KeySpec": "3x USB-C PD 3.1 + 1x USB-A · ThermalGuard",
+      "product3Image": "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=800&q=85",
+      "product4Name": "MagFlow 20000mAh 65W Power Bank",
+      "product4Category": "Power & GaN",
+      "product4Price": "LKR 16,500",
+      "product4Badge": "",
+      "product4KeySpec": "Laptop Fast Charge · Digital OLED Percentage Display",
+      "product4Image": "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=800&q=85",
+      "product5Name": "Apex 75 Pro Hall-Effect Keyboard",
+      "product5Category": "Gaming Gear",
+      "product5Price": "LKR 38,900",
+      "product5Badge": "Pro Esports",
+      "product5KeySpec": "Rapid Trigger 0.1mm · CNC Aluminum · PBT Keycaps",
+      "product5Image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=85",
+      "product6Name": "Viper 8K Ultra-Light Wireless Mouse",
+      "product6Category": "Gaming Gear",
+      "product6Price": "LKR 21,500",
+      "product6Badge": "",
+      "product6KeySpec": "49g Feathery · 3395 Optical Sensor · 8000Hz Polling",
+      "product6Image": "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=800&q=85",
+      "product7Name": "ChronoTrack Pro Smartwatch",
+      "product7Category": "Smart Wearables",
+      "product7Price": "LKR 31,000",
+      "product7Badge": "New",
+      "product7KeySpec": "AMOLED 1000nits · Dual-GPS · Titanium Bezel",
+      "product7Image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=85",
+      "product8Name": "StreamMaster 4K USB-C Audio Interface",
+      "product8Category": "Audio & ANC",
+      "product8Price": "LKR 29,800",
+      "product8Badge": "",
+      "product8KeySpec": "32-bit/192kHz · Pre-amp +48V Phantom · Zero Latency",
+      "product8Image": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&q=85",
+      "featureEyebrow": "ACOUSTIC BENCHMARK",
+      "featureTitle": "Beryllium Dynamics Meets Spatial Clarity",
+      "featureDesc": "Unlike standard mylar drivers that distort at high volumes, our 45mm custom beryllium diaphragms deliver lightning-fast transient response, razor-sharp instrument separation, and thunderous 10Hz sub-bass extension.",
+      "featureCtaLabel": "Explore Audio Architecture",
+      "featureImage": "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=1200&q=85",
+      "storyLabel": "R&D ENGINEERING",
+      "storyTitle": "No Gimmicks. Only Measured Performance.",
+      "storyDesc": "At NEXUS, we engineer hardware with verified technical benchmarks. Every component is subjected to RF interference chambers, drop impact tests, and multi-thousand hour thermal burn-in before earning the NEXUS seal.",
+      "storyImage": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=900&q=85",
+      "stat1Value": "< 0.05%",
+      "stat1Label": "Total Harmonic Distortion (THD)",
+      "stat2Value": "140W",
+      "stat2Label": "Maximum GaN Power Delivery Output",
+      "stat3Value": "2 Years",
+      "stat3Label": "Full Direct Hardware Warranty",
+      "whatsappLabel": "DIRECT TECH ADVISOR",
+      "whatsappTitle": "Consult an Engineer via WhatsApp",
+      "whatsappDesc": "Have questions about system compatibility, impedance matching, or high-draw multi-device charging? Chat directly with our technical support team for instant answers and priority ordering.",
+      "whatsappCtaLabel": "Message Tech Support",
+      "whatsappCtaUrl": "https://wa.me/94771234567?text=Hi%20NEXUS%20Tech%20Support%2C%20I'd%20like%20assistance%20choosing%20hardware%20and%20verifying%20compatibility."
+    },
+    "product": {
+      "name": "Sonic Pro Wireless ANC Headphones",
+      "price": "LKR 46,500",
+      "badge": "FLAGSHIP",
+      "description": "Premium wireless over-ear headphones featuring dual hybrid active noise cancellation, custom 45mm beryllium drivers, and up to 48 hours of non-stop high-resolution playback with rapid charge.",
+      "featuredImage": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1000&q=85",
+      "addToSelectionLabel": "Add to Cart",
+      "warrantyLabel": "Official 2-Year Warranty Included",
+      "specsTitle": "Technical Specifications",
+      "specsDetails": "Driver Architecture: 45mm Custom Beryllium Diaphragm | Frequency Response: 10Hz – 40,000Hz | Impedance: 32 Ohms | Bluetooth Version: 5.4 with Multipoint Dual Connection | Codec Support: LDAC, aptX Adaptive, AAC, SBC | Weight: 265g | Battery Capacity: 850mAh | Rapid Charge: 10 mins = 5 hours play.",
+      "boxTitle": "What's in the Box",
+      "boxDetails": "Sonic Pro Wireless Headphones | Hardshell Travel Case with Cable Pocket | Gold-plated 3.5mm to 3.5mm Aux Cable (1.2m) | Braided USB-C to USB-C Charging Cable | Airplane Dual-Pin Adapter | Quick Start Guide & Warranty Certificate.",
+      "shippingTitle": "Express Delivery & Direct Warranty",
+      "shippingSummary": "Free courier delivery nationwide within 24 hours in Colombo and 48 hours islandwide. Secure tamper-evident protective transit packaging.",
+      "shippingReturns": "Official 2-Year Direct Replacement Warranty. If hardware defect occurs under normal use, we swap for a brand new unit with zero repair turnaround delay.",
+      "relatedLabel": "COMPLETE YOUR AUDIO ECOSYSTEM",
+      "relatedTitle": "Recommended Accessories"
+    }
+  }
+}

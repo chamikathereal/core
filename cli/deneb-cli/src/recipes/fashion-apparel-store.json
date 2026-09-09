@@ -1,0 +1,1074 @@
+{
+  "name": "fashion-apparel-store",
+  "label": "Haute & Streetwear Fashion Apparel Storefront",
+  "description": "Specialized recipe for apparel, streetwear, fashion boutiques, and luxury garments with size selectors, lookbooks, color swatches, WhatsApp styling concierge, and bag drawer integration.",
+  "signatures": {
+    "keywords": [
+      "fashion",
+      "apparel",
+      "clothing",
+      "wear",
+      "outfit",
+      "boutique",
+      "dress",
+      "shirt",
+      "hoodie",
+      "denim",
+      "collection",
+      "lookbook",
+      "atelier",
+      "streetwear",
+      "garment",
+      "textile",
+      "couture",
+      "style"
+    ],
+    "componentRoles": [
+      "Navbar",
+      "Hero",
+      "ProductGrid",
+      "ProductCard",
+      "SizeGuide",
+      "Lookbook",
+      "FilterSidebar",
+      "CartDrawer",
+      "CollectionBanner",
+      "FabricCare",
+      "StylingConcierge",
+      "Footer",
+      "ProductDetail"
+    ]
+  },
+  "gridRules": {
+    "cardComponentNames": [
+      "ProductCard",
+      "ApparelCard",
+      "FashionCard",
+      "ItemCard",
+      "Card",
+      "LookCard",
+      "ClothingCard"
+    ],
+    "cardFields": [
+      {
+        "suffix": "Image",
+        "type": "image",
+        "label": "Garment Image"
+      },
+      {
+        "suffix": "Badge",
+        "type": "text",
+        "label": "Badge"
+      },
+      {
+        "suffix": "Category",
+        "type": "text",
+        "label": "Collection Category"
+      },
+      {
+        "suffix": "Name",
+        "type": "text",
+        "label": "Product Title"
+      },
+      {
+        "suffix": "Price",
+        "type": "text",
+        "label": "Price"
+      },
+      {
+        "suffix": "Sizes",
+        "type": "text",
+        "label": "Available Sizes"
+      }
+    ],
+    "autoIndex": true,
+    "defaultCardPrefix": "product",
+    "withBasePathImages": true,
+    "safeNavigationButtons": true
+  },
+  "productDetailRules": {
+    "enabled": true,
+    "sectionPath": "product",
+    "sampleRoute": "/products/classic-oversized-heavyweight-tee",
+    "galleryWithBasePath": true,
+    "noStaticOnEditableAncestors": true
+  },
+  "actionRules": {
+    "splitActionAndLabel": true,
+    "whatsappKeywords": [
+      "whatsapp",
+      "wa.me",
+      "order via whatsapp",
+      "styling concierge",
+      "ask stylist",
+      "chat with stylist",
+      "personal shopper"
+    ],
+    "actionFieldMapping": {
+      "whatsapp": {
+        "urlField": "whatsappCtaUrl",
+        "labelField": "whatsappCtaLabel"
+      },
+      "order": {
+        "urlField": "orderCtaUrl",
+        "labelField": "orderCtaLabel"
+      },
+      "promo": {
+        "urlField": "promoCtaUrl",
+        "labelField": "promoCtaLabel"
+      },
+      "sizeguide": {
+        "urlField": "sizeGuideUrl",
+        "labelField": "sizeGuideLabel"
+      }
+    }
+  },
+  "socialRules": {
+    "platforms": [
+      "instagram",
+      "tiktok",
+      "pinterest",
+      "facebook",
+      "youtube"
+    ],
+    "targetPath": "common.footer"
+  },
+  "pages": [
+    {
+      "id": "home",
+      "label": "Home",
+      "route": "/",
+      "required": true
+    },
+    {
+      "id": "shop",
+      "label": "Shop All",
+      "route": "/shop"
+    },
+    {
+      "id": "lookbook",
+      "label": "Lookbook",
+      "route": "/lookbook"
+    },
+    {
+      "id": "size-guide",
+      "label": "Size & Fit Guide",
+      "route": "/size-guide"
+    },
+    {
+      "id": "about",
+      "label": "Atelier & Story",
+      "route": "/about"
+    },
+    {
+      "id": "contact",
+      "label": "Contact & Concierge",
+      "route": "/contact",
+      "required": true
+    },
+    {
+      "id": "product",
+      "label": "Garment Detail",
+      "route": "/products/classic-oversized-heavyweight-tee"
+    }
+  ],
+  "sections": [
+    {
+      "id": "common",
+      "path": "common",
+      "type": "object",
+      "label": "Shared Storefront Content",
+      "fields": [
+        {
+          "key": "websiteTitle",
+          "type": "text",
+          "label": "Fashion Brand Name",
+          "required": true
+        },
+        {
+          "key": "shortDescription",
+          "type": "textarea",
+          "label": "Brand Manifesto"
+        },
+        {
+          "key": "tagline",
+          "type": "text",
+          "label": "Brand Tagline"
+        },
+        {
+          "key": "announcementText",
+          "type": "text",
+          "label": "Header Announcement Bar"
+        },
+        {
+          "key": "logoUrl",
+          "type": "image",
+          "label": "Atelier Logo",
+          "recommendedWidth": 512,
+          "recommendedHeight": 512
+        },
+        {
+          "key": "brandUrl",
+          "type": "text",
+          "label": "Home Link URL"
+        },
+        {
+          "key": "headerCtaLabel",
+          "type": "text",
+          "label": "Header Action Label"
+        },
+        {
+          "key": "navLabels",
+          "type": "object",
+          "label": "Navigation Links",
+          "fields": [
+            {
+              "key": "home",
+              "type": "text",
+              "label": "Home Link"
+            },
+            {
+              "key": "shop",
+              "type": "text",
+              "label": "Shop All Link"
+            },
+            {
+              "key": "lookbook",
+              "type": "text",
+              "label": "Lookbook Link"
+            },
+            {
+              "key": "sizeGuide",
+              "type": "text",
+              "label": "Size Guide Link"
+            },
+            {
+              "key": "about",
+              "type": "text",
+              "label": "Atelier Story Link"
+            },
+            {
+              "key": "contact",
+              "type": "text",
+              "label": "Concierge Link"
+            }
+          ]
+        },
+        {
+          "key": "business",
+          "type": "object",
+          "label": "Atelier Contact Details",
+          "fields": [
+            {
+              "key": "phone",
+              "type": "tel",
+              "label": "Customer Care Phone"
+            },
+            {
+              "key": "whatsapp",
+              "type": "text",
+              "label": "Styling Concierge WhatsApp"
+            },
+            {
+              "key": "email",
+              "type": "email",
+              "label": "Concierge Email"
+            },
+            {
+              "key": "location",
+              "type": "object",
+              "label": "Showroom Address",
+              "fields": [
+                {
+                  "key": "address",
+                  "type": "text",
+                  "label": "Street Address"
+                },
+                {
+                  "key": "city",
+                  "type": "text",
+                  "label": "City"
+                },
+                {
+                  "key": "country",
+                  "type": "text",
+                  "label": "Country"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "footer",
+          "type": "object",
+          "label": "Footer Columns & Links",
+          "fields": [
+            {
+              "key": "collectionsHeading",
+              "type": "text",
+              "label": "Collections Column Heading"
+            },
+            {
+              "key": "collectionsLink1",
+              "type": "text",
+              "label": "Collection Link 1"
+            },
+            {
+              "key": "collectionsLink2",
+              "type": "text",
+              "label": "Collection Link 2"
+            },
+            {
+              "key": "collectionsLink3",
+              "type": "text",
+              "label": "Collection Link 3"
+            },
+            {
+              "key": "collectionsLink4",
+              "type": "text",
+              "label": "Collection Link 4"
+            },
+            {
+              "key": "atelierHeading",
+              "type": "text",
+              "label": "Atelier Column Heading"
+            },
+            {
+              "key": "atelierLink1",
+              "type": "text",
+              "label": "Atelier Link 1"
+            },
+            {
+              "key": "atelierLink2",
+              "type": "text",
+              "label": "Atelier Link 2"
+            },
+            {
+              "key": "atelierLink3",
+              "type": "text",
+              "label": "Atelier Link 3"
+            },
+            {
+              "key": "conciergeHeading",
+              "type": "text",
+              "label": "Concierge Column Heading"
+            },
+            {
+              "key": "conciergeLink1",
+              "type": "text",
+              "label": "Concierge Link 1"
+            },
+            {
+              "key": "conciergeLink2",
+              "type": "text",
+              "label": "Concierge Link 2"
+            },
+            {
+              "key": "conciergeLink3",
+              "type": "text",
+              "label": "Concierge Link 3"
+            },
+            {
+              "key": "instagramUrl",
+              "type": "text",
+              "label": "Instagram Profile URL"
+            },
+            {
+              "key": "tiktokUrl",
+              "type": "text",
+              "label": "TikTok Profile URL"
+            },
+            {
+              "key": "pinterestUrl",
+              "type": "text",
+              "label": "Pinterest Profile URL"
+            }
+          ]
+        },
+        {
+          "key": "copyright",
+          "type": "text",
+          "label": "Copyright Text"
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "path": "home",
+      "type": "object",
+      "label": "Home Page Content",
+      "fields": [
+        {
+          "key": "heroSeason",
+          "type": "text",
+          "label": "Hero Season / Eyebrow"
+        },
+        {
+          "key": "heroTitle",
+          "type": "text",
+          "label": "Hero Headline"
+        },
+        {
+          "key": "heroSummary",
+          "type": "textarea",
+          "label": "Hero Subtitle"
+        },
+        {
+          "key": "heroImage",
+          "type": "image",
+          "label": "Hero Editorial Banner",
+          "recommendedWidth": 1920,
+          "recommendedHeight": 1080
+        },
+        {
+          "key": "primaryCtaLabel",
+          "type": "text",
+          "label": "Primary Hero Button"
+        },
+        {
+          "key": "secondaryCtaLabel",
+          "type": "text",
+          "label": "Secondary Hero Button"
+        },
+        {
+          "key": "tickerItem1",
+          "type": "text",
+          "label": "Ticker Message 1"
+        },
+        {
+          "key": "tickerItem2",
+          "type": "text",
+          "label": "Ticker Message 2"
+        },
+        {
+          "key": "tickerItem3",
+          "type": "text",
+          "label": "Ticker Message 3"
+        },
+        {
+          "key": "tickerItem4",
+          "type": "text",
+          "label": "Ticker Message 4"
+        },
+        {
+          "key": "categoryLabel",
+          "type": "text",
+          "label": "Collections Section Eyebrow"
+        },
+        {
+          "key": "categoryTitle",
+          "type": "text",
+          "label": "Collections Section Title"
+        },
+        {
+          "key": "categoryDesc",
+          "type": "textarea",
+          "label": "Collections Section Description"
+        },
+        {
+          "key": "categoryLabel1",
+          "type": "text",
+          "label": "Collection Tab 1"
+        },
+        {
+          "key": "categoryLabel2",
+          "type": "text",
+          "label": "Collection Tab 2"
+        },
+        {
+          "key": "categoryLabel3",
+          "type": "text",
+          "label": "Collection Tab 3"
+        },
+        {
+          "key": "categoryLabel4",
+          "type": "text",
+          "label": "Collection Tab 4"
+        },
+        {
+          "key": "product1Name",
+          "type": "text",
+          "label": "Garment 1 Title"
+        },
+        {
+          "key": "product1Category",
+          "type": "text",
+          "label": "Garment 1 Collection"
+        },
+        {
+          "key": "product1Price",
+          "type": "text",
+          "label": "Garment 1 Price"
+        },
+        {
+          "key": "product1Badge",
+          "type": "text",
+          "label": "Garment 1 Badge"
+        },
+        {
+          "key": "product1Sizes",
+          "type": "text",
+          "label": "Garment 1 Available Sizes"
+        },
+        {
+          "key": "product1Image",
+          "type": "image",
+          "label": "Garment 1 Photo"
+        },
+        {
+          "key": "product2Name",
+          "type": "text",
+          "label": "Garment 2 Title"
+        },
+        {
+          "key": "product2Category",
+          "type": "text",
+          "label": "Garment 2 Collection"
+        },
+        {
+          "key": "product2Price",
+          "type": "text",
+          "label": "Garment 2 Price"
+        },
+        {
+          "key": "product2Badge",
+          "type": "text",
+          "label": "Garment 2 Badge"
+        },
+        {
+          "key": "product2Sizes",
+          "type": "text",
+          "label": "Garment 2 Available Sizes"
+        },
+        {
+          "key": "product2Image",
+          "type": "image",
+          "label": "Garment 2 Photo"
+        },
+        {
+          "key": "product3Name",
+          "type": "text",
+          "label": "Garment 3 Title"
+        },
+        {
+          "key": "product3Category",
+          "type": "text",
+          "label": "Garment 3 Collection"
+        },
+        {
+          "key": "product3Price",
+          "type": "text",
+          "label": "Garment 3 Price"
+        },
+        {
+          "key": "product3Badge",
+          "type": "text",
+          "label": "Garment 3 Badge"
+        },
+        {
+          "key": "product3Sizes",
+          "type": "text",
+          "label": "Garment 3 Available Sizes"
+        },
+        {
+          "key": "product3Image",
+          "type": "image",
+          "label": "Garment 3 Photo"
+        },
+        {
+          "key": "product4Name",
+          "type": "text",
+          "label": "Garment 4 Title"
+        },
+        {
+          "key": "product4Category",
+          "type": "text",
+          "label": "Garment 4 Collection"
+        },
+        {
+          "key": "product4Price",
+          "type": "text",
+          "label": "Garment 4 Price"
+        },
+        {
+          "key": "product4Badge",
+          "type": "text",
+          "label": "Garment 4 Badge"
+        },
+        {
+          "key": "product4Sizes",
+          "type": "text",
+          "label": "Garment 4 Available Sizes"
+        },
+        {
+          "key": "product4Image",
+          "type": "image",
+          "label": "Garment 4 Photo"
+        },
+        {
+          "key": "product5Name",
+          "type": "text",
+          "label": "Garment 5 Title"
+        },
+        {
+          "key": "product5Category",
+          "type": "text",
+          "label": "Garment 5 Collection"
+        },
+        {
+          "key": "product5Price",
+          "type": "text",
+          "label": "Garment 5 Price"
+        },
+        {
+          "key": "product5Badge",
+          "type": "text",
+          "label": "Garment 5 Badge"
+        },
+        {
+          "key": "product5Sizes",
+          "type": "text",
+          "label": "Garment 5 Available Sizes"
+        },
+        {
+          "key": "product5Image",
+          "type": "image",
+          "label": "Garment 5 Photo"
+        },
+        {
+          "key": "product6Name",
+          "type": "text",
+          "label": "Garment 6 Title"
+        },
+        {
+          "key": "product6Category",
+          "type": "text",
+          "label": "Garment 6 Collection"
+        },
+        {
+          "key": "product6Price",
+          "type": "text",
+          "label": "Garment 6 Price"
+        },
+        {
+          "key": "product6Badge",
+          "type": "text",
+          "label": "Garment 6 Badge"
+        },
+        {
+          "key": "product6Sizes",
+          "type": "text",
+          "label": "Garment 6 Available Sizes"
+        },
+        {
+          "key": "product6Image",
+          "type": "image",
+          "label": "Garment 6 Photo"
+        },
+        {
+          "key": "product7Name",
+          "type": "text",
+          "label": "Garment 7 Title"
+        },
+        {
+          "key": "product7Category",
+          "type": "text",
+          "label": "Garment 7 Collection"
+        },
+        {
+          "key": "product7Price",
+          "type": "text",
+          "label": "Garment 7 Price"
+        },
+        {
+          "key": "product7Badge",
+          "type": "text",
+          "label": "Garment 7 Badge"
+        },
+        {
+          "key": "product7Sizes",
+          "type": "text",
+          "label": "Garment 7 Available Sizes"
+        },
+        {
+          "key": "product7Image",
+          "type": "image",
+          "label": "Garment 7 Photo"
+        },
+        {
+          "key": "product8Name",
+          "type": "text",
+          "label": "Garment 8 Title"
+        },
+        {
+          "key": "product8Category",
+          "type": "text",
+          "label": "Garment 8 Collection"
+        },
+        {
+          "key": "product8Price",
+          "type": "text",
+          "label": "Garment 8 Price"
+        },
+        {
+          "key": "product8Badge",
+          "type": "text",
+          "label": "Garment 8 Badge"
+        },
+        {
+          "key": "product8Sizes",
+          "type": "text",
+          "label": "Garment 8 Available Sizes"
+        },
+        {
+          "key": "product8Image",
+          "type": "image",
+          "label": "Garment 8 Photo"
+        },
+        {
+          "key": "lookbookEyebrow",
+          "type": "text",
+          "label": "Lookbook Eyebrow"
+        },
+        {
+          "key": "lookbookTitle",
+          "type": "text",
+          "label": "Lookbook Headline"
+        },
+        {
+          "key": "lookbookDesc",
+          "type": "textarea",
+          "label": "Lookbook Description"
+        },
+        {
+          "key": "lookbookCtaLabel",
+          "type": "text",
+          "label": "Lookbook Action Button"
+        },
+        {
+          "key": "lookbookImage",
+          "type": "image",
+          "label": "Editorial Lookbook Image"
+        },
+        {
+          "key": "storyLabel",
+          "type": "text",
+          "label": "Atelier Story Eyebrow"
+        },
+        {
+          "key": "storyTitle",
+          "type": "text",
+          "label": "Atelier Story Headline"
+        },
+        {
+          "key": "storyDesc",
+          "type": "textarea",
+          "label": "Atelier Story Description"
+        },
+        {
+          "key": "storyImage",
+          "type": "image",
+          "label": "Atelier Story Image"
+        },
+        {
+          "key": "stat1Value",
+          "type": "text",
+          "label": "Statistic 1 Value"
+        },
+        {
+          "key": "stat1Label",
+          "type": "text",
+          "label": "Statistic 1 Label"
+        },
+        {
+          "key": "stat2Value",
+          "type": "text",
+          "label": "Statistic 2 Value"
+        },
+        {
+          "key": "stat2Label",
+          "type": "text",
+          "label": "Statistic 2 Label"
+        },
+        {
+          "key": "stat3Value",
+          "type": "text",
+          "label": "Statistic 3 Value"
+        },
+        {
+          "key": "stat3Label",
+          "type": "text",
+          "label": "Statistic 3 Label"
+        },
+        {
+          "key": "whatsappLabel",
+          "type": "text",
+          "label": "Concierge Section Eyebrow"
+        },
+        {
+          "key": "whatsappTitle",
+          "type": "text",
+          "label": "Concierge Section Headline"
+        },
+        {
+          "key": "whatsappDesc",
+          "type": "textarea",
+          "label": "Concierge Description"
+        },
+        {
+          "key": "whatsappCtaLabel",
+          "type": "text",
+          "label": "Styling Concierge Button Label"
+        },
+        {
+          "key": "whatsappCtaUrl",
+          "type": "text",
+          "label": "Styling Concierge WhatsApp URL"
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "path": "product",
+      "type": "object",
+      "label": "Product Detail Content",
+      "fields": [
+        {
+          "key": "name",
+          "type": "text",
+          "label": "Garment Title",
+          "required": true
+        },
+        {
+          "key": "price",
+          "type": "text",
+          "label": "Garment Price",
+          "required": true
+        },
+        {
+          "key": "badge",
+          "type": "text",
+          "label": "Product Tag / Badge"
+        },
+        {
+          "key": "description",
+          "type": "textarea",
+          "label": "Garment Editorial Description"
+        },
+        {
+          "key": "featuredImage",
+          "type": "image",
+          "label": "Main Garment Photograph"
+        },
+        {
+          "key": "addToSelectionLabel",
+          "type": "text",
+          "label": "Add to Bag Button Label"
+        },
+        {
+          "key": "sizeGuideLabel",
+          "type": "text",
+          "label": "Size Guide Link Label"
+        },
+        {
+          "key": "fabricTitle",
+          "type": "text",
+          "label": "Fabric & Craftsmanship Heading"
+        },
+        {
+          "key": "fabricDetails",
+          "type": "textarea",
+          "label": "Fabric Composition & GSM"
+        },
+        {
+          "key": "fitTitle",
+          "type": "text",
+          "label": "Fit & Model Heading"
+        },
+        {
+          "key": "fitDetails",
+          "type": "textarea",
+          "label": "Fit Description & Model Measurements"
+        },
+        {
+          "key": "shippingTitle",
+          "type": "text",
+          "label": "Delivery & Packaging Heading"
+        },
+        {
+          "key": "shippingSummary",
+          "type": "textarea",
+          "label": "Delivery Times & Packaging Guarantee"
+        },
+        {
+          "key": "shippingReturns",
+          "type": "textarea",
+          "label": "Exchange Policy"
+        },
+        {
+          "key": "relatedLabel",
+          "type": "text",
+          "label": "Complete The Look Eyebrow"
+        },
+        {
+          "key": "relatedTitle",
+          "type": "text",
+          "label": "Complete The Look Heading"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "common": {
+      "websiteTitle": "ATELIER ÉTOILE",
+      "shortDescription": "Contemporary luxury silhouettes and sculpted streetwear, ethically tailored with heavyweight organic textiles and bespoke architectural cuts.",
+      "tagline": "Modern Couture & Streetwear",
+      "announcementText": "Complimentary Worldwide Express Delivery on orders over LKR 15,000 — Code ATELIER10 for 10% off",
+      "logoUrl": "/logo.svg",
+      "brandUrl": "/",
+      "headerCtaLabel": "Shop The Drop",
+      "copyright": "© 2026 ATELIER ÉTOILE Studios. All rights reserved.",
+      "navLabels": {
+        "home": "Home",
+        "shop": "Shop All",
+        "lookbook": "Lookbook SS26",
+        "sizeGuide": "Size & Fit Guide",
+        "about": "Atelier",
+        "contact": "Concierge"
+      },
+      "business": {
+        "phone": "+94 77 987 6543",
+        "whatsapp": "94779876543",
+        "email": "concierge@atelieretoile.com",
+        "location": {
+          "address": "18 Horton Place, Cinnamon Gardens",
+          "city": "Colombo 07",
+          "country": "Sri Lanka"
+        }
+      },
+      "footer": {
+        "collectionsHeading": "Collections",
+        "collectionsLink1": "New Drop: Edition 06",
+        "collectionsLink2": "Heavyweight Knitwear",
+        "collectionsLink3": "Tailored Trousers",
+        "collectionsLink4": "Structured Outerwear",
+        "atelierHeading": "Atelier",
+        "atelierLink1": "Our Sustainability Ethos",
+        "atelierLink2": "Fabric Sourcing & Care",
+        "atelierLink3": "Colombo Flagship Showroom",
+        "conciergeHeading": "Concierge",
+        "conciergeLink1": "Complimentary Styling Advisor",
+        "conciergeLink2": "Size & Measurement Chart",
+        "conciergeLink3": "Order Status & Returns",
+        "instagramUrl": "https://instagram.com",
+        "tiktokUrl": "https://tiktok.com",
+        "pinterestUrl": "https://pinterest.com"
+      }
+    },
+    "home": {
+      "heroSeason": "SPRING / SUMMER 2026",
+      "heroTitle": "Architectural Cuts. Heavyweight Drape.",
+      "heroSummary": "Sculpted minimalism crafted for effortless presence. Heavyweight organic cottons, tailored raw linen, and structured outerwear designed for the contemporary wardrobe.",
+      "heroImage": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1920&q=85",
+      "primaryCtaLabel": "Explore Collection",
+      "secondaryCtaLabel": "View SS26 Lookbook",
+      "tickerItem1": "Ethically Sourced 280 GSM Organic Cottons",
+      "tickerItem2": "Complimentary Islandwide Express Delivery",
+      "tickerItem3": "One-on-One WhatsApp Styling Concierge",
+      "tickerItem4": "Limited Batch Drops — No Restocks",
+      "categoryLabel": "CURATED PIECES",
+      "categoryTitle": "The Capsule Wardrobe",
+      "categoryDesc": "Essential modular silhouettes tailored to layer seamlessly from daytime meetings to midnight gallery openings.",
+      "categoryLabel1": "Outerwear",
+      "categoryLabel2": "Tops & Tees",
+      "categoryLabel3": "Tailored Trousers",
+      "categoryLabel4": "Accessories",
+      "product1Name": "Classic Oversized Heavyweight Tee",
+      "product1Category": "Tops & Tees",
+      "product1Price": "LKR 8,900",
+      "product1Badge": "New Drop",
+      "product1Sizes": "XS · S · M · L · XL",
+      "product1Image": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=85",
+      "product2Name": "Structured Double-Breasted Linen Blazer",
+      "product2Category": "Outerwear",
+      "product2Price": "LKR 28,500",
+      "product2Badge": "Editorial",
+      "product2Sizes": "S · M · L",
+      "product2Image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=85",
+      "product3Name": "Pleated Wide-Leg Wool Blend Trousers",
+      "product3Category": "Tailored Trousers",
+      "product3Price": "LKR 16,800",
+      "product3Badge": "Bestseller",
+      "product3Sizes": "28 · 30 · 32 · 34 · 36",
+      "product3Image": "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&q=85",
+      "product4Name": "Minimalist Cashmere Mock Neck Sweater",
+      "product4Category": "Tops & Tees",
+      "product4Price": "LKR 22,400",
+      "product4Badge": "Pre-Order",
+      "product4Sizes": "S · M · L · XL",
+      "product4Image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=85",
+      "product5Name": "Raw Denim Relaxed Carpenter Pant",
+      "product5Category": "Tailored Trousers",
+      "product5Price": "LKR 18,200",
+      "product5Badge": "",
+      "product5Sizes": "30 · 32 · 34 · 36",
+      "product5Image": "https://images.unsplash.com/photo-1542272604-780c96856592?w=800&q=85",
+      "product6Name": "Cocoon Hooded Trench Coat",
+      "product6Category": "Outerwear",
+      "product6Price": "LKR 34,900",
+      "product6Badge": "Limited",
+      "product6Sizes": "One Size (Fluid)",
+      "product6Image": "https://images.unsplash.com/photo-1544441893-675973e31985?w=800&q=85",
+      "product7Name": "Bias-Cut Silk Habotai Slip Dress",
+      "product7Category": "Tops & Tees",
+      "product7Price": "LKR 24,500",
+      "product7Badge": "New",
+      "product7Sizes": "XS · S · M · L",
+      "product7Image": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=85",
+      "product8Name": "Sculptural Calfskin Leather Belt",
+      "product8Category": "Accessories",
+      "product8Price": "LKR 9,500",
+      "product8Badge": "",
+      "product8Sizes": "85cm · 95cm · 105cm",
+      "product8Image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=85",
+      "lookbookEyebrow": "EDITORIAL CAMPAIGN",
+      "lookbookTitle": "Shadows & Silhouettes in Colombo",
+      "lookbookDesc": "Shot on 35mm film across the brutalist architectural landmarks of Colombo. Discover how raw sunlight interacts with tailored textures and structural drape.",
+      "lookbookCtaLabel": "Browse Editorial Gallery",
+      "lookbookImage": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=85",
+      "storyLabel": "CRAFT & SUSTAINABILITY",
+      "storyTitle": "Garments Made to Outlive Trends",
+      "storyDesc": "Every ATELIER ÉTOILE garment begins with deadstock or GOTS-certified organic fiber. We partner with multi-generational master patternmakers in Sri Lanka, producing strictly small batches to eliminate waste and guarantee heirloom longevity.",
+      "storyImage": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&q=85",
+      "stat1Value": "280 GSM",
+      "stat1Label": "Custom Knitted Heavyweight Cotton",
+      "stat2Value": "100%",
+      "stat2Label": "Plastic-Free Biodegradable Packaging",
+      "stat3Value": "< 100",
+      "stat3Label": "Pieces Produced per Limited Silhouette",
+      "whatsappLabel": "PERSONAL STYLING ADVISOR",
+      "whatsappTitle": "Curate Your Fit via WhatsApp",
+      "whatsappDesc": "Unsure about shoulder drape or trouser inseam? Message our in-house stylist on WhatsApp for personalized measurement recommendations and direct concierge ordering.",
+      "whatsappCtaLabel": "Chat with Our Stylist",
+      "whatsappCtaUrl": "https://wa.me/94779876543?text=Hi%20Atelier%20%C3%89toile%2C%20I'd%20like%20guidance%20with%20sizing%20and%20styling%20for%20my%20order."
+    },
+    "product": {
+      "name": "Classic Oversized Heavyweight Tee",
+      "price": "LKR 8,900",
+      "badge": "NEW DROP",
+      "description": "Constructed from custom-developed 280 GSM combed organic cotton with a boxy, dropped-shoulder silhouette. Preshrunk to ensure a permanent architectural drape wash after wash.",
+      "featuredImage": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1000&q=85",
+      "addToSelectionLabel": "Add to Bag",
+      "sizeGuideLabel": "View Fit & Measurement Guide",
+      "fabricTitle": "Fabric & Craftsmanship",
+      "fabricDetails": "100% GOTS-certified organic cotton, 280 GSM heavyweight jersey. Twin-needle reinforced neckband that will never bacon or warp. Garment dyed in Colombo using low-impact, non-toxic reactive dyes.",
+      "fitTitle": "Fit & Model Information",
+      "fitDetails": "Relaxed oversized cut. We recommend taking your normal size for the intended boxy aesthetic, or sizing down for a closer classic fit. Model is 6'1\" (185 cm) and wearing size L in Onyx Black.",
+      "shippingTitle": "Delivery & Ethical Packaging",
+      "shippingSummary": "Free islandwide courier delivery within 48 hours. Orders are presented in archival tissue wrap inside a 100% compostable cassava starch mailer.",
+      "shippingReturns": "14-day exchange privilege for unworn garments with original tags intact. Simple courier pickup arranged via WhatsApp.",
+      "relatedLabel": "COMPLETE THE SILHOUETTE",
+      "relatedTitle": "Recommended Pairings"
+    }
+  }
+}
