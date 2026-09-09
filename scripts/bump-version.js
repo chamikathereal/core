@@ -56,6 +56,22 @@ execSync('npm install --package-lock-only --ignore-scripts --workspaces=false', 
   stdio: 'inherit',
 });
 
+// Purge obsolete workspaces from root lockfile
+const rootLockPath = path.join(rootDir, 'package-lock.json');
+if (fs.existsSync(rootLockPath)) {
+  const lock = JSON.parse(fs.readFileSync(rootLockPath, 'utf8'));
+  let modified = false;
+  for (const stale of ['packages/editable-components', 'packages/ceeg-ui', 'cli/fivora-cli']) {
+    if (lock.packages?.[stale]) {
+      delete lock.packages[stale];
+      modified = true;
+    }
+  }
+  if (modified) {
+    fs.writeFileSync(rootLockPath, JSON.stringify(lock, null, 2) + '\n');
+  }
+}
+
 console.log(`\n📦 Rebuilding packages and syncing templates...`);
 execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
 
