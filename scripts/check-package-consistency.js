@@ -62,9 +62,13 @@ expectEqual('template lock name', sourceTemplateLock.name, sourceTemplate.name);
 expectEqual('template lock root name', sourceTemplateLock.packages?.['']?.name, sourceTemplate.name);
 expectEqual('root template workspace name', rootLock.packages?.['templates/nextjs']?.name, sourceTemplate.name);
 
-for (const staleWorkspace of ['cli/fivora-cli', 'packages/ceeg-ui', 'packages/editable-components']) {
-  if (rootLock.packages?.[staleWorkspace]) {
-    errors.push(`root lock still contains obsolete workspace ${JSON.stringify(staleWorkspace)}`);
+// Dynamic Validation: Ensure every workspace in package-lock.json actually exists on disk
+for (const packageKey of Object.keys(rootLock.packages || {})) {
+  if (packageKey.startsWith('packages/') || packageKey.startsWith('cli/') || packageKey.startsWith('templates/')) {
+    const fullPath = path.join(rootDir, packageKey);
+    if (!fs.existsSync(fullPath) || !fs.existsSync(path.join(fullPath, 'package.json'))) {
+      errors.push(`root lock still contains orphaned workspace ${JSON.stringify(packageKey)} that does not exist on disk`);
+    }
   }
 }
 

@@ -5,11 +5,7 @@
   "bin": {
     "deneb": "bin/index.js",
     "denebui": "bin/index.js",
-    "deneb-cli": "bin/index.js",
-    "@deneb-ui/cli": "bin/index.js",
-    "cli": "bin/index.js",
-    "ceeg": "bin/index.js",
-    "ceegui": "bin/index.js"
+    "deneb-cli": "bin/index.js"
   },
   "publishConfig": {
     "access": "public"

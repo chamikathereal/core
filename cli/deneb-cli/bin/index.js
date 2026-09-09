@@ -791,7 +791,7 @@ function updateDependencies(cmdArgs = []) {
   // 1. Update npm packages
   if (isLocal) {
     const uiDir = path.join(localPath, 'packages', 'deneb-ui');
-    const cliDir = path.join(localPath, 'cli', 'fivora-cli');
+    const cliDir = path.join(localPath, 'cli', 'deneb-cli');
 
     if (fs.existsSync(uiDir) && fs.existsSync(cliDir)) {
       console.log('🔄 Updating from local workspace:');

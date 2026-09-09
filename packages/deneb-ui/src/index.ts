@@ -83,7 +83,3 @@ export const DENEB_FRAMEWORK_NAME = 'DENEB UI';
 export const DENEB_FRAMEWORK_VERSION = '2.0.0';
 export const DENEB_AUTHOR = 'Chamika Gayashan & Induranga Kawishwara';
 
-// Backward compatibility alias
-export const CEEG_FRAMEWORK_NAME = DENEB_FRAMEWORK_NAME;
-export const CEEG_FRAMEWORK_VERSION = DENEB_FRAMEWORK_VERSION;
-export const CEEG_AUTHOR = DENEB_AUTHOR;
