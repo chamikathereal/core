@@ -13,7 +13,7 @@ import type { DenebFontDefinition, DenebFontManifest } from './types';
 
 export const FONTS_MANIFEST_REL = '.deneb/fonts.json';
 export const FONTS_CSS_REL = 'src/fonts/deneb-fonts.css';
-export const FONTS_CSS_IMPORT = './fonts/deneb-fonts.css';
+export const FONTS_CSS_IMPORT = '../fonts/deneb-fonts.css';
 
 const SKIP_HOST_NAMES = new Set([
   '@deneb-ui/ui',
@@ -127,22 +127,62 @@ export function generateFontsCss(fonts: DenebFontDefinition[]): string {
   return `${lines.join('\n').trim()}\n`;
 }
 
-function patchLayoutImport(projectDir: string): { patched: boolean; reason: string; layoutPath?: string } {
+function findLayoutPath(projectDir: string): string | undefined {
   const layoutCandidates = [
     path.join(projectDir, 'src', 'app', 'layout.tsx'),
     path.join(projectDir, 'src', 'app', 'layout.jsx'),
     path.join(projectDir, 'app', 'layout.tsx'),
     path.join(projectDir, 'app', 'layout.jsx'),
   ];
-  const layoutPath = layoutCandidates.find((candidate) => fs.existsSync(candidate));
+  return layoutCandidates.find((candidate) => fs.existsSync(candidate));
+}
+
+function ensureRootHydrationGuard(source: string): string {
+  let next = source;
+  if (!/<html\b[^>]*suppressHydrationWarning/.test(next)) {
+    next = next.replace(/<html\b([^>]*)>/, '<html$1 suppressHydrationWarning>');
+  }
+  if (!/<body\b[^>]*suppressHydrationWarning/.test(next)) {
+    next = next.replace(/<body\b([^>]*)>/, '<body$1 suppressHydrationWarning>');
+  }
+  return next;
+}
+
+function fontsCssImportSpecifier(projectDir: string, layoutPath: string): string {
+  const cssAbs = path.join(projectDir, FONTS_CSS_REL);
+  let rel = path.relative(path.dirname(layoutPath), cssAbs).replace(/\\/g, '/');
+  if (!rel.startsWith('.')) rel = `./${rel}`;
+  return rel;
+}
+
+function patchLayoutImport(projectDir: string): { patched: boolean; reason: string; layoutPath?: string } {
+  const layoutPath = findLayoutPath(projectDir);
   if (!layoutPath) return { patched: false, reason: 'layout.tsx not found' };
 
+  const specifier = fontsCssImportSpecifier(projectDir, layoutPath);
+  const importLine = `import '${specifier}';`;
   let source = fs.readFileSync(layoutPath, 'utf8');
-  if (source.includes(FONTS_CSS_IMPORT) || source.includes('deneb-fonts.css')) {
+
+  // Older installer wrote ./fonts/... next to layout.tsx; the CSS lives in src/fonts.
+  if (source.includes("import './fonts/deneb-fonts.css'")) {
+    source = ensureRootHydrationGuard(source.replace("import './fonts/deneb-fonts.css';", importLine));
+    fs.writeFileSync(layoutPath, source, 'utf8');
+    return { patched: true, reason: 'rewrote stale import', layoutPath };
+  }
+  if (source.includes('import "./fonts/deneb-fonts.css"')) {
+    source = ensureRootHydrationGuard(source.replace('import "./fonts/deneb-fonts.css";', importLine));
+    fs.writeFileSync(layoutPath, source, 'utf8');
+    return { patched: true, reason: 'rewrote stale import', layoutPath };
+  }
+  if (source.includes('deneb-fonts.css')) {
+    const guarded = ensureRootHydrationGuard(source);
+    if (guarded !== source) {
+      fs.writeFileSync(layoutPath, guarded, 'utf8');
+      return { patched: true, reason: 'hydration guard', layoutPath };
+    }
     return { patched: false, reason: 'already imported', layoutPath };
   }
 
-  const importLine = `import '${FONTS_CSS_IMPORT}';`;
   if (source.includes("import './globals.css'")) {
     source = source.replace("import './globals.css';", `import './globals.css';\n${importLine}`);
   } else if (source.includes('import "./globals.css"')) {
@@ -150,6 +190,7 @@ function patchLayoutImport(projectDir: string): { patched: boolean; reason: stri
   } else {
     source = `${importLine}\n${source}`;
   }
+  source = ensureRootHydrationGuard(source);
   fs.writeFileSync(layoutPath, source, 'utf8');
   return { patched: true, reason: 'patched', layoutPath };
 }

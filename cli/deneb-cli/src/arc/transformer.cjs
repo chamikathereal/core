@@ -580,11 +580,36 @@ function inferPageKey(relativeFile) {
   return 'home';
 }
 
+function ensureHtmlBodyHydration(ast) {
+  recast.types.visit(ast, {
+    visitJSXOpeningElement(pathNode) {
+      const name = pathNode.node.name;
+      const tag = name && name.type === 'JSXIdentifier' ? name.name : '';
+      if (tag === 'html' || tag === 'body') {
+        const has = (pathNode.node.attributes || []).some(
+          (attr) => attr.type === 'JSXAttribute' && attr.name && attr.name.name === 'suppressHydrationWarning',
+        );
+        if (!has) {
+          pathNode.node.attributes.push(b.jsxAttribute(b.jsxIdentifier('suppressHydrationWarning')));
+        }
+      }
+      this.traverse(pathNode);
+    },
+  });
+}
+
 function instrumentLayoutSource(code, siteDataImport) {
   if (/SiteDataProvider|DenebDataProvider/.test(code)) {
-    return { code, updated: false };
+    if (/suppressHydrationWarning/.test(code)) {
+      return { code, updated: false };
+    }
+    const ast = parseSource(code, 'layout.tsx');
+    ensureHtmlBodyHydration(ast);
+    return { code: printSource(ast, code), updated: true };
   }
+
   const ast = parseSource(code, 'layout.tsx');
+  ensureHtmlBodyHydration(ast);
   ensureImport(ast, '@deneb-ui/ui', ['SiteDataProvider']);
   ensureDefaultImport(ast, siteDataImport, 'initialSiteData');
 
