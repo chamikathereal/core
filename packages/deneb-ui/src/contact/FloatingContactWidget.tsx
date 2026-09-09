@@ -80,7 +80,8 @@ export function FloatingContactWidget({
     position: 'absolute',
     bottom: '4.25rem',
     [isRight ? 'right' : 'left']: '0',
-    width: '18rem',
+    width: 'min(18rem, calc(100vw - 2rem))',
+    maxWidth: 'calc(100vw - 2rem)',
     backgroundColor: '#ffffff',
     borderRadius: '1rem',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
@@ -91,7 +92,7 @@ export function FloatingContactWidget({
 
   return (
     <div
-      className={`deneb-floating-contact fixed z-50 bottom-6 ${isRight ? 'right-6' : 'left-6'} ${className}`}
+      className={`deneb-floating-contact fixed z-50 bottom-6 ${isRight ? 'right-6 deneb-floating-right' : 'left-6 deneb-floating-left'} ${className}`}
       style={containerStyle}
       data-preview-field-path={fieldPath}
     >

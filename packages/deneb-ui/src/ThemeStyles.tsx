@@ -1,4 +1,5 @@
 import React from 'react';
+import { ResponsiveBaseStyles } from './ResponsiveBaseStyles';
 
 export interface TemplateTheme {
   primaryColor?: string;
@@ -218,5 +219,10 @@ ${cssLines}
     }
   `;
 
-  return <style dangerouslySetInnerHTML={{ __html: css }} />;
+  return (
+    <>
+      <ResponsiveBaseStyles />
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+    </>
+  );
 }

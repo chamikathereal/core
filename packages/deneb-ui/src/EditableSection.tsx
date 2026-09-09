@@ -1,15 +1,8 @@
 import React from 'react';
 import { BoxSpacing } from './EditableBox';
+import { RESPONSIVE_SECTION_PADDING } from './utils/responsive';
 
-const SECTION_PADDING_MAP: Record<string, string> = {
-  none: '0',
-  xs: '1.5rem 0',
-  sm: '2.5rem 0',
-  md: '4rem 0',
-  lg: '6rem 0',
-  xl: '8rem 0',
-  '2xl': '10rem 0',
-};
+const SECTION_PADDING_MAP: Record<string, string> = RESPONSIVE_SECTION_PADDING;
 
 export interface EditableSectionProps extends React.HTMLAttributes<HTMLElement> {
   as?: React.ElementType;

@@ -105,6 +105,7 @@ export function EditableContactForm({
     >
       {(resolvedFormTitle || formTitlePath) && (
         <h2
+          className="deneb-contact-form-title"
           data-preview-field-path={formTitlePath || 'contact.formTitle'}
           style={{
             fontSize: '1.5rem',

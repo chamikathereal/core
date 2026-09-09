@@ -1,7 +1,7 @@
 {
   "name": "@deneb-ui/ui",
   "version": "2.0.22",
-  "description": "DENEB UI - The premier visual-first React component framework for the modern web. Created by Chamika Gayashan & Induranga Kawishwara.",
+  "description": "Visual-first React component library for editable commerce storefronts. Built for Next.js and Fivora.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
@@ -12,7 +12,7 @@
     "url": "git+https://github.com/deneb-ui/core.git",
     "directory": "packages/deneb-ui"
   },
-  "homepage": "https://github.com/deneb-ui/core#readme",
+  "homepage": "https://deneb.fivora.site",
   "bugs": {
     "url": "https://github.com/deneb-ui/core/issues"
   },
@@ -28,14 +28,23 @@
     "deneb",
     "deneb-ui",
     "fivora",
-    "ecommerce",
-    "shadcn",
-    "heroui",
-    "visual-editing",
+    "react",
     "nextjs",
-    "react"
+    "components",
+    "ui",
+    "ecommerce",
+    "storefront",
+    "visual-editing",
+    "responsive",
+    "typescript",
+    "shadcn",
+    "tailwind"
   ],
   "author": "Chamika Gayashan & Induranga Kawishwara",
+  "contributors": [
+    "Chamika Gayashan <https://github.com/chamikathereal>",
+    "Induranga Kawishwara <https://github.com/Induranga-kawishwara>"
+  ],
   "license": "MIT",
   "dependencies": {},
   "peerDependencies": {

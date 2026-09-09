@@ -121,6 +121,7 @@ export function EditablePricingCard({
             as="span"
             id={`${itemPath}.price`}
             defaultValue={price}
+            className="deneb-pricing-amount"
             style={{
               fontSize: '2.75rem',
               fontWeight: 800,

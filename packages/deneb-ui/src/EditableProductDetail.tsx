@@ -132,7 +132,7 @@ export function EditableProductDetail({
         <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-4">
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto max-h-[580px] pb-2 md:pb-0 scrollbar-none">
+            <div className="deneb-product-detail-gallery flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto max-h-[580px] pb-2 md:pb-0 scrollbar-none">
               {images.map((img, idx) => (
                 <button
                   key={idx}
@@ -242,7 +242,7 @@ export function EditableProductDetail({
                 <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
                   Select Size
                 </span>
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                <div className="deneb-product-detail-sizes grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {sizes.map((s) => (
                     <button
                       key={s}

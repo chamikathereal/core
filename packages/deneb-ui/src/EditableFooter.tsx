@@ -255,7 +255,7 @@ export function EditableFooter({
             gap: '3rem',
             marginBottom: '4rem',
           }}
-          className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 mb-16"
+          className="deneb-footer-grid grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 mb-16"
         >
           {/* Column 1: Brand (Auto-Synced Logo & Title) */}
           <div className="flex flex-col gap-4">

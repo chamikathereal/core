@@ -602,8 +602,8 @@ function initProject(targetInput, options = {}) {
   const pkgPath = path.join(targetDir, 'package.json');
 
   console.log('\n' + createBox([
-    '\x1b[1m\x1b[37mDENEB TEMPLATE INITIALIZER\x1b[0m',
-    '\x1b[90mConfigure existing Next.js project for Fivora Platform\x1b[0m',
+    '\x1b[1m\x1b[37mDENEB ARC\x1b[0m',
+    '\x1b[90mAdaptive Refactoring Compiler for Fivora-editable UI\x1b[0m',
     '\x1b[90mPowered by DENEB-UI Collaborate with FIVORA\x1b[0m'
   ], 58) + '\n');
 
@@ -637,18 +637,25 @@ function initProject(targetInput, options = {}) {
   // 1. Scan / Detect Pages
   const detectedPages = detectPages(targetDir);
 
-  // 2. Run Universal Template Conversion Engine
-  // Automatically detects CSS/UI frameworks (shadcn/ui, HeroUI, Tailwind CSS),
-  // creates safe backup, instruments Root Layout with SiteDataProvider,
-  // extracts hardcoded text/images/buttons/placeholders,
-  // injects data-preview-field-path markers, harmonizes UI components,
-  // and builds synchronized site-data.json & fivora-template.json.
+  // 2. Deneb ARC (default) or legacy regex converter (--legacy)
   let conversionRes = null;
   try {
-    const { runUniversalTemplateConversion } = require('../src/tools/template-converter.cjs');
-    conversionRes = runUniversalTemplateConversion(targetDir, projectName, detectedPages, options);
+    if (options.legacy) {
+      const { runUniversalTemplateConversion } = require('../src/tools/template-converter.cjs');
+      conversionRes = runUniversalTemplateConversion(targetDir, projectName, detectedPages, options);
+    } else {
+      const { runDenebArc } = require('../src/arc/index.cjs');
+      conversionRes = runDenebArc(targetDir, projectName, {
+        ...options,
+        detectedPages,
+      });
+    }
   } catch (err) {
     console.error(`\x1b[33m⚠ Note:\x1b[0m Automated conversion encountered an issue: ${err.message}. Falling back to default generation.`);
+  }
+
+  if (options.dryRun) {
+    return conversionRes;
   }
 
   // 3. Fallback: Generate fivora-template.json if not yet present
@@ -999,17 +1006,31 @@ if (command === 'validate' && (commandArgs[0] === 'and' || commandArgs[0] === '&
 if (command === 'init') {
   let targetInput = '.';
   let recipeName = null;
+  let dryRun = false;
+  let explain = false;
+  let legacy = false;
+  let telemetry = 'off';
   for (let i = 0; i < commandArgs.length; i++) {
     const arg = commandArgs[i];
     if (arg === '--recipe' || arg === '-r') {
       recipeName = commandArgs[++i];
     } else if (arg.startsWith('--recipe=')) {
       recipeName = arg.split('=')[1];
+    } else if (arg === '--dry-run' || arg === '--dryrun') {
+      dryRun = true;
+    } else if (arg === '--explain') {
+      explain = true;
+    } else if (arg === '--legacy') {
+      legacy = true;
+    } else if (arg === '--telemetry' && commandArgs[i + 1]) {
+      telemetry = commandArgs[++i];
+    } else if (arg.startsWith('--telemetry=')) {
+      telemetry = arg.split('=')[1] || 'off';
     } else if (!arg.startsWith('-')) {
       targetInput = arg;
     }
   }
-  initProject(targetInput, { recipeName });
+  initProject(targetInput, { recipeName, dryRun, explain, legacy, telemetry });
 } else if (command === 'create') {
   createTemplate(commandArgs[0]);
 } else if (command === 'add') {
@@ -1072,7 +1093,8 @@ if (command === 'init') {
   DENEB UI Framework — Powered by DENEB-UI Collaborate with FIVORA
 
 Core Commands:
-  init              Auto-convert & configure existing Next.js into editable Fivora storefront (e.g. deneb init --recipe fashion)
+  init              Deneb ARC: convert an existing React/Next.js app into a Fivora-editable storefront
+                    flags: --dry-run  --explain  --recipe <name>  --legacy  --telemetry off|anonymous|enhanced
   doctor            Run comprehensive environment, manifest, visual editing AST & asset diagnostic checks (flags: --fix, --json)
   save-recipe       Learn and save calibrated fixes & schemas into reusable recipe bank (e.g. deneb save-recipe . shoes-store)
   learn             Alias for save-recipe
@@ -1093,9 +1115,12 @@ Examples:
   deneb doctor --fix
   deneb doctor --json
   deneb init
+  deneb init --dry-run
+  deneb init --explain
   deneb init --recipe fashion
   deneb init --recipe electronics
   deneb init --recipe cosmetics
+  deneb init --legacy
   deneb update
   deneb validate .
   deneb validate --zip

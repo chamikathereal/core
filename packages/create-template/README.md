@@ -1,79 +1,76 @@
-# DENEB
+<p align="center">
+  <a href="https://deneb.fivora.site">
+    <img src="https://img.shields.io/badge/DENEB_Create--Template-Scaffold_in_Seconds-6366F1?style=for-the-badge&labelColor=0f172a" alt="DENEB create-template" />
+  </a>
+</p>
 
-### The official template initializer for DENEB UI.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@deneb-ui/create-template"><img src="https://img.shields.io/npm/v/@deneb-ui/create-template.svg?style=flat-square&color=6366F1" alt="npm version" /></a>
+  <img src="https://img.shields.io/badge/Next.js-15-000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Tailwind-Ready-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-emerald?style=flat-square" alt="MIT License" /></a>
+</p>
 
-> **DENEB UI — Build beautiful interfaces, effortlessly.**  
-> The premier visual-first React component ecosystem.  
-> Proudly presented by **DENEB-UI Collaborate with FIVORA**.
+<p align="center">
+  <strong>Generate a production-ready DENEB UI storefront template in one command.</strong>
+</p>
 
-[![Framework: DENEB UI](https://img.shields.io/badge/Framework-DENEB_UI_v2.0-blue.svg)](https://github.com/deneb-ui/ui)
-[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="https://deneb.fivora.site/docs/templates"><strong>Template Guide</strong></a> ·
+  <a href="https://deneb.fivora.site/docs/installation"><strong>Installation</strong></a> ·
+  <a href="https://github.com/deneb-ui/core"><strong>GitHub</strong></a>
+</p>
 
 ---
 
-## Quick Start
-
-Scaffold a complete storefront in seconds with a single command:
+## Quick start
 
 ```bash
-# Using npm
 npm create @deneb-ui/template my-store
-
-# Or using npx
-npx @deneb-ui/create-template my-store
-
-# Or using yarn / pnpm
-yarn create @deneb-ui/template my-store
-pnpm create @deneb-ui/template my-store
+# npx @deneb-ui/create-template my-store
+# pnpm create @deneb-ui/template my-store
 ```
 
-If you don't provide a project name, the interactive wizard will prompt you:
-
-```text
-⚡ Welcome to DENEB UI Template Creator!
-
-? What is your template name? (e.g. my-store):
-```
-
-Then start developing:
+Then:
 
 ```bash
 cd my-store
-npm run dev       # Start Next.js + Tailwind local development
-npm run lab       # Launch Visual Editing Lab
-npm run validate  # Run contract compliance checks
-npm run zip       # Create upload-ready clean ZIP
+npm run dev          # Local development
+npm run lab          # Visual editing preview lab
+npm run validate     # Fivora contract checks
+npm run zip          # Upload-ready package
 ```
 
 ---
 
-## What is Included?
+## What's included
 
-Each generated template comes pre-configured with:
-- ⚡ **Next.js 15 App Router**: Modern React 19 / Next.js with static HTML export support
-- 🎨 **Tailwind CSS**: Pre-configured `tailwind.config.ts`, `postcss.config.mjs`, and Tailwind utility classes
-- 💎 **`@deneb-ui/ui`**: Pre-installed DENEB UI visual-first component ecosystem
-- 🛠️ **`@deneb-ui/cli`**: Developer toolchain (`deneb lab`, `deneb validate`, `deneb zip`, `deneb add`)
-- 📋 **Manifest & Schema**: Pre-configured storefront template contract & visual editing bindings
-- 📦 **`src/data/site-data.json`**: Single source of truth for branding, nav labels, and editable content
-- 📖 **In-App Developer Guide**: Built-in developer guidance right on the homepage (`src/app/page.tsx`)
+Each scaffolded project ships with:
+
+- **Next.js 15** App Router + static export support  
+- **Tailwind CSS** pre-configured  
+- **`@deneb-ui/ui`** — full component library with responsive defaults  
+- **`@deneb-ui/cli`** — validate, lab, zip, and add commands  
+- **`fivora-template.json`** + **`site-data.json`** — editor-ready from day one  
 
 ---
 
-## Command Options
+## Options
 
 ```bash
-npx @deneb-ui/create-template <project-name> [options]
+npx @deneb-ui/create-template <project-name> [--skip-install]
 ```
 
-| Option | Description |
+| Flag | Description |
 | :--- | :--- |
-| `<project-name>` | Target directory name (e.g. `my-store`) |
-| `--skip-install` | Do not run `npm install` automatically after scaffolding |
+| `--skip-install` | Skip `npm install` after scaffolding |
 
 ---
 
-## 👤 Author & Credits
+## Authors
 
-Created and architected by **Chamika Gayashan & Induranga Kawishwara**.  
-Part of the **DENEB UI** ecosystem.
+Created and maintained by **[Chamika Gayashan](https://github.com/chamikathereal)** and **[Induranga Kawishwara](https://github.com/Induranga-kawishwara)**.
+
+<p align="center">
+  <sub>MIT © DENEB UI</sub>
+</p>

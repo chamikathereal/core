@@ -1,7 +1,7 @@
 {
   "name": "@deneb-ui/create-template",
   "version": "2.0.22",
-  "description": "Scaffold a modern, pre-validated DENEB UI storefront template in seconds. Created by Chamika Gayashan & Induranga Kawishwara.",
+  "description": "Scaffold production-ready DENEB UI storefront templates for Next.js in seconds.",
   "bin": {
     "create-deneb-template": "bin/index.js",
     "create-deneb": "bin/index.js",
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/deneb-ui/core.git",
     "directory": "packages/create-template"
   },
-  "homepage": "https://github.com/deneb-ui/core#readme",
+  "homepage": "https://deneb.fivora.site/docs/templates",
   "bugs": {
     "url": "https://github.com/deneb-ui/core/issues"
   },
@@ -35,9 +35,17 @@
     "template",
     "scaffold",
     "nextjs",
-    "react"
+    "react",
+    "storefront",
+    "fivora",
+    "cli",
+    "generator"
   ],
   "author": "Chamika Gayashan & Induranga Kawishwara",
+  "contributors": [
+    "Chamika Gayashan <https://github.com/chamikathereal>",
+    "Induranga Kawishwara <https://github.com/Induranga-kawishwara>"
+  ],
   "license": "MIT",
   "dependencies": {}
 }

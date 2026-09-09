@@ -148,7 +148,7 @@ export function TrustBadges({
         className={
           variant === 'inline'
             ? 'flex flex-wrap items-center justify-around gap-6'
-            : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'
+            : 'deneb-trust-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'
         }
       >
         {badges.map((badge) => (

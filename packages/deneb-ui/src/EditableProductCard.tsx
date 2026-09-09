@@ -138,8 +138,8 @@ export function EditableProductCard({
       borderRadius: '14px',
       overflow: 'hidden',
       display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'column',
+      alignItems: 'stretch',
     },
   };
 
@@ -150,15 +150,16 @@ export function EditableProductCard({
         ...variantStyles[cardVariant],
         ...style,
       }}
-      className={`editable-product-card group ${className}`.trim()}
+      className={`editable-product-card group ${isHorizontal ? 'is-horizontal' : ''} ${className}`.trim()}
       {...(props as any)}
     >
       {/* Image Wrap */}
       <div
+        className="deneb-product-card-media"
         style={{
           position: 'relative',
           overflow: 'hidden',
-          width: isHorizontal ? '38%' : '100%',
+          width: isHorizontal ? '100%' : '100%',
           flexShrink: 0,
         }}
       >

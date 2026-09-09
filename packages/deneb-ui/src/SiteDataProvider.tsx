@@ -8,6 +8,7 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
+import { ResponsiveBaseStyles } from './ResponsiveBaseStyles';
 
 export const DENEB_PREVIEW_DATA_MESSAGE = 'DENEB_PREVIEW_SITE_DATA';
 export const PREVIEW_DATA_MESSAGE = 'FIVORA_PREVIEW_SITE_DATA';
@@ -309,6 +310,7 @@ export function SiteDataProvider<T extends SiteData = SiteData>({
   const value = useMemo(() => siteData as SiteData, [siteData]);
   return (
     <SiteDataContext.Provider value={value}>
+      <ResponsiveBaseStyles />
       {children}
     </SiteDataContext.Provider>
   );

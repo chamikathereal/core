@@ -166,7 +166,6 @@ export function EditableNavbar({
         {/* Desktop Navigation Links (auto-synced with navLabels) */}
         <nav
           style={{
-            display: 'flex',
             alignItems: 'center',
             gap: '0.375rem',
           }}
@@ -253,8 +252,8 @@ export function EditableNavbar({
             data-preview-static="mobile-menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle Navigation Menu"
+            aria-expanded={mobileMenuOpen}
             style={{
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               width: '40px',
@@ -296,7 +295,7 @@ export function EditableNavbar({
             const isActive = activeRoute === link.route;
 
             return (
-              <span key={link.id} data-target-page={link.id}>
+              <span key={`mobile-${link.id}`} data-target-page={link.id}>
                 <button
                   type="button"
                   onClick={() => {
@@ -327,6 +326,34 @@ export function EditableNavbar({
               </span>
             );
           })}
+
+          {hasContact ? (
+            <span data-target-page="contact" style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(226,232,240,0.8)' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate('/contact');
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'center',
+                  backgroundColor: 'var(--color-primary, #0f172a)',
+                  color: '#ffffff',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  border: 0,
+                  cursor: 'pointer',
+                }}
+                className="deneb-mobile-drawer-cta w-full text-center px-4 py-3 rounded-full text-base font-semibold bg-slate-900 text-white border-0 cursor-pointer"
+              >
+                <span data-preview-field-path="common.headerCtaLabel">{headerCtaLabel}</span>
+              </button>
+            </span>
+          ) : null}
         </div>
       )}
     </header>

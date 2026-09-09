@@ -47,6 +47,7 @@ export function EditableFilterSidebar({
   const [inStockOnly, setInStockOnly] = useState<boolean>(
     initialFilters?.inStockOnly || false,
   );
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const getContent = (key: string, fallback: string) => {
     const section = (siteData as Record<string, any>)?.content?.[basePath];
@@ -122,10 +123,31 @@ export function EditableFilterSidebar({
   const clearAllText = getContent('clearAllText', 'Clear All');
 
   return (
-    <aside
-      className={`deneb-filter-sidebar w-full rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md p-6 text-white shadow-xl ${className}`}
-      aria-label="Product Filters"
-    >
+    <div className={`deneb-filter-sidebar-wrap w-full ${className}`}>
+      <button
+        type="button"
+        className="deneb-filter-mobile-toggle mb-3 rounded-xl border border-neutral-800 bg-neutral-900/90 px-4 py-3 text-sm font-semibold text-white"
+        onClick={() => setMobileOpen((open) => !open)}
+        aria-expanded={mobileOpen}
+        aria-controls="deneb-filter-panel"
+        data-preview-static="filter-mobile-toggle"
+      >
+        <span>{title}</span>
+        <span className="flex items-center gap-2 text-neutral-400">
+          {activeFiltersCount > 0 ? (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-black">
+              {activeFiltersCount}
+            </span>
+          ) : null}
+          {mobileOpen ? '−' : '+'}
+        </span>
+      </button>
+
+      <aside
+        id="deneb-filter-panel"
+        className={`deneb-filter-sidebar deneb-filter-sidebar-panel w-full rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md p-6 text-white shadow-xl ${mobileOpen ? 'is-open' : ''}`}
+        aria-label="Product Filters"
+      >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
         <div className="flex items-center gap-2">
@@ -233,7 +255,7 @@ export function EditableFilterSidebar({
             >
               {sizeTitle}
             </h4>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="deneb-filter-size-grid grid grid-cols-3 gap-2">
               {sizes.map((size) => {
                 const isSelected = selectedSizes.includes(size);
                 return (
@@ -278,6 +300,7 @@ export function EditableFilterSidebar({
         </div>
       </div>
     </aside>
+    </div>
   );
 }
 

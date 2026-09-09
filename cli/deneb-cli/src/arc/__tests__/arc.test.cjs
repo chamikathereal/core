@@ -1,0 +1,458 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const { scanProject, buildDependencyGraph } = require('../scanner.cjs');
+const { analyzeFile } = require('../semantic.cjs');
+const { planTransformations } = require('../planner.cjs');
+const { applyFilePlan } = require('../transformer.cjs');
+const { buildFieldPath, inferFieldName } = require('../field-paths.cjs');
+const { runDenebArc } = require('../index.cjs');
+const { parseSource } = require('../ast.cjs');
+const contract = require('../fivora-contract.cjs');
+const { ensureStaticExportConfig } = require('../next-config.cjs');
+
+const FIXTURE = path.join(__dirname, '..', '__fixtures__', 'next-app-basic');
+
+function silence(fn) {
+  const log = console.log;
+  const err = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  try {
+    return fn();
+  } finally {
+    console.log = log;
+    console.error = err;
+  }
+}
+
+function copyFixture() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deneb-arc-'));
+  fs.cpSync(FIXTURE, dir, { recursive: true });
+  return dir;
+}
+
+test('scanner detects Next.js App Router, TypeScript, and Tailwind', () => {
+  const profile = scanProject(FIXTURE);
+  assert.equal(profile.framework, 'nextjs');
+  assert.equal(profile.router, 'next-app');
+  assert.equal(profile.language, 'typescript');
+  assert.ok(profile.cssSystems.some((s) => s.startsWith('tailwind')));
+  assert.ok(profile.routes.some((r) => r.id === 'home' && r.route === '/'));
+  assert.ok(profile.jsxFiles.some((f) => f.includes('Hero.tsx')));
+  assert.ok(profile.architectureFingerprint);
+});
+
+test('field paths are semantic and stable', () => {
+  const used = new Set();
+  const a = buildFieldPath({ scope: 'home', section: 'hero', field: 'title', used });
+  const b = buildFieldPath({ scope: 'home', section: 'hero', field: 'title', used });
+  assert.equal(a, 'home.hero.title');
+  assert.equal(b, 'home.hero.title2');
+  assert.equal(inferFieldName('url', 'a', 'Chat Now', { action: 'whatsapp' }), 'whatsappUrl');
+  assert.equal(inferFieldName('label', 'a', 'Chat Now', { action: 'whatsapp', paired: true }), 'whatsappLabel');
+});
+
+test('semantic engine splits WhatsApp action/label contracts', () => {
+  const code = fs.readFileSync(path.join(FIXTURE, 'src', 'components', 'Hero.tsx'), 'utf8');
+  const analysis = analyzeFile({
+    code,
+    relativeFile: 'src/components/Hero.tsx',
+    profile: scanProject(FIXTURE),
+    graph: { sharedFiles: [] },
+    ownerScope: 'home',
+    componentMeta: { name: 'Hero', role: 'hero' },
+  });
+  const split = analysis.candidates.find((c) => c.operation === 'split-action-contract');
+  assert.ok(split, 'expected split-action-contract candidate');
+  assert.equal(split.extra.action, 'whatsapp');
+  assert.match(split.label, /Start a Conversation/);
+  const heading = analysis.candidates.find((c) => c.operation === 'extract-text' && c.tag === 'h1');
+  assert.ok(heading);
+  assert.equal(heading.value, 'Summer Collection');
+});
+
+test('AST transformer preserves className and uses nullish fallbacks', () => {
+  const relativeFile = 'src/components/Hero.tsx';
+  const code = fs.readFileSync(path.join(FIXTURE, relativeFile), 'utf8');
+  const profile = scanProject(FIXTURE);
+  const analysis = analyzeFile({
+    code,
+    relativeFile,
+    profile,
+    graph: { sharedFiles: [] },
+    ownerScope: 'home',
+    componentMeta: { name: 'Hero', role: 'hero' },
+  });
+  analysis.relativeFile = relativeFile;
+  analysis.code = code;
+  const plan = planTransformations({
+    profile,
+    analyses: [analysis],
+    recipe: { actionRules: { splitActionAndLabel: true } },
+  });
+  const result = applyFilePlan(plan.files[0], profile);
+  assert.equal(result.changed, true);
+  assert.match(result.code, /className="hero"/);
+  assert.match(result.code, /data-preview-field-path=/);
+  assert.match(result.code, /\?\?/);
+  assert.match(result.code, /<span data-preview-field-path="/);
+  assert.doesNotMatch(result.code, /'use client'/);
+  assert.match(result.code, /site-data\.json|@\/data\/site-data\.json/);
+  parseSource(result.code, relativeFile);
+});
+
+test('dry-run does not modify source files', () => {
+  const dir = copyFixture();
+  const before = fs.readFileSync(path.join(dir, 'src', 'components', 'Hero.tsx'), 'utf8');
+  const result = silence(() => runDenebArc(dir, 'arc-fixture', { dryRun: true }));
+  const after = fs.readFileSync(path.join(dir, 'src', 'components', 'Hero.tsx'), 'utf8');
+  assert.equal(before, after);
+  assert.equal(result.outcome, 'dry-run');
+  assert.equal(fs.existsSync(path.join(dir, 'src', 'data', 'site-data.json')), false);
+});
+
+test('ARC converts a Next.js fixture into Fivora contracts without redesigning', () => {
+  const dir = copyFixture();
+  const result = silence(() => runDenebArc(dir, 'arc-fixture', { telemetry: 'off' }));
+  assert.equal(result.outcome, 'success');
+
+  const hero = fs.readFileSync(path.join(dir, 'src', 'components', 'Hero.tsx'), 'utf8');
+  const layout = fs.readFileSync(path.join(dir, 'src', 'app', 'layout.tsx'), 'utf8');
+  const page = fs.readFileSync(path.join(dir, 'src', 'app', 'page.tsx'), 'utf8');
+  const promo = fs.readFileSync(path.join(dir, 'src', 'components', 'PromoBanner.tsx'), 'utf8');
+  const siteData = JSON.parse(fs.readFileSync(path.join(dir, 'src', 'data', 'site-data.json'), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'fivora-template.json'), 'utf8'));
+
+  assert.match(layout, /SiteDataProvider/);
+  assert.match(page, /data-preview-page-key="home"/);
+  assert.doesNotMatch(layout, /'use client'/);
+  assert.match(hero, /data-preview-field-path="/);
+  assert.match(hero, /whatsapp/i);
+  assert.match(hero, /className="hero"/);
+  assert.match(hero, /className="btn cta"/);
+  assert.doesNotMatch(hero, /'use client'/);
+  assert.doesNotMatch(hero, /trueUrl/);
+  assert.match(promo, /useSiteData/);
+  assert.doesNotMatch(promo, /use client';;/);
+  assert.doesNotMatch(JSON.stringify(siteData.content), /VANTA/);
+  assert.ok(siteData.content.home.hero.title);
+  assert.ok(manifest.editorSchema.sections.length >= 1);
+  assert.ok(manifest.editorSchema.sections.length < 12);
+  assert.equal(manifest.arcVersion, result.arcVersion);
+  assert.equal(result.designPreservation >= 90, true, `design preservation ${result.designPreservation}`);
+
+  const second = silence(() => runDenebArc(dir, 'arc-fixture', { telemetry: 'off' }));
+  assert.equal(second.outcome, 'success');
+  const hero2 = fs.readFileSync(path.join(dir, 'src', 'components', 'Hero.tsx'), 'utf8');
+  const spanCount1 = (hero.match(/<span data-preview-field-path=/g) || []).length;
+  const spanCount2 = (hero2.match(/<span data-preview-field-path=/g) || []).length;
+  assert.equal(spanCount2, spanCount1);
+});
+
+test('dependency graph marks shared header as common-capable', () => {
+  const profile = scanProject(FIXTURE);
+  const graph = buildDependencyGraph(profile);
+  assert.ok(graph.nodes['src/app/page.tsx']);
+  assert.ok(graph.edges.some((e) => String(e.to).includes('Hero')));
+});
+
+// ---------------------------------------------------------------------------
+// Fivora strict-contract conformance
+// ---------------------------------------------------------------------------
+
+const STOREFRONT_FIXTURE = path.join(__dirname, '..', '__fixtures__', 'next-app-storefront');
+
+function copyOf(fixture) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deneb-arc-'));
+  fs.cpSync(fixture, dir, { recursive: true });
+  return dir;
+}
+
+function readSources(root) {
+  const out = [];
+  (function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name.startsWith('.deneb')) continue;
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(abs);
+      else if (/\.(tsx|jsx|ts|js)$/.test(entry.name)) {
+        out.push({ rel: path.relative(root, abs).replace(/\\/g, '/'), code: fs.readFileSync(abs, 'utf8') });
+      }
+    }
+  })(root);
+  return out;
+}
+
+/** Applies the ported Fivora strict rules the same way the ingest pipeline does. */
+function auditFivora(dir) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'fivora-template.json'), 'utf8'));
+  const siteData = JSON.parse(fs.readFileSync(path.join(dir, manifest.siteDataFile), 'utf8'));
+  const sources = readSources(dir);
+
+  const markers = [];
+  const pageKeysByFile = {};
+  const errors = [];
+
+  for (const source of sources) {
+    const extracted = contract.extractMarkers(source.code, source.rel);
+    markers.push(...extracted.markers);
+    const pages = extracted.markers.filter((m) => m.kind === 'page').map((m) => m.value);
+    if (pages.length) pageKeysByFile[source.rel] = pages;
+    errors.push(...contract.auditMarkerPlacement(source.code, source.rel));
+    errors.push(...contract.auditActionLabelCollision(source.code, source.rel));
+    for (const finding of contract.findUncoveredVisibleText(source.code, source.rel)) {
+      errors.push(`${finding.filePath}:${finding.line} uncovered visible text "${finding.text}"`);
+    }
+  }
+
+  // Resolve manifest pages to source files for both Next.js routers.
+  const routeFiles = {};
+  for (const page of manifest.pages || []) {
+    const segment = page.route === '/' ? '' : String(page.route).replace(/^\//, '');
+    const candidates = [];
+    for (const base of ['src/app', 'app']) {
+      for (const ext of ['tsx', 'jsx', 'js']) {
+        candidates.push(segment ? path.join(base, segment, `page.${ext}`) : path.join(base, `page.${ext}`));
+      }
+    }
+    for (const base of ['src/pages', 'pages']) {
+      for (const ext of ['tsx', 'jsx', 'js']) {
+        candidates.push(path.join(base, `${segment || 'index'}.${ext}`));
+        if (segment) candidates.push(path.join(base, segment, `index.${ext}`));
+      }
+    }
+    for (const candidate of candidates) {
+      if (fs.existsSync(path.join(dir, candidate))) {
+        routeFiles[page.id] = candidate.replace(/\\/g, '/');
+        break;
+      }
+    }
+  }
+
+  errors.push(
+    ...contract.auditPathCoverage({
+      content: siteData.content,
+      editorSchema: manifest.editorSchema,
+      markers,
+      controlOnlyPaths: manifest.visualEditing?.controlOnlyPaths || [],
+    }).errors
+  );
+  errors.push(...contract.auditSchemaUniqueness(manifest.editorSchema));
+  errors.push(...contract.auditPageCoverage({ pages: manifest.pages, routeFiles, pageMarkersByFile: pageKeysByFile }));
+  errors.push(...contract.auditPreviewRuntime(sources.map((s) => s.code)));
+
+  return { errors: [...new Set(errors)], manifest, siteData };
+}
+
+test('converted basic fixture satisfies the Fivora strict contract', () => {
+  const dir = copyOf(FIXTURE);
+  silence(() => runDenebArc(dir, 'basic-store', { telemetry: 'off' }));
+  const { errors } = auditFivora(dir);
+  assert.deepEqual(errors, []);
+});
+
+test('converted storefront fixture satisfies the Fivora strict contract', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const { errors } = auditFivora(dir);
+  assert.deepEqual(errors, []);
+});
+
+test('every unbound site-data field is declared control-only', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const { manifest, siteData } = auditFivora(dir);
+  const controlOnly = manifest.visualEditing.controlOnlyPaths;
+
+  // The merchant baseline ARC always writes is never rendered by an arbitrary
+  // project, so it must be control-only rather than a coverage failure.
+  assert.ok(controlOnly.includes('common.business.phone'));
+  assert.ok(controlOnly.includes('common.websiteTitle'));
+  assert.ok(!controlOnly.includes('home.hero.title'), 'bound fields stay visually editable');
+
+  const inventory = contract.enumerateContentPaths(siteData.content);
+  for (const declared of controlOnly) {
+    assert.ok(
+      inventory.concreteFields.has(declared) ||
+        [...inventory.fieldPatterns].some((p) => p === contract.wildcardPath(declared)),
+      `controlOnlyPaths entry "${declared}" must exist in site-data content`
+    );
+  }
+});
+
+test('ARC never declares a manifest page without a page file on disk', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const { manifest } = auditFivora(dir);
+  const ids = manifest.pages.map((page) => page.id);
+  assert.deepEqual(ids.sort(), ['about', 'home']);
+  assert.ok(!ids.includes('contact'), 'a contact route with no page component must not be invented');
+});
+
+test('static-array collections become list contracts without changing render logic', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const grid = fs.readFileSync(path.join(dir, 'src', 'components', 'ProductGrid.tsx'), 'utf8');
+
+  assert.match(grid, /data-preview-list-path="home\.products"/);
+  assert.match(grid, /data-preview-item-path=\{`home\.products\[\$\{index\}\]`\}/);
+  assert.match(grid, /data-preview-field-path=\{`home\.products\[\$\{index\}\]\.title`\}/);
+  // The array is site-data backed with the developer's literal as fallback.
+  assert.match(grid, /const products = siteData\?\.content\?\.home\?\.products \?\? \[/);
+  // Render logic is untouched: items are still read off the map variable.
+  assert.match(grid, /\{product\.title\}/);
+  assert.match(grid, /className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"/);
+
+  const { manifest, siteData } = auditFivora(dir);
+  const home = manifest.editorSchema.sections.find((s) => s.id === 'home');
+  const products = home.fields.find((f) => f.key === 'products');
+  assert.equal(products.type, 'list');
+  assert.deepEqual(products.fields.map((f) => f.key).sort(), ['description', 'image', 'price', 'title']);
+  assert.equal(siteData.content.home.products.length, 3);
+  assert.equal(siteData.content.home.products[0].title, 'Minimalist Smart Watch');
+});
+
+test('collections holding component references are left alone', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const features = fs.readFileSync(path.join(dir, 'src', 'components', 'Features.tsx'), 'utf8');
+  assert.ok(!features.includes('data-preview-list-path'), 'icon component refs are not merchant content');
+  assert.match(features, /icon: Truck/);
+});
+
+test('literal text inside a broad container is wrapped instead of marked illegally', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const about = fs.readFileSync(path.join(dir, 'src', 'app', 'about', 'page.tsx'), 'utf8');
+
+  // Fivora rejects data-preview-field-path on <div>, so the text gets a span.
+  assert.match(about, /<div className="mt-10 text-sm text-slate-500">\s*<span data-preview-field-path=/);
+  assert.ok(!/<div[^>]*data-preview-field-path/.test(about));
+});
+
+test('shadcn Button asChild keeps the action on the link and the label in a span', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const hero = fs.readFileSync(path.join(dir, 'src', 'components', 'Hero.tsx'), 'utf8');
+
+  assert.match(hero, /<Button asChild>/);
+  assert.match(hero, /href=\{siteData\?\.content\?\.home\?\.hero\?\.shopCollectionUrl \?\? "\/products"\}/);
+  assert.match(hero, /<span data-preview-field-path="home\.hero\.shopCollectionLabel">/);
+  // The decorative icon stays static.
+  assert.match(hero, /<ArrowRight className="ml-2 size-4" aria-hidden="true" \/>/);
+});
+
+test('a second init run converges on identical sources and manifest', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const firstSources = readSources(dir).map((s) => s.code).join('\n---\n');
+  const firstManifest = fs.readFileSync(path.join(dir, 'fivora-template.json'), 'utf8');
+
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const secondSources = readSources(dir).map((s) => s.code).join('\n---\n');
+  const secondManifest = fs.readFileSync(path.join(dir, 'fivora-template.json'), 'utf8');
+
+  assert.equal(secondSources, firstSources, 'sources must not drift on re-run');
+  assert.equal(secondManifest, firstManifest, 'manifest must not lose schema on re-run');
+  assert.deepEqual(auditFivora(dir).errors, []);
+});
+
+const PAGES_FIXTURE = path.join(__dirname, '..', '__fixtures__', 'next-pages-basic');
+
+test('Pages Router projects convert and satisfy the strict contract', () => {
+  const dir = copyOf(PAGES_FIXTURE);
+  silence(() => runDenebArc(dir, 'pottery-shop', { telemetry: 'off' }));
+
+  const profile = scanProject(dir);
+  assert.equal(profile.router, 'next-pages');
+
+  const index = fs.readFileSync(path.join(dir, 'pages', 'index.jsx'), 'utf8');
+  const contact = fs.readFileSync(path.join(dir, 'pages', 'contact.jsx'), 'utf8');
+  const app = fs.readFileSync(path.join(dir, 'pages', '_app.jsx'), 'utf8');
+
+  // Page keys must come from the route id, not an App Router filename pattern.
+  assert.match(index, /<main data-preview-page-key="home"/);
+  assert.match(contact, /<main data-preview-page-key="contact"/);
+  // The provider mounts in _app for this router.
+  assert.match(app, /<SiteDataProvider initialSiteData=\{initialSiteData\}>/);
+  // No path alias exists here, so the import must be relative.
+  assert.match(index, /from "\.\.\/data\/site-data\.json"/);
+  // tel: actions are split into url + label.
+  assert.match(index, /href=\{siteData\?\.content\?\.home\?\.contact\?\.phoneUrl \?\? "tel:\+94771234567"\}/);
+  assert.match(index, /<span data-preview-field-path="home\.contact\.phoneLabel">/);
+  // Original class names are untouched.
+  assert.match(index, /className="wrapper"/);
+  assert.match(contact, /className="photo"/);
+
+  const { errors } = auditFivora(dir);
+  assert.deepEqual(errors, []);
+});
+
+test('static export is configured without discarding an existing next config', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deneb-arc-cfg-'));
+  fs.writeFileSync(
+    path.join(dir, 'next.config.ts'),
+    `import type { NextConfig } from 'next';
+import createMDX from '@next/mdx';
+
+// Keep MDX support enabled.
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  pageExtensions: ['ts', 'tsx', 'mdx'],
+};
+
+export default createMDX()(nextConfig);
+`,
+    'utf8'
+  );
+
+  const result = ensureStaticExportConfig(dir, { language: 'typescript' });
+  const code = fs.readFileSync(path.join(dir, 'next.config.ts'), 'utf8');
+
+  assert.equal(result.updated, true);
+  assert.match(code, /output: "export"/);
+  assert.match(code, /unoptimized: true/);
+  assert.match(code, /const basePath = process\.env\.NEXT_PUBLIC_SITE_BASE_PATH \|\| ""/);
+  // Existing plugin wiring, options and comments survive.
+  assert.match(code, /export default createMDX\(\)\(nextConfig\)/);
+  assert.match(code, /reactStrictMode: true/);
+  assert.match(code, /pageExtensions: \['ts', 'tsx', 'mdx'\]/);
+  assert.match(code, /\/\/ Keep MDX support enabled\./);
+
+  // Re-running must not duplicate any setting.
+  ensureStaticExportConfig(dir, { language: 'typescript' });
+  const again = fs.readFileSync(path.join(dir, 'next.config.ts'), 'utf8');
+  assert.equal((again.match(/output:/g) || []).length, 1);
+  assert.equal((again.match(/const basePath =/g) || []).length, 1);
+});
+
+test('a developer output setting is reported instead of overwritten', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deneb-arc-cfg2-'));
+  fs.writeFileSync(
+    path.join(dir, 'next.config.js'),
+    `module.exports = { output: 'standalone' };\n`,
+    'utf8'
+  );
+
+  const result = ensureStaticExportConfig(dir, { language: 'javascript' });
+  assert.match(result.warnings.join(' '), /output: 'standalone'/);
+  assert.match(fs.readFileSync(path.join(dir, 'next.config.js'), 'utf8'), /standalone/);
+});
+
+test('schema sections only claim a pageKey when reachability proves it', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const { manifest } = auditFivora(dir);
+  const sections = manifest.editorSchema.sections;
+
+  const common = sections.find((s) => s.id === 'common');
+  assert.equal(common.pageKey, undefined, 'shared content renders on every route');
+  assert.equal(sections.find((s) => s.id === 'home').pageKey, 'home');
+  assert.equal(sections.find((s) => s.id === 'about').pageKey, 'about');
+});

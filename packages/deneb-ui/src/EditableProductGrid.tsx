@@ -153,7 +153,7 @@ export function EditableProductGrid({
 
       {/* Grid of Products */}
       {filteredProducts.length > 0 ? (
-        <div className={`grid ${gridColClasses} gap-6 sm:gap-8`}>
+        <div className={`deneb-product-grid grid ${gridColClasses} gap-6 sm:gap-8`}>
           {filteredProducts.map((product, idx) => {
             const itemPath = `${sectionPath}.${cardPrefix}${idx + 1}`;
             return (

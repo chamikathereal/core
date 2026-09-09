@@ -1,0 +1,227 @@
+'use strict';
+
+const { CONFIDENCE } = require('./version.cjs');
+const { inferSection, inferFieldName, buildFieldPath, classifyFieldType, uniquePath } = require('./field-paths.cjs');
+const { classifyHref } = require('./adapters.cjs');
+
+function recipeBoost(candidate, recipe) {
+  if (!recipe) return 0;
+  let boost = 0;
+  if (recipe.actionRules?.splitActionAndLabel && candidate.operation === 'split-action-contract') boost += 0.03;
+  const keywords = recipe.signatures?.keywords || [];
+  const hay = `${candidate.tag} ${candidate.value || ''} ${candidate.label || ''} ${candidate.file || ''}`.toLowerCase();
+  if (keywords.some((kw) => hay.includes(String(kw).toLowerCase()))) boost += 0.02;
+  return Math.min(boost, 0.08);
+}
+
+function decideThreshold(confidence, candidate) {
+  if (candidate.skip) return 'skip';
+  if (confidence >= CONFIDENCE.AUTO) return 'auto';
+  if (confidence >= CONFIDENCE.VALIDATE) return 'validate';
+  return 'skip';
+}
+
+function planTransformations({ profile, analyses, recipe }) {
+  const usedPaths = new Set();
+  const filePlans = [];
+  const skipped = [];
+  const explanations = [];
+
+  for (const analysis of analyses) {
+    const transformations = [];
+    for (const candidate of analysis.candidates || []) {
+      const confidence = Math.min(0.99, (candidate.confidence || 0) + recipeBoost(candidate, recipe));
+      const decision = decideThreshold(confidence, candidate);
+      const section = inferSection({
+        componentName: candidate.componentName,
+        fileName: candidate.file,
+        className: candidate.className,
+        parentName: candidate.parentName,
+        tag: candidate.tag,
+        role: candidate.role,
+      });
+
+      let scope = candidate.ownerScope || 'home';
+      if (candidate.extra && ['instagram', 'facebook', 'tiktok', 'twitter', 'youtube', 'linkedin', 'pinterest'].includes(candidate.extra.action || candidate.extra.platform)) {
+        scope = 'common';
+      }
+      if (section === 'header' || section === 'footer' || section === 'navigation' || section === 'announcement') {
+        scope = 'common';
+      }
+
+      const extra = { ...(candidate.extra || {}) };
+      if (candidate.operation === 'split-action-contract') {
+        extra.action = extra.action || classifyHref(candidate.value);
+        extra.paired = true;
+      }
+
+      let transform = {
+        loc: candidate.loc,
+        operation: candidate.operation || candidate.kind,
+        tag: candidate.tag,
+        file: candidate.file,
+        confidence,
+        decision,
+        reason: candidate.reason,
+        recipeId: recipe?.name || recipe?.id || null,
+        fingerprint: candidate.fingerprint,
+        fallback: candidate.value,
+        labelFallback: candidate.label,
+        fieldType: classifyFieldType(candidate.kind, candidate.value || candidate.label),
+        section,
+        scope,
+        explain: {
+          detected: `${candidate.tag} ${candidate.kind}`,
+          why: candidate.reason,
+          recipe: recipe?.name || null,
+          confidence,
+        },
+      };
+
+      if (decision === 'skip' || candidate.skip || candidate.kind === 'already-editable' || candidate.kind === 'decoration') {
+        skipped.push({
+          file: candidate.file,
+          loc: candidate.loc,
+          reason: candidate.reason || 'low-confidence',
+          confidence,
+          kind: candidate.kind,
+        });
+        continue;
+      }
+
+      if (candidate.operation === 'split-action-contract') {
+        const urlName = inferFieldName('url', candidate.tag, candidate.label, extra);
+        const labelName = inferFieldName('label', candidate.tag, candidate.label, { ...extra, paired: true });
+        const actionSection = sectionForAction(scope, section, extra);
+        transform.urlField = buildFieldPath({ scope, section: actionSection, field: urlName, used: usedPaths });
+        const sibling = transform.urlField.split('.');
+        sibling[sibling.length - 1] = labelName;
+        transform.labelField = uniquePath(usedPaths, sibling.join('.'));
+        transform.fieldType = 'url';
+        transform.labelFieldType = 'text';
+      } else if (candidate.operation === 'extract-url') {
+        transform.field = buildFieldPath({
+          scope,
+          section: sectionForAction(scope, section, extra),
+          field: inferFieldName('url', candidate.tag, candidate.value, extra),
+          used: usedPaths,
+        });
+        transform.fieldType = 'url';
+      } else if (candidate.operation === 'extract-image') {
+        transform.field = buildFieldPath({
+          scope,
+          section,
+          field: inferFieldName('image', candidate.tag, extra.alt, extra),
+          used: usedPaths,
+        });
+        transform.fieldType = 'image';
+      } else if (candidate.operation === 'extract-alt') {
+        transform.field = buildFieldPath({
+          scope,
+          section,
+          field: inferFieldName('alt', candidate.tag, candidate.value, extra),
+          used: usedPaths,
+        });
+        transform.fieldType = 'text';
+      } else if (candidate.operation === 'wrap-text-span') {
+        transform.field = buildFieldPath({
+          scope,
+          section,
+          field: inferFieldName('text', candidate.tag, candidate.value, extra),
+          used: usedPaths,
+        });
+        transform.fieldType = 'text';
+      } else if (candidate.operation === 'extract-placeholder') {
+        transform.field = buildFieldPath({
+          scope,
+          section,
+          field: inferFieldName('placeholder', candidate.tag, candidate.value, extra),
+          used: usedPaths,
+        });
+      } else if (candidate.operation === 'collection-conversion') {
+        // A collection is named after the developer's own array variable so the
+        // merchant sees "products", not "items2".
+        transform.listField = uniquePath(usedPaths, `${scope}.${extra.binding || 'items'}`);
+        transform.field = undefined;
+        transform.fieldType = 'list';
+        transform.itemFields = (extra.itemFields || []).map((field) => ({
+          key: field.key,
+          type: field.role === 'image' ? 'image' : field.role === 'url' ? 'url' : 'text',
+        }));
+        transform.items = candidate.value.map((item) => item.value);
+        transform.itemParam = extra.itemParam;
+        transform.indexParam = extra.indexParam;
+        if (!transform.itemFields.length || !extra.objectItems) transform.decision = 'skip';
+      } else {
+        transform.field = buildFieldPath({
+          scope,
+          section,
+          field: inferFieldName(candidate.kind, extra.tag || candidate.tag, candidate.value, extra),
+          used: usedPaths,
+        });
+      }
+
+      if (transform.decision === 'skip') {
+        skipped.push({
+          file: candidate.file,
+          loc: candidate.loc,
+          reason: 'collection-not-safe',
+          confidence,
+          kind: candidate.kind,
+        });
+        continue;
+      }
+
+      transformations.push(transform);
+      explanations.push(transform.explain);
+    }
+
+    filePlans.push({
+      file: analysis.relativeFile,
+      alreadyEditable: analysis.alreadyEditable,
+      parseError: analysis.reason === 'parse-error' ? analysis.error : null,
+      skippedFile: analysis.skipped,
+      skipReason: analysis.skipped ? analysis.reason : null,
+      transformations,
+      originalCode: analysis.code,
+      designSnapshot: analysis.designSnapshot,
+    });
+  }
+
+  return {
+    files: filePlans,
+    skipped,
+    explanations,
+    usedPaths: [...usedPaths],
+    stats: summarizePlan(filePlans, skipped),
+  };
+}
+
+function sectionForAction(scope, section, extra) {
+  if (scope === 'common' && (extra.social || ['instagram', 'facebook', 'twitter', 'tiktok', 'youtube', 'linkedin'].includes(extra.action))) {
+    return 'footer';
+  }
+  if (extra.action === 'whatsapp' || extra.action === 'phone' || extra.action === 'email') {
+    return section || 'contact';
+  }
+  return section;
+}
+
+function summarizePlan(filePlans, skipped) {
+  const planned = filePlans.reduce((n, f) => n + f.transformations.length, 0);
+  const auto = filePlans.reduce((n, f) => n + f.transformations.filter((t) => t.decision === 'auto').length, 0);
+  const validate = filePlans.reduce((n, f) => n + f.transformations.filter((t) => t.decision === 'validate').length, 0);
+  const filesAffected = filePlans.filter((f) => f.transformations.length > 0).length;
+  return {
+    planned,
+    auto,
+    validate,
+    skipped: skipped.length,
+    filesAffected,
+  };
+}
+
+module.exports = {
+  planTransformations,
+  decideThreshold,
+};

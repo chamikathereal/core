@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveResponsiveColumns } from './utils/responsive';
 
 export type GridSpacing = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | (string & {}) | number;
 
@@ -73,22 +74,20 @@ export function EditableGrid({
   ...props
 }: EditableGridProps) {
   const resolvedGap = gap !== undefined ? (SPACING_MAP[String(gap)] || String(gap)) : '1.25rem';
-
-  let templateCols: string;
-  if (typeof columns === 'number') {
-    templateCols = `repeat(${columns}, minmax(0, 1fr))`;
-  } else if (columns && typeof columns === 'object') {
-    templateCols = `repeat(auto-fit, minmax(${minCardWidth}, 1fr))`;
-  } else {
-    // Default auto-balancing formula
-    templateCols = `repeat(auto-fit, minmax(${minCardWidth}, 1fr))`;
-  }
+  const { template: templateCols, dataAttrs } = resolveResponsiveColumns(columns, minCardWidth);
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: templateCols,
     gap: resolvedGap,
     alignItems: equalHeight ? 'stretch' : align,
+    ...(dataAttrs
+      ? ({
+          '--deneb-cols': dataAttrs['data-cols-mobile'],
+          '--deneb-cols-tablet': dataAttrs['data-cols-tablet'],
+          '--deneb-cols-desktop': dataAttrs['data-cols-desktop'],
+        } as React.CSSProperties)
+      : {}),
     ...style,
   };
 
@@ -97,6 +96,7 @@ export function EditableGrid({
       data-preview-list-path={previewListPath || id}
       className={`editable-grid ${className}`.trim()}
       style={gridStyle}
+      {...(dataAttrs || {})}
       {...(props as any)}
     >
       {children}

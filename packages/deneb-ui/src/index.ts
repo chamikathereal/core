@@ -33,6 +33,8 @@ export * from './cart/useCart';
 export * from './EditableCartDrawer';
 export * from './EditableFilterSidebar';
 export * from './SiteDataProvider';
+export * from './ThemeStyles';
+export { ResponsiveBaseStyles } from './ResponsiveBaseStyles';
 
 // Smart template components & actions
 export * from './utils';

@@ -1,0 +1,421 @@
+'use strict';
+
+const path = require('path');
+const { readJsonSafe, writeJson, deepMerge, isPlainObject } = require('./fs-utils.cjs');
+const { ARC_VERSION, SCHEMA_VERSION } = require('./version.cjs');
+const { humanLabel, classifyFieldType } = require('./field-paths.cjs');
+const {
+  enumerateContentPaths,
+  canonicalizeMarkerPath,
+  wildcardPath,
+} = require('./fivora-contract.cjs');
+
+function setDeep(target, pathStr, value) {
+  const parts = String(pathStr).split('.').filter(Boolean);
+  let curr = target;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i];
+    if (!isPlainObject(curr[key])) curr[key] = {};
+    curr = curr[key];
+  }
+  const last = parts[parts.length - 1];
+  if (curr[last] === undefined) curr[last] = value;
+}
+
+function getDeep(target, pathStr) {
+  const parts = String(pathStr).split('.').filter(Boolean);
+  let curr = target;
+  for (const part of parts) {
+    if (!curr || typeof curr !== 'object') return undefined;
+    curr = curr[part];
+  }
+  return curr;
+}
+
+function upsertSchemaField(sections, fieldPath, fieldType, label, required = false) {
+  const parts = String(fieldPath).split('.');
+  const sectionId = parts[0];
+  const rest = parts.slice(1);
+  let section = sections.find((s) => s.id === sectionId || s.path === sectionId);
+  if (!section) {
+    section = {
+      id: sectionId,
+      path: sectionId,
+      type: 'object',
+      label: sectionId === 'common' ? 'Shared Website Content' : `${humanLabel(sectionId)} Content`,
+      fields: [],
+    };
+    sections.push(section);
+  }
+  if (!section.path) section.path = section.id;
+
+  let fields = section.fields;
+  for (let i = 0; i < rest.length; i++) {
+    const key = rest[i];
+    const isLeaf = i === rest.length - 1;
+    let existing = fields.find((f) => f.key === key);
+    if (isLeaf) {
+      if (!existing) {
+        fields.push({
+          key,
+          type: fieldType === 'url' ? 'text' : fieldType === 'textarea' ? 'textarea' : fieldType,
+          label: label || humanLabel(key),
+          ...(required ? { required: true } : {}),
+        });
+      }
+      return;
+    }
+    if (!existing) {
+      existing = { key, type: 'object', label: humanLabel(key), fields: [] };
+      fields.push(existing);
+    }
+    existing.fields = existing.fields || [];
+    fields = existing.fields;
+  }
+}
+
+/**
+ * Registers a repeated collection as a Fivora `list` node. Only the properties
+ * the component actually renders become editable item fields; anything else
+ * (ids, internal keys) stays in content but is declared control-only.
+ */
+function upsertSchemaList(sections, listPath, itemFields, items) {
+  const parts = String(listPath).split('.');
+  const sectionId = parts[0];
+  let section = sections.find((s) => s.id === sectionId || s.path === sectionId);
+  if (!section) {
+    section = {
+      id: sectionId,
+      path: sectionId,
+      type: 'object',
+      label: sectionId === 'common' ? 'Shared Website Content' : `${humanLabel(sectionId)} Content`,
+      fields: [],
+    };
+    sections.push(section);
+  }
+
+  let fields = section.fields;
+  const rest = parts.slice(1);
+  for (let i = 0; i < rest.length - 1; i++) {
+    let existing = fields.find((f) => f.key === rest[i]);
+    if (!existing) {
+      existing = { key: rest[i], type: 'object', label: humanLabel(rest[i]), fields: [] };
+      fields.push(existing);
+    }
+    existing.fields = existing.fields || [];
+    fields = existing.fields;
+  }
+
+  const key = rest[rest.length - 1];
+  if (fields.some((f) => f.key === key)) return;
+
+  fields.push({
+    key,
+    type: 'list',
+    label: humanLabel(key),
+    itemLabel: humanLabel(key).replace(/s$/, '') || 'Item',
+    minItems: 0,
+    maxItems: Math.max((items || []).length, 12),
+    fields: (itemFields || []).map((field) => ({
+      key: field.key,
+      type: field.type === 'url' ? 'url' : field.type === 'image' ? 'image' : 'text',
+      label: humanLabel(field.key),
+    })),
+  });
+}
+
+function collectFieldsFromPlan(plan) {
+  const fields = [];
+  for (const file of plan.files || []) {
+    for (const t of file.transformations || []) {
+      if (t.field) {
+        fields.push({
+          path: t.field,
+          type: t.fieldType || 'text',
+          value: t.fallback,
+        });
+      }
+      if (t.urlField) {
+        fields.push({ path: t.urlField, type: 'url', value: t.fallback });
+      }
+      if (t.labelField) {
+        fields.push({ path: t.labelField, type: 'text', value: t.labelFallback });
+      }
+      if (t.listField) {
+        fields.push({
+          path: t.listField,
+          type: 'list',
+          value: t.items || [],
+          itemFields: t.itemFields || [],
+        });
+      }
+    }
+  }
+  return fields;
+}
+
+function baseContent(projectName, routes) {
+  const navLabels = {};
+  for (const page of routes) navLabels[page.id] = page.label || page.id;
+  return {
+    common: {
+      websiteTitle: projectName,
+      shortDescription: `A high-converting storefront built for the Fivora platform.`,
+      logoUrl: '/fivora-logo.png',
+      headerCtaLabel: 'Contact Us',
+      copyright: `© ${new Date().getFullYear()} ${projectName}. All rights reserved.`,
+      navLabels,
+      business: {
+        phone: '',
+        whatsapp: '',
+        email: '',
+      },
+    },
+  };
+}
+
+/**
+ * Fivora strict mode requires every concrete site-data field to either render a
+ * data-preview-field-path marker or be declared control-only. ARC always emits
+ * a merchant-facing baseline (business phone, logo, nav labels) that an
+ * arbitrary project may not render, so every unbound path is declared here
+ * instead of being silently shipped as an ingest failure.
+ */
+function computeControlOnlyPaths(content, boundPaths, declared = []) {
+  const inventory = enumerateContentPaths(content);
+  const bound = new Set([...(boundPaths || [])].map(wildcardPath));
+  const controlOnly = new Set();
+
+  for (const declaredPath of declared) {
+    const canonical = canonicalizeMarkerPath(declaredPath);
+    if (!canonical) continue;
+    // Drop stale declarations that no longer exist in content; the platform
+    // rejects controlOnlyPaths entries it cannot resolve.
+    const known = [...inventory.fieldPatterns, ...inventory.concreteFields].some(
+      (path) => wildcardPath(path) === wildcardPath(canonical)
+    );
+    if (known) controlOnly.add(canonical);
+  }
+
+  for (const path of inventory.concreteFields) {
+    if (!bound.has(wildcardPath(path))) controlOnly.add(path);
+  }
+
+  return [...controlOnly].sort();
+}
+
+/**
+ * A section may only claim a pageKey when every marker it owns actually renders
+ * on that route, otherwise Fivora's route-owned coverage check fails.
+ */
+function assignSectionPageKeys(sections, routes, markerRoutes) {
+  const routeIds = new Set(routes.map((route) => route.id));
+
+  for (const section of sections) {
+    delete section.pageKey;
+    if (!routeIds.has(section.id)) continue;
+
+    const ownedPaths = Object.keys(markerRoutes || {}).filter(
+      (path) => path === section.path || path.startsWith(`${section.path}.`) || path.startsWith(`${section.path}[`)
+    );
+    if (!ownedPaths.length) continue;
+
+    const rendersOnlyOnOwnRoute = ownedPaths.every((path) =>
+      (markerRoutes[path] || []).includes(section.id)
+    );
+    if (rendersOnlyOnOwnRoute) section.pageKey = section.id;
+  }
+}
+
+function buildSiteDataAndManifest({
+  projectDir,
+  projectName,
+  profile,
+  plan,
+  recipe,
+  existingSiteData,
+  existingManifest,
+  boundFieldPaths = [],
+  markerRoutes = {},
+}) {
+  const routes = (profile.routes && profile.routes.length ? profile.routes : [{ id: 'home', label: 'Home', route: '/', required: true }])
+    .map((r) => ({
+      id: r.id,
+      label: r.label,
+      route: r.route,
+      ...(r.required ? { required: true } : {}),
+    }));
+
+  const content = baseContent(projectName, routes);
+
+  // Recipes may hint schema shape, but must not dump another storefront's content
+  // into an unrelated project. Extracted values always win.
+
+  const plannedFields = collectFieldsFromPlan(plan);
+
+  // A second `init` run re-reads already-transformed sources, where the former
+  // literals are now site-data expressions and therefore no longer detectable.
+  // Seeding from the existing manifest is what makes the run converge instead
+  // of silently erasing the schema it produced the first time.
+  const editorSections = (existingManifest?.editorSchema?.sections || []).map((section) =>
+    JSON.parse(JSON.stringify(section))
+  );
+
+  let commonSection = editorSections.find((section) => section.id === 'common' || section.path === 'common');
+  if (!commonSection) {
+    commonSection = {
+      id: 'common',
+      path: 'common',
+      type: 'object',
+      label: 'Shared Website Content',
+      fields: [],
+    };
+    editorSections.unshift(commonSection);
+  }
+  commonSection.fields = commonSection.fields || [];
+
+  const commonBaseline = [
+    { key: 'websiteTitle', type: 'text', label: 'Website Title', required: true },
+    { key: 'shortDescription', type: 'textarea', label: 'Short Description' },
+    { key: 'logoUrl', type: 'image', label: 'Website Logo' },
+    { key: 'headerCtaLabel', type: 'text', label: 'Header Button Label' },
+    {
+      key: 'navLabels',
+      type: 'object',
+      label: 'Navigation Labels',
+      fields: routes.map((p) => ({ key: p.id, type: 'text', label: `${p.label || p.id} Link` })),
+    },
+    { key: 'copyright', type: 'text', label: 'Copyright' },
+  ];
+  for (const field of commonBaseline) {
+    if (!commonSection.fields.some((existing) => existing.key === field.key)) {
+      commonSection.fields.push(field);
+    }
+  }
+
+  for (const field of plannedFields) {
+    if (field.type === 'list') {
+      setDeep(content, field.path, field.value ?? []);
+      upsertSchemaList(editorSections, field.path, field.itemFields, field.value);
+      continue;
+    }
+    setDeep(content, field.path, field.value ?? '');
+    const type = field.type === 'url' ? 'text' : field.type || classifyFieldType('text', field.value);
+    upsertSchemaField(editorSections, field.path, type, humanLabel(field.path));
+  }
+
+  if (existingSiteData && existingSiteData.content) {
+    Object.assign(content, deepMerge(content, existingSiteData.content));
+    // Planned extracted values should win over empty recipe defaults when existing is absent,
+    // but never erase merchant-configured existing values.
+    for (const field of plannedFields) {
+      const existingVal = getDeep(existingSiteData.content, field.path);
+      if (existingVal !== undefined) setDeep(content, field.path, existingVal);
+      else if (field.value !== undefined) setDeep(content, field.path, field.value);
+    }
+  }
+
+  const siteData = {
+    denebVersion: existingSiteData?.denebVersion || undefined,
+    arcVersion: ARC_VERSION,
+    schemaVersion: SCHEMA_VERSION,
+    project: existingSiteData?.project || {
+      id: `${projectName}-project`,
+      title: projectName,
+      status: 'APPROVED',
+    },
+    merchant: existingSiteData?.merchant || {
+      businessName: projectName,
+      description: 'A modern commerce storefront built for the Fivora platform.',
+    },
+    template: existingSiteData?.template || {
+      id: `${projectName}-template`,
+      name: projectName,
+      engine: 'NEXT_STATIC_EXPORT',
+      structure: { pages: routes.map((p) => p.id) },
+    },
+    requirements: existingSiteData?.requirements || {
+      requiredPages: routes.filter((p) => p.required).map((p) => p.id),
+      requiredFeatures: [],
+    },
+    content,
+  };
+
+  if (!siteData.template.structure) siteData.template.structure = {};
+  siteData.template.structure.pages = routes.map((p) => p.id);
+
+  assignSectionPageKeys(editorSections, routes, markerRoutes);
+
+  const controlOnlyPaths = computeControlOnlyPaths(
+    content,
+    boundFieldPaths,
+    existingManifest?.visualEditing?.controlOnlyPaths || []
+  );
+
+  const manifest = {
+    framework: existingManifest?.framework || 'nextjs-static-export',
+    version: existingManifest?.version || 2,
+    denebVersion: existingManifest?.denebVersion,
+    arcVersion: ARC_VERSION,
+    schemaVersion: SCHEMA_VERSION,
+    visualEditing: {
+      contractVersion: 1,
+      mode: existingManifest?.visualEditing?.mode || 'strict',
+      controlOnlyPaths,
+    },
+    siteDataFile: existingManifest?.siteDataFile || (profile.hasSrc ? 'src/data/site-data.json' : 'data/site-data.json'),
+    outputDirectory: existingManifest?.outputDirectory || 'out',
+    installCommand: existingManifest?.installCommand || 'npm install',
+    buildCommand: existingManifest?.buildCommand || 'npm run build',
+    basePathEnvVar: existingManifest?.basePathEnvVar || 'NEXT_PUBLIC_SITE_BASE_PATH',
+    pages: routes,
+    editorSchema: {
+      version: 1,
+      sections: editorSections,
+    },
+  };
+
+  return { siteData, manifest, siteDataRel: manifest.siteDataFile };
+}
+
+function writeDataBank(projectDir, siteData, manifest) {
+  const siteDataRel = manifest.siteDataFile || 'src/data/site-data.json';
+  const siteDataPath = path.join(projectDir, siteDataRel);
+  const manifestPath = path.join(projectDir, 'fivora-template.json');
+  writeJson(siteDataPath, siteData);
+  writeJson(manifestPath, manifest);
+  return { siteDataPath, manifestPath };
+}
+
+function loadExistingData(projectDir, profile) {
+  const manifest = readJsonSafe(path.join(projectDir, 'fivora-template.json'));
+  const rel = manifest?.siteDataFile || (profile.hasSrc ? 'src/data/site-data.json' : 'data/site-data.json');
+  const siteData = readJsonSafe(path.join(projectDir, rel));
+  return { manifest, siteData, siteDataRel: rel };
+}
+
+function countSchemaFields(manifest) {
+  function walk(fields) {
+    if (!Array.isArray(fields)) return 0;
+    let n = 0;
+    for (const f of fields) {
+      if (f.fields) n += walk(f.fields);
+      else n += 1;
+    }
+    return n;
+  }
+  return (manifest.editorSchema?.sections || []).reduce((acc, s) => acc + walk(s.fields), 0);
+}
+
+module.exports = {
+  buildSiteDataAndManifest,
+  writeDataBank,
+  loadExistingData,
+  setDeep,
+  getDeep,
+  countSchemaFields,
+  collectFieldsFromPlan,
+  computeControlOnlyPaths,
+  assignSectionPageKeys,
+  upsertSchemaList,
+};

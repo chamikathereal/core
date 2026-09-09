@@ -1,119 +1,88 @@
-# DENEB UI Framework
+<p align="center">
+  <a href="https://deneb.fivora.site">
+    <img src="https://img.shields.io/badge/DENEB_UI-Visual--First_Storefront_Framework-6366F1?style=for-the-badge&labelColor=0f172a" alt="DENEB UI" />
+  </a>
+</p>
 
-### A modern UI system for the web.
+<p align="center">
+  <a href="https://www.npmjs.com/org/deneb-ui"><img src="https://img.shields.io/npm/v/@deneb-ui/ui.svg?style=flat-square&label=@deneb-ui/ui&color=6366F1" alt="npm" /></a>
+  <img src="https://img.shields.io/badge/Monorepo-TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Fivora-Visual_Editing-818CF8?style=flat-square" alt="Fivora" />
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-emerald?style=flat-square" alt="MIT" /></a>
+</p>
 
-> **DENEB UI — Build beautiful interfaces, effortlessly.**  
-> The visual-first React component ecosystem and storefront authoring suite.  
-> Proudly presented by **DENEB-UI Collaborate with FIVORA**.
+<p align="center">
+  <strong>Visual-first React components + CLI toolchain for editable commerce storefronts.</strong>
+</p>
 
-[![Framework: DENEB UI](https://img.shields.io/badge/Framework-DENEB_UI_v2.0-blue.svg)](https://github.com/deneb-ui/ui)
-[![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="https://deneb.fivora.site"><strong>Documentation</strong></a> ·
+  <a href="https://www.npmjs.com/org/deneb-ui"><strong>npm</strong></a> ·
+  <a href="https://github.com/deneb-ui/ui"><strong>Docs repo</strong></a>
+</p>
 
 ---
 
-## 🚀 Quickstart
+## Packages
 
-### 1. Install DENEB UI in any React / Next.js project:
+Published under the [`@deneb-ui`](https://www.npmjs.com/org/deneb-ui) npm organization:
+
+| Package | Description | Install |
+| :--- | :--- | :--- |
+| [**@deneb-ui/ui**](packages/deneb-ui) | React component library — 40+ editable storefront components | `npm i @deneb-ui/ui` |
+| [**@deneb-ui/cli**](cli/deneb-cli) | CLI — init, validate, zip, doctor, lab, add | `npm i -D @deneb-ui/cli` |
+| [**@deneb-ui/create-template**](packages/create-template) | Scaffold new storefront templates | `npm create @deneb-ui/template` |
+
+---
+
+## Quick start
 
 ```bash
-npm install @deneb-ui/ui
-# or with pnpm
-pnpm add @deneb-ui/ui
+# New project from template
+npm create @deneb-ui/template my-store
+
+# Or convert an existing Next.js app
+npx @deneb-ui/cli init
 ```
 
 ```tsx
-import {
-  Button,
-  Card,
-  Dialog,
-  ContactActions,
-  WhatsAppButton,
-  LocationCard,
-  SocialLinks,
-  BusinessHours,
-} from "@deneb-ui/ui";
-```
-
-### 2. Scaffold a complete storefront template in seconds:
-
-```bash
-npx @deneb-ui/create-template my-store
-# or
-npx create-deneb my-store
-```
-
-### 3. Add components on-demand via CLI:
-
-```bash
-# List available components:
-npx @deneb-ui/cli add list
-
-# Add specific components into src/components/ui/:
-npx @deneb-ui/cli add product-card
-npx @deneb-ui/cli add contact-actions
-npx @deneb-ui/cli add location-card
-npx @deneb-ui/cli add whatsapp-button
-npx @deneb-ui/cli add dialog
-npx @deneb-ui/cli add all
+import { SiteDataProvider, Navbar, Hero, Footer } from "@deneb-ui/ui";
 ```
 
 ---
 
-## 📦 Packages in this Monorepo
+## Repository structure
 
-| Package | Purpose | Installation |
-| :--- | :--- | :--- |
-| **`@deneb-ui/ui`** | Complete visual-first UI framework (shadcn & HeroUI style primitives + smart template components) | `npm i @deneb-ui/ui` |
-| **`@deneb-ui/cli`** | Developer CLI (`deneb add`, `validate`, `lab`, `zip`, `init`) | `npm i -D @deneb-ui/cli` |
-| **`@deneb-ui/create-template`** | Scaffolding CLI to generate pre-validated storefront templates | `npx @deneb-ui/create-template <app>` |
+```
+core/
+├── packages/deneb-ui/       # @deneb-ui/ui component library
+├── cli/deneb-cli/           # @deneb-ui/cli + Deneb ARC engine
+├── packages/create-template/# @deneb-ui/create-template
+├── templates/nextjs/        # Reference storefront template
+└── .github/workflows/       # CI/CD + npm publish with provenance
+```
 
----
-
-## 🌟 Smart Template Components
-
-DENEB UI includes a dedicated suite of high-converting smart action components designed for commerce:
-
-### 1. Smart Contact & Messaging
-- **`ContactActions`**: Automatically inspects available contact channels (`phone`, `whatsapp`, `email`) and renders active buttons with automatic fallback.
-- **`WhatsAppButton`**: One-click click-to-chat button with built-in SVG icon and automatic URL generation (`https://wa.me/...`).
-- **`PhoneButton`**: One-click calling button with `tel:` handler and raw number visual editing bindings.
-- **`EmailButton`**: One-click email button with `mailto:` handler and optional subject lines.
-
-### 2. Smart Location & Navigation
-- **`LocationCard`**: High-converting location card with pin icon, formatted address, and Google Maps directions button.
-- **`LocationLink`**: Address display paired with an interactive "Get Directions" action.
-- **`MapLink`**: Direct button to open Google Maps directions or search queries.
-- **`MapEmbed`**: Responsive map embed iframe with safe graceful fallback to `MapLink` when embed URLs are unconfigured.
-- **`Address`**: Structured semantic `<address>` component with individual street, city, and country field markers.
-
-### 3. Social & Operating Hours
-- **`SocialLinks`**: Smart container that automatically filters out unconfigured social platforms.
-- **`SocialButton`**: Brand-colored social button with built-in SVGs (Instagram, Facebook, TikTok, YouTube, LinkedIn, X, Pinterest, GitHub).
-- **`BusinessHours`**: Weekly schedule renderer with a live dynamic **Open Now** / **Closed** status badge.
-- **`DenebAction`** / **`ActionLink`**: Foundation action primitive connecting action types, URL generation, and visual editing markers.
+Documentation site (separate repo): **[github.com/deneb-ui/ui](https://github.com/deneb-ui/ui)** → [deneb.fivora.site](https://deneb.fivora.site)
 
 ---
 
-## 🛠️ Monorepo Commands
+## Development
 
 ```bash
-# Build all packages & sync template
+npm install
 npm run build
 
-# Bump versions across monorepo (patch / minor / major)
-npm run bump
-npm run bump:minor
+# Run ARC tests
+node --test cli/deneb-cli/src/arc/__tests__/arc.test.cjs
 
-# Run preflight compliance validation on reference template
+# Validate reference template
 node cli/deneb-cli/bin/index.js validate templates/nextjs --skip-install
-
-# Test CLI component registry
-node cli/deneb-cli/bin/index.js add list
 ```
 
 ---
 
-## 👤 Author & Architecture
+## Authors
 
-Created and architected by **Chamika Gayashan & Induranga Kawishwara**.  
-Built for high-converting, modern storefronts.
+**[Chamika Gayashan](https://github.com/chamikathereal)** · **[Induranga Kawishwara](https://github.com/Induranga-kawishwara)**
+
+DENEB UI · Collaborate with Fivora · MIT License

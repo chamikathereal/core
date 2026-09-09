@@ -148,7 +148,7 @@ export function StickyMobileBar({
 
   return (
     <aside
-      className={`fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-3 transition-transform duration-300 ${
+      className={`deneb-sticky-mobile-bar fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-3 transition-transform duration-300 ${
         showOnDesktop ? 'block' : 'lg:hidden'
       } ${className}`}
       data-preview-field-path={fieldPath}
