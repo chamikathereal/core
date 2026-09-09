@@ -12,6 +12,13 @@ const packagePaths = [
   path.join(rootDir, 'package.json'),
 ];
 
+const RELEASE_PACKAGES = [
+  '@deneb-ui/core',
+  '@deneb-ui/ui',
+  '@deneb-ui/cli',
+  '@deneb-ui/create-template',
+];
+
 function getRemoteVersion(pkgName) {
   try {
     const out = execSync(`npm view ${pkgName} version`, { encoding: 'utf8' }).trim();
@@ -89,24 +96,26 @@ function refreshLocks(nextVersion) {
 const localPkg = JSON.parse(fs.readFileSync(packagePaths[0], 'utf8'));
 const localVersion = localPkg.version;
 
-// 2. Query npm for latest published version
-const remoteVersion = getRemoteVersion('@deneb-ui/ui');
-
 console.log(`\n🔍 Checking versions for @deneb-ui:`);
 console.log(`   Local repo version:  v${localVersion}`);
-console.log(`   Latest npm version:  v${remoteVersion}`);
 
-// 3. Determine base version: highest of local or remote
-const baseVersion = compareSemver(localVersion, remoteVersion) >= 0 ? localVersion : remoteVersion;
+let remoteMax = '0.0.0';
+for (const name of RELEASE_PACKAGES) {
+  const v = getRemoteVersion(name);
+  console.log(`   npm ${name}: v${v}`);
+  if (compareSemver(v, remoteMax) > 0) remoteMax = v;
+}
+console.log(`   Highest npm version: v${remoteMax}`);
 
-// 4. If remote is equal to or greater than baseVersion, auto-bump patch
+const baseVersion = compareSemver(localVersion, remoteMax) >= 0 ? localVersion : remoteMax;
+
 let nextVersion = baseVersion;
 let hasBumped = false;
 
-if (compareSemver(remoteVersion, baseVersion) >= 0) {
+if (compareSemver(remoteMax, baseVersion) >= 0) {
   nextVersion = bumpPatch(baseVersion);
   hasBumped = true;
-  console.log(`\n⚡ Version v${baseVersion} is already on npm. Auto-bumping to next dynamic version: v${nextVersion}`);
+  console.log(`\n⚡ npm already has v${remoteMax}. Auto-bumping every package to v${nextVersion}`);
 } else {
   console.log(`\n✔ Local version v${localVersion} is ahead of npm. Using v${nextVersion}`);
 }
@@ -149,5 +158,6 @@ if (fs.existsSync(rootLockPath)) {
 // 7. Rebuild packages and sync templates
 console.log(`\n📦 Rebuilding packages and syncing templates for v${nextVersion}...`);
 execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
+execSync('node scripts/assert-release-lockstep.js', { cwd: rootDir, stdio: 'inherit' });
 
 console.log(`\n🎉 Ready to publish v${nextVersion} to npm!`);

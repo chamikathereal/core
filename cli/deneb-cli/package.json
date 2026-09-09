@@ -25,7 +25,8 @@
     "README.md"
   ],
   "scripts": {
-    "test": "node --test src/arc/__tests__/arc.test.cjs"
+    "test": "node --test src/arc/__tests__/arc.test.cjs",
+    "build:tools": "npx --yes tsx tool-sources/build-tools.ts"
   },
   "keywords": [
     "deneb",
