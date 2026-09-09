@@ -579,13 +579,18 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
   });
 
   // 14. Sensitive Element Guardian: Auto-annotate non-bound <a> and <img> tags with data-preview-static
-  // Ensures 100% compliance with Fivora strict mode so unannotated links/images don't fail certification
-  code = code.replace(/<a(\s+[^>]*?href="[^"]*"[^>]*?)>/gi, (match, attrs) => {
+  // CRITICAL FIVORA RULE: Never mark an <a> as static if it encloses any children with data-preview-field-path
+  // This completely eliminates "markers cannot be on or inside data-preview-static" errors across cards and links.
+  code = code.replace(/<a(\s+[^>]*?href="[^"]*"[^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
     if (attrs.includes('data-preview-field-path') || attrs.includes('data-preview-static')) {
       return match;
     }
+    // If the inner content has editable field markers or is a card wrapper, NEVER mark the anchor static!
+    if (inner.includes('data-preview-field-path') || inner.includes('data-preview-item-path') || /card|product|shoe|item/i.test(attrs)) {
+      return match;
+    }
     fileModified = true;
-    return `<a${attrs} data-preview-static="navigation-link">`;
+    return `<a${attrs} data-preview-static="navigation-link">${inner}</a>`;
   });
 
   code = code.replace(/<img(\s+[^>]*?src="[^"]*"[^>]*?)>/gi, (match, attrs) => {
@@ -735,13 +740,25 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
     },
   ];
 
-  // If active recipe has defined sections, seed them
+  // Merge pages from detectedPages and activeRecipe.pages
+  const mergedPages = [...detectedPages];
+  if (activeRecipe && Array.isArray(activeRecipe.pages)) {
+    for (const rp of activeRecipe.pages) {
+      if (!mergedPages.some((p) => p.id === rp.id || p.route === rp.route)) {
+        mergedPages.push(rp);
+      }
+    }
+  }
+
+  // If active recipe has defined sections, seed them with guaranteed path property
   if (activeRecipe && Array.isArray(activeRecipe.sections)) {
     for (const sec of activeRecipe.sections) {
-      if (sec.id === 'common') {
+      const clonedSec = { ...sec };
+      if (!clonedSec.path) clonedSec.path = clonedSec.id;
+      if (clonedSec.id === 'common') {
         const commonSec = editorSections.find((s) => s.id === 'common');
-        if (commonSec && Array.isArray(sec.fields)) {
-          for (const rf of sec.fields) {
+        if (commonSec && Array.isArray(clonedSec.fields)) {
+          for (const rf of clonedSec.fields) {
             if (!commonSec.fields.some((f) => f.key === rf.key)) {
               commonSec.fields.push(rf);
             }
@@ -749,7 +766,7 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
         }
         continue;
       }
-      editorSections.push(sec);
+      editorSections.push(clonedSec);
     }
   }
 
@@ -796,6 +813,7 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
     }
 
     if (existingSection) {
+      if (!existingSection.path) existingSection.path = existingSection.id;
       existingSection.fields.push(...newFieldDefs);
     } else if (newFieldDefs.length > 0) {
       editorSections.push({
@@ -806,6 +824,11 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
         fields: newFieldDefs,
       });
     }
+  }
+
+  // Ensure all editorSections have a valid path attribute
+  for (const sec of editorSections) {
+    if (!sec.path) sec.path = sec.id;
   }
 
   const siteData = {
@@ -823,11 +846,11 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
       name: projectName,
       engine: 'NEXT_STATIC_EXPORT',
       structure: {
-        pages: detectedPages.map((p) => p.id),
+        pages: mergedPages.map((p) => p.id),
       },
     },
     requirements: {
-      requiredPages: detectedPages.filter((p) => p.required).map((p) => p.id),
+      requiredPages: mergedPages.filter((p) => p.required).map((p) => p.id),
       requiredFeatures: [],
     },
     content: content,
@@ -846,7 +869,7 @@ function generateTemplateData(projectDir, projectName, detectedPages, extractedB
     installCommand: 'npm install',
     buildCommand: 'npm run build',
     basePathEnvVar: 'NEXT_PUBLIC_SITE_BASE_PATH',
-    pages: detectedPages,
+    pages: mergedPages,
     editorSchema: {
       version: 1,
       sections: editorSections,

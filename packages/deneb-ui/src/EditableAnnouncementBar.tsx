@@ -40,12 +40,13 @@ export function EditableAnnouncementBar({
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Resolve dynamic values from siteData if present
-  const announcementData = (siteData as any)?.site?.announcement;
-  const isEnabled = announcementData?.enabled !== false;
+  const announcementData = (siteData as any)?.content?.site?.announcement || (siteData as any)?.site?.announcement;
+  const isEnabled = announcementData ? announcementData?.enabled !== false : true;
   const text = announcementData?.text || defaultText;
   const badge = announcementData?.badge || defaultBadge;
   const linkText = announcementData?.linkText || defaultLinkText;
   const linkUrl = announcementData?.linkUrl || defaultLinkUrl;
+  const activeFieldPath = announcementData ? fieldPath : undefined;
 
   if (isDismissed || !isEnabled) {
     return null;
@@ -118,14 +119,14 @@ export function EditableAnnouncementBar({
           <span
             className="deneb-announcement-badge bg-white/20 text-white px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase inline-flex items-center"
             style={badgeStyle}
-            data-preview-field-path={fieldPath ? `${fieldPath}.badge` : undefined}
+            data-preview-field-path={activeFieldPath ? `${activeFieldPath}.badge` : undefined}
           >
             {badge}
           </span>
         )}
         <span
           className="deneb-announcement-text"
-          data-preview-field-path={fieldPath ? `${fieldPath}.text` : undefined}
+          data-preview-field-path={activeFieldPath ? `${activeFieldPath}.text` : undefined}
         >
           {text}
         </span>
@@ -134,7 +135,7 @@ export function EditableAnnouncementBar({
             href={linkUrl}
             className="deneb-announcement-link underline font-semibold text-white hover:opacity-90 transition-opacity ml-1 inline-flex items-center gap-1"
             style={linkStyle}
-            data-preview-field-path={fieldPath ? `${fieldPath}.linkText` : undefined}
+            data-preview-field-path={activeFieldPath ? `${activeFieldPath}.linkText` : undefined}
           >
             {linkText} &rarr;
           </a>

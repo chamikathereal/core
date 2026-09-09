@@ -132,6 +132,15 @@ function saveRecipeFromProject(projectDir, recipeName = 'custom-storefront', opt
       ],
       autoIndex: true,
       defaultCardPrefix: 'product',
+      withBasePathImages: true,
+      safeNavigationButtons: true,
+    },
+    productDetailRules: {
+      enabled: true,
+      sectionPath: 'product',
+      sampleRoute: '/products/vanta-aero-x',
+      galleryWithBasePath: true,
+      noStaticOnEditableAncestors: true,
     },
     actionRules: {
       splitActionAndLabel: true,
@@ -146,7 +155,11 @@ function saveRecipeFromProject(projectDir, recipeName = 'custom-storefront', opt
       platforms: ['instagram', 'facebook', 'twitter', 'tiktok', 'youtube', 'linkedin'],
       targetPath: 'common.footer',
     },
-    sections: manifest.editorSchema?.sections || [],
+    pages: manifest.pages || [],
+    sections: (manifest.editorSchema?.sections || []).map((s) => ({
+      ...s,
+      path: s.path || s.id,
+    })),
     defaults: siteData.content || {},
   };
 
