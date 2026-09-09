@@ -25,9 +25,11 @@ on:
       - 'v*'
 
 jobs:
-  publish:
+  build-and-test:
     name: Build, Validate & Publish
     runs-on: ubuntu-latest
+    env:
+      CAN_PUBLISH: ${{ github.repository == 'deneb-ui/core' }}
 
     permissions:
       contents: write
@@ -43,9 +45,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          registry-url: 'https://registry.npmjs.org'
-          scope: '@deneb-ui'
+          node-version: 22
 
       - name: Install Dependencies
         run: npm install
@@ -53,16 +53,23 @@ jobs:
       - name: Dynamic Auto-Version Bump & Build
         id: dynamic_bump
         run: |
-          if [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
-            node scripts/auto-version-bump.js
-            NEW_VER=$(node -p "require('./packages/deneb-ui/package.json').version")
-            echo "NEW_VERSION=$NEW_VER" >> $GITHUB_ENV
-            echo "BUMPED=true" >> $GITHUB_ENV
-            echo "✔ Dynamic version ready: v$NEW_VER"
-          else
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             echo "Dry run mode - skipping dynamic version bump."
             npm run build
+            exit 0
           fi
+
+          if [ "$CAN_PUBLISH" != "true" ]; then
+            echo "Fork or non-canonical repo: build without bumping or publishing."
+            npm run build
+            exit 0
+          fi
+
+          node scripts/auto-version-bump.js
+          NEW_VER=$(node -p "require('./packages/deneb-ui/package.json').version")
+          echo "NEW_VERSION=$NEW_VER" >> $GITHUB_ENV
+          echo "BUMPED=true" >> $GITHUB_ENV
+          echo "✔ Dynamic version ready: v$NEW_VER"
 
       - name: Assert release lockstep
         run: node scripts/assert-release-lockstep.js
@@ -82,11 +89,36 @@ jobs:
           cd templates/nextjs
           node ../../cli/deneb-cli/bin/index.js validate . --skip-install || echo "Preflight validation completed."
 
+      - name: Skip npm publish on fork
+        if: env.CAN_PUBLISH != 'true'
+        run: |
+          echo "This workflow ran on ${{ github.repository }}."
+          echo "npm publish only runs on deneb-ui/core (org secrets + trusted publisher)."
+          echo "Merge the PR into deneb-ui/core to release."
+
+      - name: Configure npm registry auth
+        if: env.CAN_PUBLISH == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@deneb-ui'
+
       - name: Publish to npm Registry
+        if: env.CAN_PUBLISH == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DENEB_TOKEN || secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
+
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "No DENEB_TOKEN / NPM_TOKEN. Removing empty auth so GitHub OIDC trusted publishing can work."
+            if [ -f "$HOME/.npmrc" ]; then
+              grep -v '_authToken' "$HOME/.npmrc" > "$HOME/.npmrc.noid" || true
+              mv "$HOME/.npmrc.noid" "$HOME/.npmrc"
+            fi
+          fi
+
           DRY_RUN_FLAG=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             DRY_RUN_FLAG="--dry-run"
@@ -101,7 +133,7 @@ jobs:
             local name=$2
             cd "$GITHUB_WORKSPACE/$dir"
             local local_ver=$(node -p "require('./package.json').version")
-            local is_published=$(npm view "$name@$local_ver" version 2>/dev/null || echo "")
+            local is_published=$(npm view "$name@$local_ver" version --no-workspaces 2>/dev/null || echo "")
 
             echo "========================================================="
             echo "Checking $name (local: v$local_ver)"
@@ -138,7 +170,7 @@ jobs:
           echo "========================================================="
 
       - name: Commit & Push Bumped Version Back to Repo
-        if: env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
+        if: env.CAN_PUBLISH == 'true' && env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -147,7 +179,7 @@ jobs:
           git push origin HEAD:main || echo "Push to main branch skipped or already up to date"
 
       - name: Trigger UI Showcase Synchronization
-        if: env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
+        if: env.CAN_PUBLISH == 'true' && env.BUMPED == 'true' && github.event.inputs.dry_run != 'true'
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.DENEB_ORG_SYNC_PAT || secrets.GITHUB_TOKEN }}
@@ -158,6 +190,7 @@ jobs:
 
       - name: Verify npm lockstep
         if: >
+          env.CAN_PUBLISH == 'true' &&
           env.BUMPED == 'true' &&
           github.event.inputs.dry_run != 'true' &&
           github.event.inputs.package != '@deneb-ui/core' &&
