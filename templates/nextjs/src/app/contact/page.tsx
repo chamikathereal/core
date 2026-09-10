@@ -1,12 +1,20 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { MapLink } from '@deneb-ui/ui';
 import { contentObject, contentText, useSiteData } from '@/lib/siteDataContext';
 
 export default function ContactPage() {
   const siteData = useSiteData();
   const contact = contentObject(contentObject(siteData.content).contact);
   const [status, setStatus] = useState('');
+
+  const directionsLabel = contentText(contact.directionsLabel) || 'Get Directions';
+  const directionsUrl =
+    contentText(contact.directionsUrl) ||
+    contentText(contact.mapUrl) ||
+    contentText(contact.addressUrl);
+  const address = contentText(contact.address);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +56,16 @@ export default function ContactPage() {
         <div className="contact-details">
           <a href={`tel:${contentText(contact.phone)}`} data-preview-field-path="contact.phone">{contentText(contact.phone)}</a>
           <a href={`mailto:${contentText(contact.email)}`} data-preview-field-path="contact.email">{contentText(contact.email)}</a>
-          <p data-preview-field-path="contact.address">{contentText(contact.address)}</p>
+          <p data-preview-field-path="contact.address">{address}</p>
+          <MapLink
+            mapUrl={directionsUrl}
+            address={address}
+            label={directionsLabel}
+            labelFieldPath="contact.directionsLabel"
+            urlFieldPath="contact.directionsUrl"
+            variant="outline"
+            size="md"
+          />
         </div>
         <form
           className="contact-form"

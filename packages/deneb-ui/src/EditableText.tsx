@@ -340,6 +340,7 @@ export function EditableText({
       data-preview-placeholder={isPlaceholderActive ? 'true' : undefined}
       className={`deneb-text ${className}`.trim()}
       style={typographyStyle}
+      suppressHydrationWarning
       {...(props as any)}
     >
       {displayContent}

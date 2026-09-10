@@ -141,6 +141,14 @@ function humanLabel(fieldPath) {
     .trim();
 }
 
+function isListActionCtaKey(key) {
+  return /Cta$/i.test(String(key || ''));
+}
+
+function listActionCtaItemFieldNames() {
+  return ['buttonLabel', 'buttonUrl'];
+}
+
 function classifyFieldType(kind, value) {
   if (kind === 'image') return 'image';
   if (kind === 'url') return 'url';
@@ -162,4 +170,6 @@ module.exports = {
   buildFieldPath,
   humanLabel,
   classifyFieldType,
+  isListActionCtaKey,
+  listActionCtaItemFieldNames,
 };

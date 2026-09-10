@@ -343,13 +343,27 @@ export function SiteDataProvider<T extends SiteData = SiteData>({
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const value = useMemo(() => siteData as SiteData, [siteData]);
   return (
     <SiteDataContext.Provider value={value}>
       <FontLoader />
       <ResponsiveBaseStyles />
       <DenebComponentStyles />
-      {children}
+      {hydrated ? (
+        children
+      ) : (
+        <div
+          className="min-h-screen"
+          style={{ background: 'var(--page-bg, #f9f5ef)' }}
+          suppressHydrationWarning
+          aria-hidden
+        />
+      )}
     </SiteDataContext.Provider>
   );
 }

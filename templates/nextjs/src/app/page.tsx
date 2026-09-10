@@ -9,11 +9,9 @@ import {
 import { pageRoute, withBasePath } from '@/lib/utils';
 import {
   EditableText,
-  EditableImage,
   EditableList,
   EditableCard,
-  EditableBox,
-  EditableGrid,
+  ListActionCta,
 } from '@deneb-ui/ui';
 
 
@@ -26,6 +24,11 @@ export default function HomePage() {
   const content = contentObject(siteData.content);
   const home = contentObject(content.home);
   const features = contentList(home.features);
+  const demoCta = contentObject(
+    (contentList(home.demoPreOrderCta)[0] as Record<string, unknown> | undefined) ?? {}
+  );
+  const demoCtaLabel = contentText(demoCta.buttonLabel) || 'Book a Demo';
+  const demoCtaUrl = contentText(demoCta.buttonUrl) || '';
   const selectedPages =
     siteData.requirements?.requiredPages ??
     siteData.template?.structure?.pages ??
@@ -133,6 +136,15 @@ export default function HomePage() {
             data-preview-field-path="home.introBody"
             defaultValue={contentText(home.introBody)}
           />
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem' }}>
+            <ListActionCta
+              listPath="home.demoPreOrderCta"
+              editable
+              buttonLabel={demoCtaLabel}
+              buttonUrl={demoCtaUrl}
+              className="button-primary"
+            />
+          </div>
         </div>
       </section>
 

@@ -34,7 +34,7 @@ export function LocationCard({
   mapUrl,
   fieldPath,
   addressFieldPath = 'common.business.location.address',
-  mapUrlFieldPath = 'common.business.location.mapUrl',
+  mapUrlFieldPath = 'common.business.location.addressUrl',
   directionsLabel = 'Get Directions →',
   className = '',
   style,

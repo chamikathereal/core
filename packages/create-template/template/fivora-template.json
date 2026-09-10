@@ -131,6 +131,18 @@
               },
               { "key": "body", "type": "textarea", "label": "Description" }
             ]
+          },
+          {
+            "key": "demoPreOrderCta",
+            "type": "list",
+            "label": "Demo Pre Order Cta",
+            "itemLabel": "Demo Pre Order Cta",
+            "minItems": 0,
+            "maxItems": 12,
+            "fields": [
+              { "key": "buttonLabel", "type": "text", "label": "Button Label" },
+              { "key": "buttonUrl", "type": "url", "label": "Button Url" }
+            ]
           }
         ]
       },
@@ -154,6 +166,22 @@
             "label": "About image",
             "recommendedWidth": 1200,
             "recommendedHeight": 900
+          },
+          { "key": "collageHeading", "type": "text", "label": "Collage Heading" },
+          { "key": "collageDescription", "type": "textarea", "label": "Collage Description" },
+          { "key": "historyHeading", "type": "text", "label": "History Heading" },
+          { "key": "history", "type": "textarea", "label": "History" },
+          {
+            "key": "collageImages",
+            "type": "list",
+            "label": "Collage Images",
+            "itemLabel": "Collage Image",
+            "minItems": 0,
+            "maxItems": 12,
+            "fields": [
+              { "key": "image", "type": "image", "label": "Image" },
+              { "key": "caption", "type": "text", "label": "Caption" }
+            ]
           }
         ]
       },
@@ -217,6 +245,8 @@
           { "key": "phone", "type": "tel", "label": "Phone" },
           { "key": "email", "type": "email", "label": "Email" },
           { "key": "address", "type": "textarea", "label": "Address" },
+          { "key": "directionsLabel", "type": "text", "label": "Directions Label" },
+          { "key": "directionsUrl", "type": "url", "label": "Directions Url" },
           { "key": "formTitle", "type": "text", "label": "Form heading" },
           { "key": "submitLabel", "type": "text", "label": "Submit button" }
         ]

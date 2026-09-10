@@ -63,12 +63,22 @@
         { "title": "Auto-Balancing Layouts", "body": "Cards, grids, and containers automatically balance and fill space seamlessly across all screen sizes." },
         { "title": "Strict Visual Editing", "body": "Direct bindings enable merchants to click, edit, and preview changes without breaking template styles." },
         { "title": "1-Click Clean Packaging", "body": "Built-in zip command strips heavy caches, node_modules, and git files so uploads pass instantly." }
-      ]
+      ],
+      "demoPreOrderCta": [{ "buttonLabel": "Book a Demo", "buttonUrl": "https://wa.me/94771234567" }]
     },
     "about": {
       "heading": "Built for the next generation of online storefronts",
       "body": "The Fivora connects businesses with high-converting, beautifully crafted templates. This starter template demonstrates clean monorepo architecture, responsive typography, and auto-balancing components.",
-      "imageUrl": "/placeholder.svg"
+      "imageUrl": "/placeholder.svg",
+      "collageHeading": "Our story in pictures",
+      "collageDescription": "A quick visual tour of how we design, build, and ship merchant-ready storefronts.",
+      "historyHeading": "Where we started",
+      "history": "We began as a small team helping local businesses move online. Today our templates power visual editing labs, strict Fivora contracts, and one-click packaging for developers worldwide.",
+      "collageImages": [
+        { "id": "studio", "image": "/placeholder.svg", "caption": "Design studio" },
+        { "id": "build", "image": "/placeholder.svg", "caption": "Build & test" },
+        { "id": "ship", "image": "/placeholder.svg", "caption": "Ship to Fivora" }
+      ]
     },
     "servicesPage": {
       "heading": "Template Services & Capabilities",
@@ -96,6 +106,8 @@
       "phone": "+94 11 234 5678",
       "email": "developer@fivora.lk",
       "address": "Colombo, Sri Lanka",
+      "directionsLabel": "Get Directions",
+      "directionsUrl": "https://maps.app.goo.gl/example",
       "formTitle": "Send an enquiry",
       "submitLabel": "Send Message",
       "directMessageText": "Send us a direct message",
