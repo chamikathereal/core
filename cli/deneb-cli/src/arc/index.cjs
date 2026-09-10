@@ -17,7 +17,7 @@ const { walkFiles, isJsxFile, rel, copyFilePreserve, writeJson, readJsonSafe, fi
 const { scanProject, buildDependencyGraph, inferOwnerScope } = require('./scanner.cjs');
 const { analyzeFile, collectDesignSnapshot } = require('./semantic.cjs');
 const { planTransformations } = require('./planner.cjs');
-const { applyFilePlan, instrumentLayoutSource, instrumentPageKey, resolveSiteDataSpecifier, ensureJsonModule } = require('./transformer.cjs');
+const { applyFilePlan, instrumentLayoutSource, instrumentPageKey, resolveSiteDataSpecifier, ensureJsonModule, sanitizeContradictoryMarkersInSource } = require('./transformer.cjs');
 const { parseSource } = require('./ast.cjs');
 const { buildSiteDataAndManifest, writeDataBank, loadExistingData, countSchemaFields } = require('./manifest.cjs');
 const { validateAstFiles, validateContracts, designPreservationScore, coverageMetrics } = require('./validator.cjs');
@@ -352,6 +352,19 @@ function runDenebArc(projectDir, projectName, options = {}) {
       backupFile(projectDir, backupDir, abs);
       fs.writeFileSync(abs, keyed.code, 'utf8');
       if (!changedFiles.includes(route.file)) changedFiles.push(route.file);
+    }
+  }
+
+  // Remove any conflicting data-preview-static from elements carrying editable markers
+  for (const relativeFile of profile.jsxFiles || []) {
+    const abs = path.join(projectDir, relativeFile);
+    if (!fs.existsSync(abs)) continue;
+    const original = fs.readFileSync(abs, 'utf8');
+    const sanitized = sanitizeContradictoryMarkersInSource(original, relativeFile);
+    if (sanitized.updated && sanitized.code !== original) {
+      backupFile(projectDir, backupDir, abs);
+      fs.writeFileSync(abs, sanitized.code, 'utf8');
+      if (!changedFiles.includes(relativeFile)) changedFiles.push(relativeFile);
     }
   }
 

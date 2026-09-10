@@ -490,6 +490,7 @@ function findUncoveredVisibleText(code, filePath) {
     // A `<` preceded by an identifier character is a TypeScript generic
     // (forwardRef<HTMLButtonElement, Props>), never a JSX element.
     if (/[\w$)\]]/.test(source[offset - 1] || '')) continue;
+    if (tag.toLowerCase() === 'option') continue;
     if (!text || text.length <= 2 || !/\p{L}/u.test(text)) continue;
     if (!/^[\p{L}\p{N}"'(¡¿#$€£]/u.test(text)) continue;
     if (/^(?:true|false|null|undefined)$/i.test(text)) continue;
