@@ -5,6 +5,8 @@
 
 export interface MapLocationInput {
   mapUrl?: string | null;
+  /** Fivora-paired sibling of `address` (`addressUrl` shares the `address` inspector stem). */
+  addressUrl?: string | null;
   address?: string | null;
   city?: string | null;
   country?: string | null;
@@ -71,8 +73,9 @@ export function createMapUrl(location?: MapLocationInput | string | null): strin
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
   }
 
-  if (location.mapUrl && location.mapUrl.trim()) {
-    return location.mapUrl.trim();
+  const explicitUrl = (location.addressUrl || location.mapUrl || '').trim();
+  if (explicitUrl) {
+    return explicitUrl;
   }
 
   const queryParts = [location.address, location.city, location.country]
@@ -84,6 +87,28 @@ export function createMapUrl(location?: MapLocationInput | string | null): strin
   }
 
   return '';
+}
+
+/**
+ * Resolves a merchant-entered action URL for CTAs (WhatsApp, tel, mailto, or external http(s)).
+ * Phone-like values without a scheme become WhatsApp links when `mode` is `auto`.
+ */
+export function resolveActionUrl(
+  raw?: string | null,
+  mode: 'auto' | 'external' = 'auto'
+): string {
+  const value = raw?.trim() ?? '';
+  if (!value) return '';
+  if (mode === 'external') {
+    return isSafeExternalLink(value) ? value : '';
+  }
+  if (/^https?:\/\//i.test(value) || /^tel:/i.test(value) || /^mailto:/i.test(value)) {
+    return value;
+  }
+  if (/^\+?[\d\s().-]+$/.test(value)) {
+    return createWhatsAppUrl(value);
+  }
+  return isSafeExternalLink(value) ? value : '';
 }
 
 /**
@@ -120,6 +145,7 @@ export function withBasePath(value?: string | null): string {
 /**
  * Resolves standard page route from pageKey.
  */
-export function pageRoute(pageKey: string): string {
-  return pageKey === 'home' ? '/' : `/${pageKey}`;
+export function resolvePageRoute(pageKey: string, pages?: Array<{ id: string; route: string }>): string {
+  const match = pages?.find((page) => page.id === pageKey);
+  return match?.route ?? `/${pageKey.replace(/_/g, '/')}`;
 }

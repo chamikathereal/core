@@ -126,13 +126,42 @@ function splitActionChildren(node, labelField, labelFallback) {
   node.children = nextChildren;
 }
 
+function wrapHiddenUrlSibling(pathNode, urlField, fallback) {
+  const urlParts = urlField.split('.');
+  const hiddenUrl = b.jsxElement(
+    b.jsxOpeningElement(
+      b.jsxIdentifier('span'),
+      [
+        b.jsxAttribute(b.jsxIdentifier('hidden')),
+        b.jsxAttribute(b.jsxIdentifier('aria-hidden'), b.stringLiteral('true')),
+        jsxPreviewAttr(urlField),
+      ],
+      false
+    ),
+    b.jsxClosingElement(b.jsxIdentifier('span')),
+    [b.jsxExpressionContainer(siteDataBinding(urlParts, fallback, 'url'))],
+    false
+  );
+  pathNode.insertAfter(hiddenUrl);
+}
+
 function applyTransformToElement(pathNode, transform) {
   const node = pathNode.node;
   if (transform.operation === 'split-action-contract') {
     const urlParts = transform.urlField.split('.');
     replaceAttrValue(node, 'href', siteDataBinding(urlParts, transform.fallback, 'url'));
-    ensurePreviewPath(node, transform.urlField);
+    if (!hasJsxAttribute(node, 'data-preview-static')) {
+      node.openingElement.attributes.push(
+        b.jsxAttribute(b.jsxIdentifier('data-preview-static'), b.stringLiteral('action-link'))
+      );
+    }
+    if (hasJsxAttribute(node, 'data-preview-field-path')) {
+      node.openingElement.attributes = node.openingElement.attributes.filter(
+        (attr) => !(attr.type === 'JSXAttribute' && attr.name && attr.name.name === 'data-preview-field-path')
+      );
+    }
     splitActionChildren(node, transform.labelField, transform.labelFallback || '');
+    wrapHiddenUrlSibling(pathNode, transform.urlField, transform.fallback);
     return;
   }
   if (transform.operation === 'extract-url') {

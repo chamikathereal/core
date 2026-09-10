@@ -9,19 +9,29 @@ export interface MapLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorEleme
   city?: string | null;
   country?: string | null;
   label?: React.ReactNode;
+  /** Visible label field path, e.g. `contact.directionsLabel`. */
+  labelFieldPath?: string;
+  /** Hidden URL field path, e.g. `contact.directionsUrl`. */
+  urlFieldPath?: string;
+  /** @deprecated Use `urlFieldPath` instead. */
   fieldPath?: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link';
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
 }
 
+/**
+ * Directions CTA with Fivora-safe split fields: label on the button, URL on a hidden sibling.
+ */
 export function MapLink({
   mapUrl,
   address,
   city,
   country,
   label = 'Get Directions',
-  fieldPath = 'common.business.location.mapUrl',
+  labelFieldPath,
+  urlFieldPath,
+  fieldPath,
   variant = 'outline',
   size = 'md',
   icon,
@@ -29,11 +39,13 @@ export function MapLink({
   style,
   ...rest
 }: MapLinkProps) {
-  const resolvedHref = createMapUrl({ mapUrl, address, city, country });
-  const hasFieldPath = Boolean(fieldPath && fieldPath.trim());
-  const finalHref = resolvedHref || (hasFieldPath ? '#' : '');
+  const resolvedUrlFieldPath = urlFieldPath || fieldPath || 'contact.directionsUrl';
+  const resolvedLabelFieldPath = labelFieldPath || resolvedUrlFieldPath.replace(/Url$/, 'Label');
+  const resolvedHref = createMapUrl({ mapUrl, addressUrl: mapUrl, address, city, country });
+  const urlText = (mapUrl && mapUrl.trim()) || resolvedHref;
+  const finalHref = resolvedHref || '#';
 
-  if (!finalHref) return null;
+  if (!finalHref && !label) return null;
 
   const defaultIcon = (
     <svg data-preview-static="map-link-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -94,18 +106,25 @@ export function MapLink({
     ...variantStyles[variant],
   };
 
+  const opensNewTab = finalHref !== '#';
+
   return (
-    <a
-      href={finalHref}
-      data-preview-field-path={fieldPath}
-      target={finalHref !== '#' ? '_blank' : undefined}
-      rel={finalHref !== '#' ? 'noopener noreferrer' : undefined}
-      className={`deneb-map-link ${className}`.trim()}
-      style={mergedStyles}
-      {...rest}
-    >
-      {icon !== undefined ? icon : defaultIcon}
-      {label}
-    </a>
+    <span className="deneb-map-link-group" style={{ display: 'contents' }}>
+      <a
+        href={finalHref}
+        data-preview-static="map-link"
+        target={opensNewTab ? '_blank' : undefined}
+        rel={opensNewTab ? 'noopener noreferrer' : undefined}
+        className={`deneb-map-link ${className}`.trim()}
+        style={mergedStyles}
+        {...rest}
+      >
+        {icon !== undefined ? icon : defaultIcon}
+        <span data-preview-field-path={resolvedLabelFieldPath}>{label}</span>
+      </a>
+      <span hidden aria-hidden="true" data-preview-field-path={resolvedUrlFieldPath}>
+        {urlText}
+      </span>
+    </span>
   );
 }

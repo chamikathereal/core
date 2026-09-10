@@ -59,7 +59,7 @@ function upsertSchemaField(sections, fieldPath, fieldType, label, required = fal
       if (!existing) {
         fields.push({
           key,
-          type: fieldType === 'url' ? 'text' : fieldType === 'textarea' ? 'textarea' : fieldType,
+          type: fieldType === 'url' ? 'url' : fieldType === 'textarea' ? 'textarea' : fieldType === 'phone' ? 'tel' : fieldType,
           label: label || humanLabel(key),
           ...(required ? { required: true } : {}),
         });
@@ -119,10 +119,75 @@ function upsertSchemaList(sections, listPath, itemFields, items) {
     maxItems: Math.max((items || []).length, 12),
     fields: (itemFields || []).map((field) => ({
       key: field.key,
-      type: field.type === 'url' ? 'url' : field.type === 'image' ? 'image' : 'text',
+      type:
+        field.type === 'url'
+          ? 'url'
+          : field.type === 'image'
+            ? 'image'
+            : field.type === 'textarea'
+              ? 'textarea'
+              : field.type === 'tel' || field.type === 'phone'
+                ? 'tel'
+                : field.type === 'email'
+                  ? 'email'
+                  : field.type || 'text',
       label: humanLabel(field.key),
     })),
   });
+}
+
+const LIST_ACTION_CTA_ITEM_FIELDS = [
+  { key: 'buttonLabel', type: 'text' },
+  { key: 'buttonUrl', type: 'url' },
+];
+
+function isListActionCtaKey(key) {
+  return /Cta$/i.test(String(key || ''));
+}
+
+/**
+ * Walks merged site-data content and registers schemas ARC learns from merchant patterns:
+ * list CTAs (`*Cta` with buttonLabel/buttonUrl) and paired *Label/*Url siblings.
+ */
+function enrichSchemasFromContent(content, sections) {
+  if (!content || typeof content !== 'object') return;
+
+  function walk(node, prefix) {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      const listKey = prefix.split('.').pop() || '';
+      if (isListActionCtaKey(listKey)) {
+        const sample = node[0];
+        if (sample && typeof sample === 'object' && ('buttonLabel' in sample || 'buttonUrl' in sample)) {
+          upsertSchemaList(sections, prefix, LIST_ACTION_CTA_ITEM_FIELDS, node);
+        }
+      }
+      node.forEach((item, idx) => {
+        if (item && typeof item === 'object') walk(item, `${prefix}[${idx}]`);
+      });
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      const nextPath = prefix ? `${prefix}.${key}` : key;
+      if (Array.isArray(value) && isListActionCtaKey(key)) {
+        const sample = value[0];
+        if (sample && typeof sample === 'object' && ('buttonLabel' in sample || 'buttonUrl' in sample)) {
+          upsertSchemaList(sections, nextPath, LIST_ACTION_CTA_ITEM_FIELDS, value);
+        }
+      } else if (typeof value === 'string' && /Url$/i.test(key)) {
+        upsertSchemaField(sections, nextPath, 'url', humanLabel(key));
+        const labelKey = key.replace(/Url$/i, 'Label');
+        if (Object.prototype.hasOwnProperty.call(node, labelKey)) {
+          upsertSchemaField(sections, `${prefix}.${labelKey}`, 'text', humanLabel(labelKey));
+        }
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        walk(value, nextPath);
+      }
+    }
+  }
+
+  walk(content, '');
 }
 
 function collectFieldsFromPlan(plan) {
@@ -362,6 +427,7 @@ function buildSiteDataAndManifest({
   siteData.template.structure.pages = routes.map((p) => p.id);
 
   assignSectionPageKeys(editorSections, routes, markerRoutes);
+  enrichSchemasFromContent(content, editorSections);
 
   const controlOnlyPaths = computeControlOnlyPaths(
     content,
@@ -435,4 +501,6 @@ module.exports = {
   computeControlOnlyPaths,
   assignSectionPageKeys,
   upsertSchemaList,
+  enrichSchemasFromContent,
+  isListActionCtaKey,
 };

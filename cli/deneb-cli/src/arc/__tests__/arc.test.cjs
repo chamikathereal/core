@@ -10,10 +10,56 @@ const { scanProject, buildDependencyGraph } = require('../scanner.cjs');
 const { analyzeFile } = require('../semantic.cjs');
 const { planTransformations } = require('../planner.cjs');
 const { applyFilePlan } = require('../transformer.cjs');
-const { buildFieldPath, inferFieldName } = require('../field-paths.cjs');
+const { buildFieldPath, inferFieldName, isListActionCtaKey } = require('../field-paths.cjs');
+const { enrichSchemasFromContent } = require('../manifest.cjs');
 const { runDenebArc } = require('../index.cjs');
 const { parseSource } = require('../ast.cjs');
 const { loadFingerprintBoost } = require('../learning.cjs');
+
+test('field-paths recognizes list action CTA keys', () => {
+  assert.equal(isListActionCtaKey('preOrderCta'), true);
+  assert.equal(isListActionCtaKey('addToTrayCta'), true);
+  assert.equal(isListActionCtaKey('features'), false);
+});
+
+test('manifest enrichSchemasFromContent registers list CTA and paired directions fields', () => {
+  const sections = [
+    {
+      id: 'contact',
+      path: 'contact',
+      type: 'object',
+      label: 'Contact',
+      fields: [],
+    },
+    {
+      id: 'home',
+      path: 'home',
+      type: 'object',
+      label: 'Home',
+      fields: [],
+    },
+  ];
+  enrichSchemasFromContent(
+    {
+      contact: {
+        directionsLabel: 'Get Directions',
+        directionsUrl: 'https://maps.example',
+      },
+      home: {
+        demoPreOrderCta: [{ buttonLabel: 'Order', buttonUrl: 'https://wa.me/123' }],
+      },
+    },
+    sections
+  );
+  const contactFields = sections.find((s) => s.id === 'contact').fields;
+  assert.ok(contactFields.some((f) => f.key === 'directionsUrl' && f.type === 'url'));
+  assert.ok(contactFields.some((f) => f.key === 'directionsLabel'));
+  const homeFields = sections.find((s) => s.id === 'home').fields;
+  const list = homeFields.find((f) => f.key === 'demoPreOrderCta');
+  assert.ok(list && list.type === 'list');
+  assert.ok(list.fields.some((f) => f.key === 'buttonLabel'));
+  assert.ok(list.fields.some((f) => f.key === 'buttonUrl' && f.type === 'url'));
+});
 
 test('unseen fingerprints do not change planner confidence', () => {
   const hint = loadFingerprintBoost(null);
@@ -109,6 +155,8 @@ test('AST transformer preserves className and uses nullish fallbacks', () => {
   assert.match(result.code, /data-preview-field-path=/);
   assert.match(result.code, /\?\?/);
   assert.match(result.code, /<span[\s\S]*data-preview-field-path="/);
+  assert.match(result.code, /<span[^>]*hidden[^>]*data-preview-field-path="/);
+  assert.match(result.code, /data-preview-static="action-link"/);
   assert.doesNotMatch(result.code, /'use client'/);
   assert.match(result.code, /site-data\.json|@\/data\/site-data\.json/);
   assert.match(result.code, /data-preview-style-target=/);

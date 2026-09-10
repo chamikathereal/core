@@ -3,6 +3,7 @@
  * Created by Chamika Gayashan & Induranga Kawishwara
  */
 
+export * from './PreviewField';
 export * from './EditableText';
 export * from './EditableImage';
 export * from './EditableList';
