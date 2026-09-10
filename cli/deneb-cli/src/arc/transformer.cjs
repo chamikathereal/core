@@ -48,7 +48,16 @@ function replaceAttrValue(node, attrName, expression) {
   attr.value = b.jsxExpressionContainer(expression);
 }
 
+function stripStaticAttribute(node) {
+  if (node && node.openingElement && Array.isArray(node.openingElement.attributes)) {
+    node.openingElement.attributes = node.openingElement.attributes.filter(
+      (attr) => !(attr.type === 'JSXAttribute' && attr.name && attr.name.name === 'data-preview-static')
+    );
+  }
+}
+
 function ensurePreviewPath(node, fieldPath) {
+  stripStaticAttribute(node);
   if (hasJsxAttribute(node, 'data-preview-field-path')) return;
   node.openingElement.attributes.push(jsxPreviewAttr(fieldPath));
 }
@@ -505,6 +514,9 @@ function applyFilePlan(filePlan, profile) {
     ensureDefaultImport(ast, siteDataImport, 'siteData');
   }
 
+  // Sanitize any conflicting data-preview-static on elements with editable markers
+  sanitizeContradictoryMarkers(ast);
+
   // Page keys are stamped in a separate route-driven pass so App Router and
   // Pages Router projects are handled by the same logic.
   const code = printSource(ast, filePlan.originalCode);
@@ -692,6 +704,49 @@ function ensureJsonModule(tsconfig) {
   };
 }
 
+function sanitizeContradictoryMarkers(ast) {
+  let cleaned = 0;
+  recast.types.visit(ast, {
+    visitJSXOpeningElement(pathNode) {
+      const attrs = pathNode.node.attributes || [];
+      const hasEditable = attrs.some(
+        (a) => a.type === 'JSXAttribute' && a.name && (
+          a.name.name === 'data-preview-field-path' ||
+          a.name.name === 'data-preview-list-path' ||
+          a.name.name === 'data-preview-item-path'
+        )
+      );
+      const hasStatic = attrs.some(
+        (a) => a.type === 'JSXAttribute' && a.name && a.name.name === 'data-preview-static'
+      );
+      if (hasEditable && hasStatic) {
+        pathNode.node.attributes = attrs.filter(
+          (a) => !(a.type === 'JSXAttribute' && a.name && a.name.name === 'data-preview-static')
+        );
+        cleaned++;
+      }
+      this.traverse(pathNode);
+    },
+  });
+  return cleaned;
+}
+
+function sanitizeContradictoryMarkersInSource(code, relativeFile) {
+  if (!code.includes('data-preview-static')) return { code, updated: false };
+  if (!code.includes('data-preview-field-path') && !code.includes('data-preview-list-path') && !code.includes('data-preview-item-path')) {
+    return { code, updated: false };
+  }
+  let ast;
+  try {
+    ast = parseSource(code, relativeFile);
+  } catch {
+    return { code, updated: false };
+  }
+  const count = sanitizeContradictoryMarkers(ast);
+  if (count === 0) return { code, updated: false };
+  return { code: printSource(ast, code), updated: true, count };
+}
+
 module.exports = {
   applyFilePlan,
   instrumentLayoutSource,
@@ -699,4 +754,6 @@ module.exports = {
   resolveSiteDataSpecifier,
   ensureJsonModule,
   inferPageKey,
+  sanitizeContradictoryMarkers,
+  sanitizeContradictoryMarkersInSource,
 };

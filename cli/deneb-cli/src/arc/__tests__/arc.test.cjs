@@ -496,3 +496,26 @@ test('schema sections only claim a pageKey when reachability proves it', () => {
   assert.equal(sections.find((s) => s.id === 'home').pageKey, 'home');
   assert.equal(sections.find((s) => s.id === 'about').pageKey, 'about');
 });
+
+test('conflicting data-preview-static is stripped when element has editable markers', () => {
+  const dir = copyOf(STOREFRONT_FIXTURE);
+  // Introduce a conflicting static marker on an element with an editable marker
+  const heroPath = path.join(dir, 'src', 'components', 'Hero.tsx');
+  let heroCode = fs.readFileSync(heroPath, 'utf8');
+  heroCode = heroCode.replace(
+    '<p className="mt-4',
+    '<p data-preview-static="legacy static description" className="mt-4'
+  );
+  fs.writeFileSync(heroPath, heroCode, 'utf8');
+
+  silence(() => runDenebArc(dir, 'acme-store', { telemetry: 'off' }));
+  const updatedHero = fs.readFileSync(heroPath, 'utf8');
+
+  // data-preview-static must be stripped since the paragraph has data-preview-field-path
+  assert.ok(!updatedHero.includes('data-preview-static="legacy static description"'));
+  assert.ok(updatedHero.includes('data-preview-field-path'));
+
+  const { errors } = auditFivora(dir);
+  const placementErrors = errors.filter((e) => e.includes('cannot share an element with data-preview-static'));
+  assert.equal(placementErrors.length, 0);
+});

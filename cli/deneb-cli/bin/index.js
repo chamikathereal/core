@@ -732,12 +732,12 @@ function initProject(targetInput, options = {}) {
   // 6. Install DENEB packages if missing
   const skipInstall = process.argv.includes('--skip-install');
   const hasUi = Boolean(
-    (pkg.dependencies && (pkg.dependencies['@deneb-ui/ui'] || pkg.dependencies['@deneb/ui'] || pkg.dependencies['@fivora/editable-components'])) ||
-    (pkg.devDependencies && (pkg.devDependencies['@deneb-ui/ui'] || pkg.devDependencies['@deneb/ui'] || pkg.devDependencies['@fivora/editable-components']))
+    (pkg.dependencies && (pkg.dependencies['@deneb-ui/ui'] || pkg.dependencies['@deneb/ui'])) ||
+    (pkg.devDependencies && (pkg.devDependencies['@deneb-ui/ui'] || pkg.devDependencies['@deneb/ui']))
   );
   const hasCli = Boolean(
-    (pkg.devDependencies && (pkg.devDependencies['@deneb-ui/cli'] || pkg.devDependencies['@fivora/cli'])) ||
-    (pkg.dependencies && (pkg.dependencies['@deneb-ui/cli'] || pkg.dependencies['@fivora/cli']))
+    (pkg.devDependencies && (pkg.devDependencies['@deneb-ui/cli'] || pkg.devDependencies['@deneb/cli'])) ||
+    (pkg.dependencies && (pkg.dependencies['@deneb-ui/cli'] || pkg.dependencies['@deneb/cli']))
   );
 
   if (!skipInstall && (!hasUi || !hasCli)) {
