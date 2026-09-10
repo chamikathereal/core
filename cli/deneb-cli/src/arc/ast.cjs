@@ -267,22 +267,30 @@ function hasDirective(ast, value) {
 function ensureImport(ast, source, names) {
   const program = ast.program || ast;
   const body = program.body || [];
+
+  // Deduplicate against any import in the entire module so we never import the same identifier twice
+  const alreadyImported = new Set();
+  for (const node of body) {
+    if (node.type === 'ImportDeclaration' && Array.isArray(node.specifiers)) {
+      for (const spec of node.specifiers) {
+        const local = spec.local?.name || spec.imported?.name;
+        if (local) alreadyImported.add(local);
+      }
+    }
+  }
+
+  const namesToImport = names.filter((name) => !alreadyImported.has(name));
+  if (namesToImport.length === 0) return;
+
   const existing = body.find((node) => node.type === 'ImportDeclaration' && node.source && node.source.value === source);
   if (existing) {
-    const already = new Set(
-      (existing.specifiers || [])
-        .filter((s) => s.type === 'ImportSpecifier')
-        .map((s) => s.imported?.name || s.local?.name)
-    );
-    for (const name of names) {
-      if (!already.has(name)) {
-        existing.specifiers.push(b.importSpecifier(b.identifier(name), b.identifier(name)));
-      }
+    for (const name of namesToImport) {
+      existing.specifiers.push(b.importSpecifier(b.identifier(name), b.identifier(name)));
     }
     return;
   }
 
-  const specifiers = names.map((name) => b.importSpecifier(b.identifier(name), b.identifier(name)));
+  const specifiers = namesToImport.map((name) => b.importSpecifier(b.identifier(name), b.identifier(name)));
   const decl = b.importDeclaration(specifiers, b.stringLiteral(source));
   let insertAt = 0;
   if (body[0] && body[0].type === 'ExpressionStatement') insertAt = 1;

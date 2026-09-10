@@ -43,7 +43,7 @@ const LEGACY_SITE_DATA_CACHE_KEY = previousPreviewStorageKey('SITE_DATA_CACHE');
 const SITE_DATA_GLOBAL_KEY = '__FIVORA_PREVIEW_SITE_DATA__';
 const LEGACY_SITE_DATA_GLOBAL_KEY = previousPreviewStorageKey('SITE_DATA');
 
-export type GenericRecord = Record<string, unknown>;
+export type GenericRecord = Record<string, any>;
 
 export type SiteData = {
   project?: {
@@ -68,9 +68,17 @@ export function isRecord(value: unknown): value is GenericRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function mergeSiteData(current: unknown, incoming: unknown): unknown {
+export function mergeSiteData(
+  current: unknown,
+  incoming: unknown,
+  depth = 0,
+  seen = new WeakSet<object>(),
+): unknown {
+  if (depth > 50) return incoming;
   if (Array.isArray(incoming)) return incoming;
   if (!isRecord(incoming)) return incoming;
+  if (seen.has(incoming)) return incoming;
+  seen.add(incoming);
 
   const base = isRecord(current) ? current : {};
   const next: GenericRecord = { ...base };
@@ -81,7 +89,7 @@ export function mergeSiteData(current: unknown, incoming: unknown): unknown {
       next[key] = incoming[key];
       continue;
     }
-    next[key] = mergeSiteData(base[key], incoming[key]);
+    next[key] = mergeSiteData(base[key], incoming[key], depth + 1, seen);
   }
   return next;
 }
