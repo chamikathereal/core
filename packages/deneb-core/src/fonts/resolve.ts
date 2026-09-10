@@ -25,7 +25,10 @@ export function lookupFontDefinition(value: string | undefined): DenebFontDefini
   const primary = value.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '');
   if (primary) {
     const primarySlug = normalizeFontId(primary);
-    return DENEB_FONT_BY_ID.get(primarySlug) ?? lookupFontDefinition(primarySlug);
+    // Unknown ids used to recurse with the same slug (String.split → stack overflow).
+    if (primarySlug && primarySlug !== slug) {
+      return lookupFontDefinition(primary);
+    }
   }
 
   return null;
@@ -89,8 +92,11 @@ export function collectFontIdsFromSiteData(siteData: unknown): string[] {
     }
   }
 
+  const seen = new WeakSet<object>();
   const walkContent = (node: unknown) => {
     if (!node || typeof node !== 'object') return;
+    if (seen.has(node)) return;
+    seen.add(node);
     if (Array.isArray(node)) {
       node.forEach(walkContent);
       return;

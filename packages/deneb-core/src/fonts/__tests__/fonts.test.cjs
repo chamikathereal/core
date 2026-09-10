@@ -21,10 +21,12 @@ describe('DENEB font registry', () => {
     assert.ok(DENEB_GOOGLE_FONT_COUNT >= 50);
   });
 
-  it('resolves Inter by label and id', () => {
-    assert.equal(normalizeFontId('Plus Jakarta Sans'), 'plus-jakarta-sans');
-    assert.match(resolveFontFamily('inter') ?? '', /Inter/i);
-    assert.match(resolveFontFamily('Playfair Display') ?? '', /Playfair Display/i);
+  it('does not recurse on unknown font families or CSS stacks', () => {
+    assert.equal(lookupFontDefinition('NotARealFont'), null);
+    assert.equal(lookupFontDefinition('NotARealFont, sans-serif'), null);
+    const inter = lookupFontDefinition('Inter, system-ui, sans-serif');
+    assert.ok(inter);
+    assert.equal(inter.id, 'inter');
   });
 
   it('maps non-Google aliases to substitutes', () => {

@@ -98,11 +98,6 @@ export { EditableFooter as Footer } from './EditableFooter';
 export { EditableHeroCentered as Hero, EditableHeroSplit as HeroSplit } from './EditableHero';
 export { EditableAnnouncementBar as AnnouncementBar } from './EditableAnnouncementBar';
 export { EditableCategoryPills as CategoryPills } from './EditableCategoryPills';
-export { StickyMobileBar } from './StickyMobileBar';
-export { TrustBadges } from './TrustBadges';
-export { ProductQuickView } from './ProductQuickView';
-export { CookieConsentBanner } from './CookieConsentBanner';
-export { FloatingContactWidget } from './contact/FloatingContactWidget';
 export { EditableCartDrawer as CartDrawer } from './EditableCartDrawer';
 export { EditableFilterSidebar as FilterSidebar } from './EditableFilterSidebar';
 

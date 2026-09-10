@@ -264,11 +264,144 @@ function hasDirective(ast, value) {
   return false;
 }
 
+function localNameOfSpecifier(spec) {
+  return spec?.local?.name || spec?.imported?.name || spec?.exported?.name || null;
+}
+
+function dedupeImportSpecifiers(ast) {
+  const program = ast.program || ast;
+  const seenLocals = new Set();
+  for (const node of program.body || []) {
+    if (node.type !== 'ImportDeclaration' || !Array.isArray(node.specifiers)) continue;
+    node.specifiers = node.specifiers.filter((spec) => {
+      const local = localNameOfSpecifier(spec);
+      if (!local) return true;
+      if (seenLocals.has(local)) return false;
+      seenLocals.add(local);
+      return true;
+    });
+  }
+}
+
+function preferLocalSiteDataImport(ast) {
+  const program = ast.program || ast;
+  const body = program.body || [];
+  const localNames = new Set();
+  for (const node of body) {
+    if (node.type !== 'ImportDeclaration') continue;
+    const src = node.source && node.source.value;
+    if (typeof src !== 'string' || !/siteDataContext/.test(src)) continue;
+    for (const spec of node.specifiers || []) {
+      const local = localNameOfSpecifier(spec);
+      if (local) localNames.add(local);
+    }
+  }
+  if (localNames.size === 0) return;
+  for (const node of body) {
+    if (node.type !== 'ImportDeclaration') continue;
+    const src = node.source && node.source.value;
+    if (src !== '@deneb-ui/ui' && src !== 'deneb-ui' && src !== '@fivora/editable-components') continue;
+    node.specifiers = (node.specifiers || []).filter((spec) => !localNames.has(localNameOfSpecifier(spec)));
+  }
+}
+
+function dropImportedNameIfLocallyDeclared(ast) {
+  const program = ast.program || ast;
+  const declared = new Set();
+  for (const node of program.body || []) {
+    if (node.type === 'FunctionDeclaration' && node.id && node.id.name) {
+      declared.add(node.id.name);
+    }
+    if (node.type === 'ExportNamedDeclaration' && node.declaration) {
+      const decl = node.declaration;
+      if (decl.type === 'FunctionDeclaration' && decl.id && decl.id.name) {
+        declared.add(decl.id.name);
+      }
+      if (decl.type === 'VariableDeclaration') {
+        for (const d of decl.declarations || []) {
+          if (d.id && d.id.type === 'Identifier') declared.add(d.id.name);
+        }
+      }
+    }
+  }
+  if (declared.size === 0) return;
+  for (const node of program.body || []) {
+    if (node.type !== 'ImportDeclaration') continue;
+    node.specifiers = (node.specifiers || []).filter((spec) => !declared.has(localNameOfSpecifier(spec)));
+  }
+}
+
+function rewriteImportedReexports(ast) {
+  const program = ast.program || ast;
+  const importSourceByLocal = new Map();
+  for (const node of program.body || []) {
+    if (node.type !== 'ImportDeclaration') continue;
+    const src = node.source && node.source.value;
+    for (const spec of node.specifiers || []) {
+      const local = localNameOfSpecifier(spec);
+      if (local && src) importSourceByLocal.set(local, src);
+    }
+  }
+
+  const exportDecls = (program.body || []).filter(
+    (node) => node.type === 'ExportNamedDeclaration' && !node.source && node.specifiers && node.specifiers.length
+  );
+  for (const node of exportDecls) {
+    const groups = new Map();
+    const keep = [];
+    for (const spec of node.specifiers) {
+      const local = spec.local?.name;
+      const src = local && importSourceByLocal.get(local);
+      if (!src) {
+        keep.push(spec);
+        continue;
+      }
+      if (!groups.has(src)) groups.set(src, []);
+      groups.get(src).push(spec);
+    }
+    if (!groups.size) continue;
+    node.specifiers = keep;
+    let insertAt = program.body.indexOf(node) + 1;
+    for (const [src, specs] of groups.entries()) {
+      program.body.splice(insertAt, 0, b.exportNamedDeclaration(null, specs, b.stringLiteral(src)));
+      insertAt++;
+      for (const spec of specs) {
+        const local = spec.local?.name;
+        for (const imp of program.body) {
+          if (imp.type !== 'ImportDeclaration') continue;
+          if (!imp.specifiers) continue;
+          imp.specifiers = imp.specifiers.filter((s) => localNameOfSpecifier(s) !== local);
+        }
+      }
+    }
+  }
+}
+
+function stripEmptyImportAndExportDecls(ast) {
+  const program = ast.program || ast;
+  program.body = (program.body || []).filter((node) => {
+    if (node.type === 'ImportDeclaration') {
+      return (node.specifiers || []).length > 0;
+    }
+    if (node.type === 'ExportNamedDeclaration' && !node.declaration && !node.source) {
+      return (node.specifiers || []).length > 0;
+    }
+    return true;
+  });
+}
+
+function sanitizeDuplicateBindings(ast) {
+  dropImportedNameIfLocallyDeclared(ast);
+  preferLocalSiteDataImport(ast);
+  rewriteImportedReexports(ast);
+  dedupeImportSpecifiers(ast);
+  stripEmptyImportAndExportDecls(ast);
+}
+
 function ensureImport(ast, source, names) {
   const program = ast.program || ast;
   const body = program.body || [];
 
-  // Deduplicate against any import in the entire module so we never import the same identifier twice
   const alreadyImported = new Set();
   for (const node of body) {
     if (node.type === 'ImportDeclaration' && Array.isArray(node.specifiers)) {
@@ -276,6 +409,10 @@ function ensureImport(ast, source, names) {
         const local = spec.local?.name || spec.imported?.name;
         if (local) alreadyImported.add(local);
       }
+    }
+    if (node.type === 'FunctionDeclaration' && node.id?.name) alreadyImported.add(node.id.name);
+    if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'FunctionDeclaration' && node.declaration.id?.name) {
+      alreadyImported.add(node.declaration.id.name);
     }
   }
 
@@ -340,6 +477,7 @@ module.exports = {
   hasDirective,
   ensureImport,
   ensureDefaultImport,
+  sanitizeDuplicateBindings,
   codeHasIdentifier,
   t,
   b,

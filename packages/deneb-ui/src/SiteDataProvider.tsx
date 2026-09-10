@@ -370,6 +370,10 @@ export function contentList<Item = unknown>(value: unknown): Item[] {
   return Array.isArray(value) ? (value as Item[]) : [];
 }
 
+export function contentNumber(value: unknown, fallback: number = 0): number {
+  return typeof value === 'number' && !Number.isNaN(value) ? value : fallback;
+}
+
 export function parseFieldPath(path: string): Array<string | number> {
   if (!path) return [];
   return path

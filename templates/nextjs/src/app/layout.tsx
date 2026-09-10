@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <SiteDataProvider>
+        <SiteDataProvider initialSiteData={siteData}>
           <SiteChrome>{children}</SiteChrome>
         </SiteDataProvider>
       </body>

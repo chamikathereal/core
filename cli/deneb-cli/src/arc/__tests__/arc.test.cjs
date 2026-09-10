@@ -519,3 +519,62 @@ test('conflicting data-preview-static is stripped when element has editable mark
   const placementErrors = errors.filter((e) => e.includes('cannot share an element with data-preview-static'));
   assert.equal(placementErrors.length, 0);
 });
+
+test('sanitizeDuplicateBindings keeps a single useSiteData import', () => {
+  const { parseSource, printSource, sanitizeDuplicateBindings } = require('../ast.cjs');
+  const code = `'use client';
+import { useSiteData, contentText } from '@/lib/siteDataContext';
+import { useSiteData, contentObject } from '@deneb-ui/ui';
+export function Shop() {
+  const siteData = useSiteData();
+  return <div>{contentText(contentObject(siteData).title)}</div>;
+}
+`;
+  const ast = parseSource(code, 'shop.tsx');
+  sanitizeDuplicateBindings(ast);
+  const out = printSource(ast, code);
+  const importUses = [...out.matchAll(/import\s*\{([^}]+)\}\s*from/g)].flatMap((m) =>
+    m[1].split(',').map((s) => s.trim()).filter((s) => s === 'useSiteData')
+  );
+  assert.equal(importUses.length, 1);
+  assert.match(out, /siteDataContext/);
+  assert.doesNotMatch(out, /import\s*\{[^}]*useSiteData[^}]*\}\s*from\s*['"]@deneb-ui\/ui['"]/);
+});
+
+test('recursive SiteDataProvider wrappers are flattened to a package re-export', () => {
+  const { rewriteRecursiveSiteDataContext } = require('../transformer.cjs');
+  const code = `'use client';
+import { SiteDataProvider as BaseSiteDataProvider } from '@deneb-ui/ui';
+import initialSiteData from '@/data/site-data.json';
+export function SiteDataProvider({ children, ...props }) {
+  return (
+    <BaseSiteDataProvider initialSiteData={initialSiteData} {...props}>
+      {children}
+    </BaseSiteDataProvider>
+  );
+}
+`;
+  const out = rewriteRecursiveSiteDataContext(code);
+  assert.equal(out.updated, true);
+  assert.match(out.code, /export \{/);
+  assert.match(out.code, /SiteDataProvider/);
+  assert.match(out.code, /from '@deneb-ui\/ui'/);
+  assert.doesNotMatch(out.code, /export function SiteDataProvider/);
+  assert.doesNotMatch(out.code, /BaseSiteDataProvider/);
+});
+
+test('import plus export of useSiteData is rewritten to export-from', () => {
+  const { parseSource, printSource, sanitizeDuplicateBindings } = require('../ast.cjs');
+  const code = `'use client';
+import { SiteDataProvider as BaseSiteDataProvider, useSiteData, contentText } from '@deneb-ui/ui';
+export function SiteDataProvider({ children }) {
+  return <BaseSiteDataProvider>{children}</BaseSiteDataProvider>;
+}
+export { useSiteData, contentText };
+`;
+  const ast = parseSource(code, 'siteDataContext.tsx');
+  sanitizeDuplicateBindings(ast);
+  const out = printSource(ast, code);
+  assert.match(out, /export\s*\{[^}]*useSiteData[^}]*\}\s*from\s*['"]@deneb-ui\/ui['"]/);
+  assert.doesNotMatch(out, /import\s*\{[^}]*useSiteData/);
+});
