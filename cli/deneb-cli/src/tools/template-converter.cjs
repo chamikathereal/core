@@ -615,8 +615,8 @@ function transformFileContent(filePath, pageKey, extractedData, backupDir, proje
       code = "'use client';\n\n" + code;
     }
 
-    // Add useSiteData import if needed
-    if (!code.includes('useSiteData')) {
+    // Add useSiteData import if needed. Skip when any binding already exists.
+    if (!/\buseSiteData\b/.test(code)) {
       code = code.replace(
         /(import\s+[^;]+;\n)/,
         `$1import { useSiteData } from '@deneb-ui/ui';\n`

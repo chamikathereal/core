@@ -17,7 +17,7 @@ const { walkFiles, isJsxFile, rel, copyFilePreserve, writeJson, readJsonSafe, fi
 const { scanProject, buildDependencyGraph, inferOwnerScope } = require('./scanner.cjs');
 const { analyzeFile, collectDesignSnapshot } = require('./semantic.cjs');
 const { planTransformations } = require('./planner.cjs');
-const { applyFilePlan, instrumentLayoutSource, instrumentPageKey, resolveSiteDataSpecifier, ensureJsonModule, sanitizeContradictoryMarkersInSource } = require('./transformer.cjs');
+const { applyFilePlan, instrumentLayoutSource, instrumentPageKey, resolveSiteDataSpecifier, resolveSiteDataRuntimeSpecifier, rewriteRecursiveSiteDataContext, ensureJsonModule, sanitizeContradictoryMarkersInSource } = require('./transformer.cjs');
 const { parseSource } = require('./ast.cjs');
 const { buildSiteDataAndManifest, writeDataBank, loadExistingData, countSchemaFields } = require('./manifest.cjs');
 const { validateAstFiles, validateContracts, designPreservationScore, coverageMetrics } = require('./validator.cjs');
@@ -306,12 +306,30 @@ function runDenebArc(projectDir, projectName, options = {}) {
     backupFile(projectDir, backupDir, layoutFile);
     const layoutRel = rel(projectDir, layoutFile);
     const siteDataImport = resolveSiteDataSpecifier(profile, layoutRel);
+    const providerImport = resolveSiteDataRuntimeSpecifier(profile);
     const original = fs.readFileSync(layoutFile, 'utf8');
-    const instrumented = instrumentLayoutSource(original, siteDataImport);
+    const instrumented = instrumentLayoutSource(original, siteDataImport, providerImport);
     if (instrumented.updated && instrumented.code !== original) {
       fs.writeFileSync(layoutFile, instrumented.code, 'utf8');
       changedFiles.push(layoutRel);
       layoutUpdated = true;
+    }
+  }
+
+  const contextCandidates = [
+    path.join(projectDir, 'src', 'lib', 'siteDataContext.tsx'),
+    path.join(projectDir, 'src', 'lib', 'siteDataContext.ts'),
+    path.join(projectDir, 'lib', 'siteDataContext.tsx'),
+    path.join(projectDir, 'lib', 'siteDataContext.ts'),
+  ];
+  for (const abs of contextCandidates) {
+    if (!fs.existsSync(abs)) continue;
+    backupFile(projectDir, backupDir, abs);
+    const original = fs.readFileSync(abs, 'utf8');
+    const rewritten = rewriteRecursiveSiteDataContext(original);
+    if (rewritten.updated && rewritten.code !== original) {
+      fs.writeFileSync(abs, rewritten.code, 'utf8');
+      changedFiles.push(rel(projectDir, abs));
     }
   }
 

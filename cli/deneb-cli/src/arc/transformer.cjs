@@ -2,6 +2,7 @@
 
 const recast = require('recast');
 const path = require('path');
+const fs = require('fs');
 const {
   parseSource,
   printSource,
@@ -12,6 +13,7 @@ const {
   hasDirective,
   ensureImport,
   ensureDefaultImport,
+  sanitizeDuplicateBindings,
   siteDataBinding,
   siteDataListBinding,
   jsxPreviewAttr,
@@ -370,6 +372,43 @@ function bindArrayDeclaration(ast, mapCallPath, listPath) {
   return bound;
 }
 
+function fileAlreadyUsesSiteDataHook(ast) {
+  let found = false;
+  recast.types.visit(ast, {
+    visitCallExpression(pathNode) {
+      const callee = pathNode.node.callee;
+      if (callee && callee.type === 'Identifier' && callee.name === 'useSiteData') {
+        found = true;
+        return false;
+      }
+      this.traverse(pathNode);
+    },
+  });
+  return found;
+}
+
+function resolveSiteDataRuntimeSpecifier(profile) {
+  const root = profile && profile.root;
+  if (!root) return '@deneb-ui/ui';
+  const candidates = [
+    ['src/lib/siteDataContext.tsx', '@/lib/siteDataContext'],
+    ['src/lib/siteDataContext.ts', '@/lib/siteDataContext'],
+    ['lib/siteDataContext.tsx', '@/lib/siteDataContext'],
+    ['lib/siteDataContext.ts', '@/lib/siteDataContext'],
+  ];
+  const hasAt = Object.keys(profile.aliasMap || {}).some((k) => k === '@/*' || k.startsWith('@/'));
+  for (const [relative, alias] of candidates) {
+    if (!fs.existsSync(path.join(root, relative))) continue;
+    if (hasAt) return alias;
+    const fromAbs = path.join(root, 'src/components/placeholder.tsx');
+    const toAbs = path.join(root, relative.replace(/\.tsx?$/, ''));
+    let relSpec = path.relative(path.dirname(fromAbs), toAbs).replace(/\\/g, '/');
+    if (!relSpec.startsWith('.')) relSpec = './' + relSpec;
+    return relSpec;
+  }
+  return '@deneb-ui/ui';
+}
+
 function injectSiteDataHook(ast) {
   const program = ast.program || ast;
   let injected = false;
@@ -508,11 +547,15 @@ function applyFilePlan(filePlan, profile) {
 
   const siteDataImport = resolveSiteDataSpecifier(profile, filePlan.file);
   if (isClient) {
-    ensureImport(ast, '@deneb-ui/ui', ['useSiteData']);
-    injectSiteDataHook(ast);
+    const runtimeSpecifier = resolveSiteDataRuntimeSpecifier(profile);
+    if (!fileAlreadyUsesSiteDataHook(ast)) {
+      injectSiteDataHook(ast);
+    }
+    ensureImport(ast, runtimeSpecifier, ['useSiteData']);
   } else {
     ensureDefaultImport(ast, siteDataImport, 'siteData');
   }
+  sanitizeDuplicateBindings(ast);
 
   // Sanitize any conflicting data-preview-static on elements with editable markers
   sanitizeContradictoryMarkers(ast);
@@ -610,57 +653,91 @@ function ensureHtmlBodyHydration(ast) {
   });
 }
 
-function instrumentLayoutSource(code, siteDataImport) {
-  if (/SiteDataProvider|DenebDataProvider/.test(code)) {
-    if (/suppressHydrationWarning/.test(code)) {
-      return { code, updated: false };
-    }
-    const ast = parseSource(code, 'layout.tsx');
-    ensureHtmlBodyHydration(ast);
-    return { code: printSource(ast, code), updated: true };
+function findSiteDataJsonLocalName(ast) {
+  const program = ast.program || ast;
+  for (const node of program.body || []) {
+    if (node.type !== 'ImportDeclaration') continue;
+    const src = node.source && node.source.value;
+    if (typeof src !== 'string' || !/site-data\.json/.test(src)) continue;
+    const spec = (node.specifiers || []).find((s) => s.type === 'ImportDefaultSpecifier');
+    if (spec && spec.local) return spec.local.name;
   }
+  return null;
+}
 
-  const ast = parseSource(code, 'layout.tsx');
-  ensureHtmlBodyHydration(ast);
-  ensureImport(ast, '@deneb-ui/ui', ['SiteDataProvider']);
-  ensureDefaultImport(ast, siteDataImport, 'initialSiteData');
-
-  let wrapped = false;
+function ensureProviderInitialData(ast, ident) {
+  let added = false;
   recast.types.visit(ast, {
-    visitJSXExpressionContainer(pathNode) {
-      if (wrapped) return false;
-      const expr = pathNode.node.expression;
-      if (expr && expr.type === 'Identifier' && expr.name === 'children') {
-        pathNode.replace(
-          b.jsxElement(
-            b.jsxOpeningElement(
-              b.jsxIdentifier('SiteDataProvider'),
-              [
-                b.jsxAttribute(
-                  b.jsxIdentifier('initialSiteData'),
-                  b.jsxExpressionContainer(b.identifier('initialSiteData'))
-                ),
-              ],
-              false
-            ),
-            b.jsxClosingElement(b.jsxIdentifier('SiteDataProvider')),
-            [pathNode.node],
-            false
-          )
-        );
-        wrapped = true;
-        return false;
+    visitJSXOpeningElement(pathNode) {
+      const name = pathNode.node.name;
+      const tag = name && name.type === 'JSXIdentifier' ? name.name : '';
+      if (tag === 'SiteDataProvider' || tag === 'DenebDataProvider' || tag === 'DenebSiteDataProvider') {
+        const has = hasJsxAttribute(pathNode.node, 'initialSiteData');
+        if (!has) {
+          pathNode.node.attributes = pathNode.node.attributes || [];
+          pathNode.node.attributes.push(
+            b.jsxAttribute(
+              b.jsxIdentifier('initialSiteData'),
+              b.jsxExpressionContainer(b.identifier(ident))
+            )
+          );
+          added = true;
+        }
       }
       this.traverse(pathNode);
     },
   });
+  return added;
+}
 
-  if (!wrapped) {
+const CANONICAL_SITE_DATA_CONTEXT = `'use client';
+
+export {
+  SiteDataProvider,
+  useSiteData,
+  contentText,
+  contentObject,
+  contentList,
+  PREVIEW_DATA_MESSAGE,
+  LEGACY_PREVIEW_DATA_MESSAGE,
+  PREVIEW_READY_MESSAGE,
+  LEGACY_PREVIEW_READY_MESSAGE,
+  PREVIEW_FOCUS_MESSAGE,
+  LEGACY_PREVIEW_FOCUS_MESSAGE,
+  PREVIEW_FIELD_ATTRIBUTE,
+} from '@deneb-ui/ui';
+
+export type { SiteData, SiteDataProviderProps } from '@deneb-ui/ui';
+`;
+
+function rewriteRecursiveSiteDataContext(code) {
+  const recursive =
+    /export\s+function\s+SiteDataProvider\b/.test(code) &&
+    /<(?:Base)?SiteDataProvider\b/.test(code);
+  if (!recursive) return { code, updated: false };
+  return { code: CANONICAL_SITE_DATA_CONTEXT, updated: true };
+}
+
+function instrumentLayoutSource(code, siteDataImport, providerImport = '@deneb-ui/ui') {
+  const ast = parseSource(code, 'layout.tsx');
+  ensureHtmlBodyHydration(ast);
+
+  let jsonIdent = findSiteDataJsonLocalName(ast);
+  if (!jsonIdent) {
+    jsonIdent = 'initialSiteData';
+    ensureDefaultImport(ast, siteDataImport, jsonIdent);
+  }
+
+  const hasProvider = /SiteDataProvider|DenebDataProvider/.test(code);
+  let wrapped = hasProvider;
+
+  if (!hasProvider) {
+    ensureImport(ast, providerImport, ['SiteDataProvider']);
     recast.types.visit(ast, {
-      visitJSXElement(pathNode) {
+      visitJSXExpressionContainer(pathNode) {
         if (wrapped) return false;
-        const name = getJsxName(pathNode.node);
-        if (name === 'Component') {
+        const expr = pathNode.node.expression;
+        if (expr && expr.type === 'Identifier' && expr.name === 'children') {
           pathNode.replace(
             b.jsxElement(
               b.jsxOpeningElement(
@@ -668,7 +745,7 @@ function instrumentLayoutSource(code, siteDataImport) {
                 [
                   b.jsxAttribute(
                     b.jsxIdentifier('initialSiteData'),
-                    b.jsxExpressionContainer(b.identifier('initialSiteData'))
+                    b.jsxExpressionContainer(b.identifier(jsonIdent))
                   ),
                 ],
                 false
@@ -684,9 +761,43 @@ function instrumentLayoutSource(code, siteDataImport) {
         this.traverse(pathNode);
       },
     });
+
+    if (!wrapped) {
+      recast.types.visit(ast, {
+        visitJSXElement(pathNode) {
+          if (wrapped) return false;
+          const name = getJsxName(pathNode.node);
+          if (name === 'Component') {
+            pathNode.replace(
+              b.jsxElement(
+                b.jsxOpeningElement(
+                  b.jsxIdentifier('SiteDataProvider'),
+                  [
+                    b.jsxAttribute(
+                      b.jsxIdentifier('initialSiteData'),
+                      b.jsxExpressionContainer(b.identifier(jsonIdent))
+                    ),
+                  ],
+                  false
+                ),
+                b.jsxClosingElement(b.jsxIdentifier('SiteDataProvider')),
+                [pathNode.node],
+                false
+              )
+            );
+            wrapped = true;
+            return false;
+          }
+          this.traverse(pathNode);
+        },
+      });
+    }
   }
 
-  return { code: printSource(ast, code), updated: wrapped };
+  ensureProviderInitialData(ast, jsonIdent);
+  sanitizeDuplicateBindings(ast);
+  const next = printSource(ast, code);
+  return { code: next, updated: next !== code };
 }
 
 function ensureJsonModule(tsconfig) {
@@ -752,6 +863,8 @@ module.exports = {
   instrumentLayoutSource,
   instrumentPageKey,
   resolveSiteDataSpecifier,
+  resolveSiteDataRuntimeSpecifier,
+  rewriteRecursiveSiteDataContext,
   ensureJsonModule,
   inferPageKey,
   sanitizeContradictoryMarkers,
