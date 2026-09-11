@@ -6,14 +6,19 @@ import { MapLink } from './MapLink';
 import { EditableText } from '../EditableText';
 
 export interface LocationCardProps {
+  name?: string | null;
   title?: string;
   titleFieldPath?: string;
   address?: string | null;
   city?: string | null;
+  state?: string | null;
   country?: string | null;
   postalCode?: string | null;
   mapUrl?: string | null;
+  addressUrl?: string | null;
+  url?: string | null;
   fieldPath?: string;
+  nameFieldPath?: string;
   addressFieldPath?: string;
   mapUrlFieldPath?: string;
   directionsLabel?: string;
@@ -25,21 +30,30 @@ export interface LocationCardProps {
  * Premium storefront LocationCard displaying address, pin icon, and Google Maps directions button.
  */
 export function LocationCard({
+  name,
   title = 'Our Location',
   titleFieldPath,
   address,
   city,
+  state,
   country,
   postalCode,
   mapUrl,
+  addressUrl,
+  url,
   fieldPath,
+  nameFieldPath,
   addressFieldPath = 'common.business.location.address',
   mapUrlFieldPath = 'common.business.location.addressUrl',
   directionsLabel = 'Get Directions →',
   className = '',
   style,
 }: LocationCardProps) {
-  if (!address && !city && !country && !mapUrl) {
+  const explicitUrl = (addressUrl || mapUrl || url || '').trim();
+  const cardTitle = name || title || 'Our Location';
+  const resolvedTitleFieldPath = nameFieldPath || titleFieldPath || (fieldPath ? `${fieldPath}.name` : 'contact.locationTitle');
+
+  if (!address && !city && !country && !explicitUrl && !name) {
     return null;
   }
 
@@ -81,7 +95,7 @@ export function LocationCard({
       <EditableText
         as="h3"
         id={titleFieldPath || (fieldPath ? `${fieldPath}.title` : 'contact.locationTitle')}
-        defaultValue={title}
+        defaultValue={cardTitle}
         style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text, #0f172a)' }}
       />
 
@@ -96,12 +110,17 @@ export function LocationCard({
 
       <div style={{ marginTop: '0.5rem', width: '100%' }}>
         <MapLink
-          mapUrl={mapUrl}
+          name={name}
+          mapUrl={explicitUrl}
+          addressUrl={explicitUrl}
+          url={explicitUrl}
           address={address}
           city={city}
+          state={state}
           country={country}
+          postalCode={postalCode}
           label={directionsLabel}
-          fieldPath={mapUrlFieldPath}
+          urlFieldPath={mapUrlFieldPath}
           variant="primary"
           size="md"
           style={{ width: '100%' }}
