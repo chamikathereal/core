@@ -4,10 +4,15 @@ import React from 'react';
 import { createMapUrl } from '../utils/urls';
 
 export interface MapLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  name?: string | null;
   mapUrl?: string | null;
+  addressUrl?: string | null;
+  url?: string | null;
   address?: string | null;
   city?: string | null;
+  state?: string | null;
   country?: string | null;
+  postalCode?: string | null;
   label?: React.ReactNode;
   /** Visible label field path, e.g. `contact.directionsLabel`. */
   labelFieldPath?: string;
@@ -24,10 +29,15 @@ export interface MapLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorEleme
  * Directions CTA with Fivora-safe split fields: label on the button, URL on a hidden sibling.
  */
 export function MapLink({
+  name,
   mapUrl,
+  addressUrl,
+  url,
   address,
   city,
+  state,
   country,
+  postalCode,
   label = 'Get Directions',
   labelFieldPath,
   urlFieldPath,
@@ -41,8 +51,9 @@ export function MapLink({
 }: MapLinkProps) {
   const resolvedUrlFieldPath = urlFieldPath || fieldPath || 'contact.directionsUrl';
   const resolvedLabelFieldPath = labelFieldPath || resolvedUrlFieldPath.replace(/Url$/, 'Label');
-  const resolvedHref = createMapUrl({ mapUrl, addressUrl: mapUrl, address, city, country });
-  const urlText = (mapUrl && mapUrl.trim()) || resolvedHref;
+  const explicitUrl = (addressUrl || mapUrl || url || '').trim();
+  const resolvedHref = createMapUrl({ name, mapUrl: explicitUrl, addressUrl: explicitUrl, url: explicitUrl, address, city, state, country, postalCode });
+  const urlText = explicitUrl || resolvedHref;
   const finalHref = resolvedHref || '#';
 
   if (!finalHref && !label) return null;

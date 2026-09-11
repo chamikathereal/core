@@ -4,12 +4,27 @@
  */
 
 export interface MapLocationInput {
+  /** Location or branch name, e.g. "Main Roastery", "Downtown Cafe". */
+  name?: string | null;
+  /** Alternative title property. */
+  title?: string | null;
+  /** Explicit Google Maps or destination URL. */
   mapUrl?: string | null;
   /** Fivora-paired sibling of `address` (`addressUrl` shares the `address` inspector stem). */
   addressUrl?: string | null;
+  /** Generic external or map URL. */
+  url?: string | null;
+  /** Link URL alias. */
+  linkUrl?: string | null;
+  /** Street address. */
   address?: string | null;
   city?: string | null;
+  state?: string | null;
   country?: string | null;
+  postalCode?: string | null;
+  zipCode?: string | null;
+  /** Permissive index signature so custom or template-specific keys never trigger TS2561. */
+  [key: string]: any;
 }
 
 /**
@@ -73,14 +88,27 @@ export function createMapUrl(location?: MapLocationInput | string | null): strin
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
   }
 
-  const explicitUrl = (location.addressUrl || location.mapUrl || '').trim();
+  const explicitUrl = (
+    location.addressUrl ||
+    location.mapUrl ||
+    location.url ||
+    location.linkUrl ||
+    ''
+  ).trim();
   if (explicitUrl) {
     return explicitUrl;
   }
 
-  const queryParts = [location.address, location.city, location.country]
-    .filter((part): part is string => Boolean(part && part.trim()))
-    .map((part) => part.trim());
+  const queryParts = [
+    location.name || location.title,
+    location.address,
+    location.city,
+    location.state,
+    location.country,
+    location.postalCode || location.zipCode,
+  ]
+    .filter((part): part is string => Boolean(part && String(part).trim()))
+    .map((part) => String(part).trim());
 
   if (queryParts.length > 0) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryParts.join(', '))}`;
