@@ -62,6 +62,21 @@ const MAX_SOURCE_FILES = 2_500;
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 const VALIDATION_BASE_PATH = '/template-validation';
 
+const FIVORA_INSTALL_ENV: Record<string, string> = {
+  NODE_ENV: 'development',
+  NPM_CONFIG_PRODUCTION: 'false',
+  npm_config_production: 'false',
+  NPM_CONFIG_INCLUDE: 'dev',
+  npm_config_include: 'dev',
+  NPM_CONFIG_OMIT: '',
+  NPM_CONFIG_omit: '',
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true',
+  npm_config_ignore_scripts: 'true',
+  PNPM_CONFIG_IGNORE_SCRIPTS: 'true',
+  YARN_IGNORE_SCRIPTS: 'true',
+  YARN_PRODUCTION: 'false',
+};
+
 type CommandName = 'validate' | 'package';
 
 type CliOptions = {
@@ -349,6 +364,206 @@ async function prepareValidationWorkspace(
   return { sourceDir, archiveBuffer, packageResult };
 }
 
+
+function isNode20Compatible(range: string): boolean {
+  if (!range || range === '*' || range === 'latest') return true;
+  const parts = range.split('||').map((p) => p.trim());
+  return parts.some((part) => {
+    const minMatch = part.match(/>=s*(\d+)/);
+    if (minMatch) {
+      const minMajor = parseInt(minMatch[1], 10);
+      return minMajor <= 20;
+    }
+    const caretMatch = part.match(/\^\s*(\d+)/);
+    if (caretMatch) {
+      const caretMajor = parseInt(caretMatch[1], 10);
+      return caretMajor <= 20;
+    }
+    const tildeMatch = part.match(/~\s*(\d+)/);
+    if (tildeMatch) {
+      const tildeMajor = parseInt(tildeMatch[1], 10);
+      return tildeMajor <= 20;
+    }
+    const exactMatch = part.match(/^(\d+)/);
+    if (exactMatch) {
+      const major = parseInt(exactMatch[1], 10);
+      return major === 20;
+    }
+    return true;
+  });
+}
+
+async function checkFivoraPlatformEngineCompatibility(
+  sourceDir: string,
+  reporter: Reporter,
+) {
+  const localMajor = parseInt(process.versions.node.split('.')[0], 10);
+  if (localMajor > 20) {
+    reporter.warn(
+      `Local Node.js (v${process.versions.node}) is newer than the Fivora platform target runtime (Node 20 LTS). Verifying dependencies for Node 20 compatibility...`,
+    );
+  }
+
+  const pkgJsonPath = join(sourceDir, 'package.json');
+  let pkgJson: any;
+  try {
+    pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf8'));
+  } catch {
+    return;
+  }
+
+  if (pkgJson.engines?.node && !isNode20Compatible(pkgJson.engines.node)) {
+    throw new Error(
+      `Template package.json specifies engines.node "${pkgJson.engines.node}", which is incompatible with the Fivora platform runtime (Node 20 LTS). Update engines.node to support Node 20 (e.g. ">=20.0.0").`,
+    );
+  }
+
+  const lockfilePath = join(sourceDir, 'package-lock.json');
+  let lockfileRaw = '';
+  try {
+    lockfileRaw = await readFile(lockfilePath, 'utf8');
+  } catch {
+    return;
+  }
+
+  let lockfile: any;
+  try {
+    lockfile = JSON.parse(lockfileRaw);
+  } catch {
+    return;
+  }
+
+  const incompatibleDeps: string[] = [];
+  const packages = lockfile.packages || {};
+
+  for (const [pkgPath, pkgData] of Object.entries<any>(packages)) {
+    if (!pkgPath || pkgPath === '') continue;
+    const enginesNode = pkgData?.engines?.node;
+    if (enginesNode && typeof enginesNode === 'string') {
+      if (!isNode20Compatible(enginesNode)) {
+        const pkgName = pkgData.name || pkgPath.replace(/^node_modules\//, '');
+        const version = pkgData.version || '';
+        incompatibleDeps.push(
+          `${pkgName}${version ? `@${version}` : ''} (requires Node "${enginesNode}")`,
+        );
+      }
+    }
+  }
+
+  if (incompatibleDeps.length > 0) {
+    const formatted = incompatibleDeps.slice(0, 10).map((d) => `  - ${d}`).join('\n');
+    const extra = incompatibleDeps.length > 10 ? `\n  - ...and ${incompatibleDeps.length - 10} more` : '';
+    throw new Error(
+      `Template package includes dependencies that are incompatible with the Fivora platform runtime (Node 20 LTS):\n${formatted}${extra}\n\nPlease downgrade, remove, or replace these dependencies to versions compatible with Node 20.`,
+    );
+  }
+}
+
+async function auditTemplateDependencies(
+  sourceDir: string,
+  reporter: Reporter,
+) {
+  const pkgJsonPath = join(sourceDir, 'package.json');
+  let pkgJson: any;
+  try {
+    pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf8'));
+  } catch {
+    return;
+  }
+
+  const deps = Object.keys(pkgJson.dependencies || {});
+  const heavyCheckList = [
+    { name: '@react-three/drei', pattern: /@react-three\/drei/ },
+    { name: '@react-three/fiber', pattern: /@react-three\/fiber/ },
+    { name: 'three', pattern: /(?:from\s+['"]three(?:\/[^'"]*)?['"]|require\(['"]three)/ },
+    { name: 'framer-motion', pattern: /framer-motion/ },
+    { name: 'pixi.js', pattern: /pixi\.js/ },
+    { name: 'babylonjs', pattern: /babylonjs/ },
+  ];
+
+  const sourceFiles = await collectFiles(
+    sourceDir,
+    /\.(tsx?|jsx?|mjs|cjs)$/i,
+  );
+
+  const fileContents = await Promise.all(
+    sourceFiles.map((file) => readFile(file, 'utf8').catch(() => '')),
+  );
+  const combinedCode = fileContents.join('\n');
+
+  for (const item of heavyCheckList) {
+    if (deps.includes(item.name) && !item.pattern.test(combinedCode)) {
+      reporter.warn(
+        `Unused dependency detected: "${item.name}" is declared in package.json dependencies but is never imported in any source file. Removing unused dependencies prevents platform engine conflicts and significantly speeds up live preview warm-up.`,
+      );
+    }
+  }
+}
+
+async function simulateInteractivePreviewWarmup(
+  sourceDir: string,
+  manifest: TemplatePackageManifest,
+  originalSiteData: string,
+  siteDataPath: string,
+  options: CliOptions,
+  reporter: Reporter,
+) {
+  if (options.skipBuild) {
+    reporter.skip(
+      'Simulate interactive preview warm-up',
+      'Skipped by --skip-build.',
+    );
+    return;
+  }
+
+  // 1. Restore the template's bundled demo site-data.json
+  await writeFile(siteDataPath, originalSiteData, 'utf8');
+
+  // 2. Clear build artifacts before preview export
+  const outputDirectory = manifest.outputDirectory?.trim() || 'out';
+  await clearGeneratedBuildArtifacts(sourceDir, outputDirectory);
+
+  // 3. Run production build under simulated platform preview base path
+  const simulatedBasePath = '/uploads/generated-sites/template-preview/simulation';
+  const previewCommandEnv: Record<string, string> = {
+    NODE_ENV: 'production',
+    ...(manifest.basePathEnvVar?.trim()
+      ? { [manifest.basePathEnvVar.trim()]: simulatedBasePath }
+      : { NEXT_PUBLIC_SITE_BASE_PATH: simulatedBasePath }),
+    ...(manifest.publicSiteUrlEnvVar?.trim()
+      ? { [manifest.publicSiteUrlEnvVar.trim()]: `https://fivora.com${simulatedBasePath}/` }
+      : {}),
+  };
+
+  const buildCommand = manifest.buildCommand?.trim() || 'npm run build';
+  await runCommand(buildCommand, sourceDir, previewCommandEnv, options.json);
+
+  // 4. Verify static export output exists
+  const outputPath = resolveWithin(sourceDir, outputDirectory);
+  await access(outputPath).catch(() => {
+    throw new Error(
+      `Interactive preview build did not produce output directory "${outputDirectory}".`,
+    );
+  });
+
+  // 5. Test generated HTML files
+  const htmlFiles = await collectFiles(outputPath, /\.html$/i);
+  if (htmlFiles.length === 0) {
+    throw new Error(
+      `Interactive preview build produced no HTML files in output directory "${outputDirectory}".`,
+    );
+  }
+
+  for (const htmlPath of htmlFiles.slice(0, 10)) {
+    const html = await readFile(htmlPath, 'utf8');
+    if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
+      throw new Error(
+        `Generated preview HTML "${relative(sourceDir, htmlPath)}" is malformed.`,
+      );
+    }
+  }
+}
+
 async function validateWorkspace(
   sourceDir: string,
   options: CliOptions,
@@ -381,6 +596,14 @@ async function validateWorkspace(
   );
 
   try {
+    await reporter.step('Check platform runtime compatibility', async () => {
+      await checkFivoraPlatformEngineCompatibility(sourceDir, reporter);
+    });
+
+    await reporter.step('Audit package dependencies', async () => {
+      await auditTemplateDependencies(sourceDir, reporter);
+    });
+
     if (options.skipInstall) {
       reporter.skip(
         'Install dependencies',
@@ -389,7 +612,7 @@ async function validateWorkspace(
     } else {
       const installCommand = manifest.installCommand?.trim() || 'npm install';
       await reporter.step('Install dependencies', () =>
-        runCommand(installCommand, sourceDir, {}, options.json),
+        runCommand(installCommand, sourceDir, FIVORA_INSTALL_ENV, options.json),
       );
     }
 
@@ -500,6 +723,17 @@ async function validateWorkspace(
       assertContractPassed(
         'Template strict empty-state visual-editing validation failed.',
         result.errors,
+      );
+    });
+
+    await reporter.step('Simulate interactive preview warm-up', async () => {
+      await simulateInteractivePreviewWarmup(
+        sourceDir,
+        manifest,
+        originalSiteData,
+        siteDataPath,
+        options,
+        reporter,
       );
     });
   } finally {
