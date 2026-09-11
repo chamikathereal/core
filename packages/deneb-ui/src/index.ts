@@ -6,6 +6,7 @@
 export * from './PreviewField';
 export * from './EditableText';
 export * from './EditableImage';
+export * from './EditableMap';
 export * from './EditableList';
 export * from './EditableBox';
 export * from './EditableGrid';
@@ -81,6 +82,7 @@ export { EditableParagraph as Paragraph } from './EditableText';
 export { EditableBadge as Badge } from './EditableText';
 export { EditableQuote as Quote } from './EditableText';
 export { EditableImage as Image } from './EditableImage';
+export { EditableMap as Map } from './EditableMap';
 export { EditableGrid as Grid } from './EditableGrid';
 export { EditableSection as Section } from './EditableSection';
 export { EditableBox as Box } from './EditableBox';
