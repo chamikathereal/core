@@ -502,6 +502,41 @@ function fivoraPreviewFocusBridge(
       ) {
         continue;
       }
+
+      // Special-case star ratings: update fill colors and text badge without destroying SVG children
+      if (
+        target.hasAttribute('data-fivora-rating-container') ||
+        target.querySelector('[data-fivora-stars-row]') ||
+        target.querySelector('[data-fivora-rating-text]') ||
+        fieldPath.endsWith('.rating')
+      ) {
+        const numericRating = Math.min(Math.max(Math.round(Number(value) || 0), 0), 5);
+        const ratingText = target.querySelector<HTMLElement>('[data-fivora-rating-text]');
+        if (ratingText) {
+          ratingText.textContent = String(numericRating);
+        } else if (target.hasAttribute('data-fivora-rating-text')) {
+          target.textContent = String(numericRating);
+        }
+        const container = target.hasAttribute('data-fivora-rating-container')
+          ? target
+          : target.closest('[data-fivora-rating-container]') || target.parentElement;
+        if (container) {
+          const starSvgs = Array.from(container.querySelectorAll<SVGSVGElement>('svg'));
+          starSvgs.forEach((svg, sIdx) => {
+            const filled = sIdx < numericRating;
+            const color = filled ? '#fa7014' : '#dadce0';
+            svg.style.fill = color;
+            svg.style.color = color;
+            const path = svg.querySelector('path');
+            if (path) {
+              path.style.fill = color;
+            }
+          });
+          container.setAttribute('data-rating-value', String(numericRating));
+        }
+        continue;
+      }
+
       const text =
         (target.getAttribute('data-fivora-value-prefix') ?? '') +
         String(value) +

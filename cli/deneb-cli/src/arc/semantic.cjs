@@ -277,8 +277,12 @@ function collectItemFieldUsage(callback, itemParam) {
           if (attribute === 'src') record(property, 'image');
           else if (attribute === 'href') record(property, 'url');
           else if (attribute === 'alt' || attribute === 'title') record(property, 'text');
+          else if (attribute === 'rating' || attribute === 'score' || attribute === 'count') record(property, 'number');
         } else {
-          record(property, 'text');
+          if (/rating|stars|score|count/i.test(property)) record(property, 'number');
+          else if (/avatar|image|photo|icon/i.test(property)) record(property, 'image');
+          else if (/quote|comment|review|bio|description/i.test(property)) record(property, 'textarea');
+          else record(property, 'text');
         }
       }
       this.traverse(pathNode);

@@ -39,7 +39,9 @@ function inferSection(context) {
     ['footer', /footer|site-footer/],
     ['hero', /hero|banner|jumbotron/],
     ['navigation', /nav|menu|links/],
-    ['testimonials', /testimonial|review/],
+    ['feedback', /feedback|google-review/],
+    ['testimonials', /testimonial/],
+    ['map', /map\b|location-map|google-map/],
     ['faq', /faq|accordion/],
     ['contact', /contact|whatsapp|mailto/],
     ['featuredProducts', /featured|product-grid|collection/],
@@ -155,9 +157,9 @@ function classifyFieldType(kind, value) {
   if (kind === 'email' || (typeof value === 'string' && /^mailto:/i.test(value))) return 'email';
   if (kind === 'phone' || (typeof value === 'string' && /^(tel:|\+)/i.test(value))) return 'phone';
   if (kind === 'color') return 'color';
+  if (kind === 'rating' || kind === 'number' || typeof value === 'number') return 'number';
   if (typeof value === 'boolean') return 'boolean';
-  if (typeof value === 'number') return 'number';
-  if (typeof value === 'string' && value.length > 80) return 'textarea';
+  if (kind === 'textarea' || (typeof value === 'string' && value.length > 80)) return 'textarea';
   if (typeof value === 'string' && /\$|lkr|usd|rs\.?\s*\d/i.test(value)) return 'currency';
   return 'text';
 }

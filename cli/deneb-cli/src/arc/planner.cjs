@@ -164,7 +164,16 @@ function planTransformations({ profile, analyses, recipe }) {
         transform.fieldType = 'list';
         transform.itemFields = (extra.itemFields || []).map((field) => ({
           key: field.key,
-          type: field.role === 'image' ? 'image' : field.role === 'url' ? 'url' : 'text',
+          type:
+            field.role === 'image'
+              ? 'image'
+              : field.role === 'url'
+                ? 'url'
+                : field.role === 'number'
+                  ? 'number'
+                  : field.role === 'textarea'
+                    ? 'textarea'
+                    : 'text',
         }));
         transform.items = candidate.value.map((item) => item.value);
         transform.itemParam = extra.itemParam;
