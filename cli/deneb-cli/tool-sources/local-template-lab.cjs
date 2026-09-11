@@ -906,10 +906,16 @@ const server = http.createServer((request, response) => {
 
   if (request.method === 'GET' && url.pathname === '/api/site-data') {
     try {
+      let currentManifest = manifest;
+      try {
+        currentManifest = readJson(manifestPath, 'Template manifest');
+      } catch {
+        // fallback
+      }
       sendJson(response, 200, {
-        manifest,
+        manifest: currentManifest,
         siteData: readSiteData(),
-        siteDataFile: manifest.siteDataFile,
+        siteDataFile: currentManifest.siteDataFile || manifest.siteDataFile,
       });
     } catch (error) {
       sendJson(response, 500, {

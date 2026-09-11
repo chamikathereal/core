@@ -99,6 +99,29 @@ const reactBits = createAdapter('react-bits', {
   },
 });
 
+const deneb = createAdapter('deneb', {
+  detect: (project) =>
+    (project.componentLibraries || []).includes('@deneb-ui/ui') ||
+    project['@deneb-ui/ui'] === true ||
+    Boolean(project.dependencies && project.dependencies['@deneb-ui/ui']),
+  recognizeNode(node) {
+    const name = getJsxName(node);
+    if (['EditableGoogleFeedback', 'EditableCustomerReviews', 'CustomerReviews', 'GoogleFeedback'].includes(name)) {
+      return { library: 'deneb', kind: 'feedback', tag: name };
+    }
+    if (['EditableTestimonialSection', 'EditableTestimonialCard', 'TestimonialSection', 'Testimonials'].includes(name)) {
+      return { library: 'deneb', kind: 'testimonial', tag: name };
+    }
+    if (name === 'EditableMap' || name === 'Map') {
+      return { library: 'deneb', kind: 'map', tag: name };
+    }
+    if (['EditableImage', 'EditableText', 'EditableCard', 'EditableProductCard', 'Image', 'Text', 'Card'].includes(name)) {
+      return { library: 'deneb', kind: 'editable-primitive', tag: name };
+    }
+    return null;
+  },
+});
+
 const radix = createAdapter('radix', {
   detect: (project) => (project.componentLibraries || []).includes('radix'),
   recognizeNode(node) {
@@ -110,7 +133,7 @@ const radix = createAdapter('radix', {
   },
 });
 
-const ADAPTERS = [nextjs, shadcn, heroui, framer, reactBits, radix];
+const ADAPTERS = [nextjs, deneb, shadcn, heroui, framer, reactBits, radix];
 
 function activeAdapters(profile) {
   return ADAPTERS.filter((adapter) => {
