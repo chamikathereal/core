@@ -28,6 +28,167 @@
 
 ## Getting Started
 
+### Editable countdown timer
+
+Render inside the existing `SiteDataProvider`:
+
+```tsx
+import { EditableCountdownTimer } from '@deneb-ui/ui';
+
+<EditableCountdownTimer fieldPath="home.countdown" />
+```
+
+Example provider/site-data snapshot (paths are relative to `content`):
+
+```json
+{
+  "content": {
+    "home": {
+      "countdown": {
+        "heading": "Our next launch",
+        "deadline": "2030-12-31T23:59:59+05:30",
+        "expiryMessage": "The launch is here!",
+        "ctaLabel": "Explore the collection",
+        "ctaUrl": "/collections"
+      }
+    }
+  },
+  "styles": {
+    "home.countdown.card": { "backgroundColor": "#0f172a" },
+    "home.countdown.text": { "color": "#ffffff" }
+  }
+}
+```
+
+All content fields have `data-preview-field-path` bindings, including an optional
+`subtitle` (defaults to “Hurry! Offers end soon.”). The URL is
+bound to the anchor and its label to the nested span. Content updates from
+`useSiteData()` drive the rendered text, link, and timer. `fieldPath` defaults
+to `countdown` and supports array indexes. Optional `defaults` supplies fallback
+content; an explicitly empty saved string takes precedence. `className` and
+`style` customize the outer container.
+
+Colors use `useComponentStyle` with existing card/text style targets, as shown
+above; they are style settings rather than additional content fields. The card
+consumes `--deneb-card-bg`; its inner text container consumes `--deneb-color`.
+Additional style targets are `<fieldPath>.heading` (text color),
+`<fieldPath>.digits.card` (backgroundColor, borderRadius for all four number boxes),
+`<fieldPath>.digits.text` (digit color), and `<fieldPath>.cta` (button backgroundColor,
+textColor, borderRadius). The main card also consumes borderRadius. No editor
+infrastructure or dependencies are added.
+
+ISO deadlines must include `T` and either uppercase `Z` or an explicit `+HH:MM` /
+`-HH:MM` offset. Seconds are optional; fractional seconds support 1–3 digits.
+The same deadline field also accepts the readable format
+`01 Dec 2026, 11:59 PM +05:30` (optional seconds before AM/PM) for compatibility.
+The editable deadline always displays ISO text, with its supplied offset and
+precision, so copying it back into Fivora preserves the same timestamp. For
+example, `2026-12-01T23:59+05:30` stays exactly that; no seconds or non-ISO suffix
+are added. Readable legacy input is normalized to ISO for display. The current
+editor schema uses a text field with an ISO example rather than a native picker.
+Invalid calendar dates are rejected. Missing/invalid deadlines show a prompt
+and `--` digits without starting a timer. SSR and the first browser render also
+use `--`; the clock starts after mount. Expired deadlines show zero in every
+unit and the expiry message, with no running interval. Editing the deadline
+restarts the clock; unmounting clears it. The expiry message appears when the
+deadline is reached; edit it through the schema's Expiry message field at any
+time, or select it visually after setting a past deadline. The CTA remains available after
+expiry; empty/unsafe URLs have no navigable `href`.
+
+#### Verify in Fivora Developer Portal
+
+These are manual acceptance steps; actual editor behavior has **not** been verified.
+The Next.js starter includes a separate `/countdown-preview/` route with
+`home.countdown` sample content and its own editor schema/page entry. The original
+`/announcement-bar-preview/` page and its announcement strip remain separate.
+The countdown route imports `@deneb-ui/ui` and uses the layout's existing
+`SiteDataProvider`; it does not import source outside the template or install
+another editor message listener. With an older package that lacks this export,
+only this optional route shows an availability message; other pages keep working.
+
+For local testing, the linked package's `dist` output must contain the new
+component and barrel export. Recompile those outputs after changing the component;
+the preview no longer follows library source edits directly. A standalone copy
+needs an installed package version that exports `EditableCountdownTimer` to show
+the countdown (the currently declared version range does not guarantee that).
+No dependency/version changes are included here.
+
+From the repository root, start the existing Lab workflow:
+
+```powershell
+node .\cli\deneb-cli\bin\index.js lab .\templates\nextjs
+```
+
+Connect the printed controller URL/token in **Developer Portal > Local Test Lab**,
+then choose **Countdown Preview**. The direct URL with default ports is
+`http://127.0.0.1:4174/countdown-preview/`.
+
+1. Confirm the Countdown Preview route renders the timer rather than the
+   availability message, using the locally compiled package export.
+2. Open the preview in Fivora Developer Portal's visual editor. Select the
+   heading and change `home.countdown.heading`; confirm both rendered text and
+   saved content change. Repeat for `subtitle` and `ctaLabel`. Edit `expiryMessage`
+   through its schema field or select it visually with a past deadline.
+3. Select the visible deadline and set it to an explicit-zone ISO timestamp
+   about two minutes in the future. Confirm the digits restart and seconds tick.
+   Change to a past timestamp: confirm zeros and the expiry message. Try an
+   invalid date and a date without a timezone: confirm the prompt and `--` digits.
+4. Select the CTA anchor/URL field (`home.countdown.ctaUrl`), distinct from its
+   nested label. Set `/collections`; verify navigation in the regular preview.
+   Try `javascript:alert(1)` and an empty URL; neither should navigate.
+5. Select style target `home.countdown.card` and change `backgroundColor`.
+   Select `home.countdown.text` and change `color`. Confirm both apply immediately.
+6. Save, reload the preview, and reselect each field/style target. Confirm values
+   persist and the countdown still uses the saved deadline. Check narrow mobile
+   and desktop widths for wrapping and overflow.
+7. Check the browser console for hydration warnings. With a future deadline,
+   navigate away/unmount and back; confirm the old timer stops and a single
+   countdown resumes. If any field cannot be selected or persisted, record it as
+   an editor integration failure; source bindings alone are not verification.
+
+### Styling the whole editable navbar
+
+`EditableNavbar` (also exported as `Navbar` and `Header`) accepts shared
+`navbarStyles` settings for desktop and mobile:
+
+```tsx
+<EditableNavbar
+  navbarStyles={{
+    fontSize: '18px',
+    fontFamily: 'Arial, sans-serif',
+    fontWeight: 600,
+    color: '#172554',
+    backgroundColor: '#eff6ff',
+    padding: '16px 24px',
+    gap: '24px',
+    linkGap: '12px',
+    border: '1px solid #bfdbfe',
+    borderRadius: '12px',
+    itemBorderRadius: '8px',
+    maxWidth: '1440px',
+  }}
+  partStyles={{ title: { fontSize: '24px' }, cta: { color: '#fff' } }}
+/>
+```
+
+Shared typography includes text size, family, weight, line height, letter spacing,
+text transform, and color. It applies to the title, links, search, CTA, and cart
+badge. A shared color also changes icon colors. Keep CTA/badge contrast readable
+when changing the shared color. `padding` controls the inner bar and mobile drawer;
+`gap` controls bar/action spacing, and `linkGap` controls navigation/drawer spacing.
+
+For saved site data and live previews, place the same settings at
+`content.common.header.navbarStyles`, and per-element styles at
+`content.common.header.navbarPartStyles`. Component props override saved settings;
+`partStyles` overrides shared styles. Supported parts are `inner`, `brand`, `logo`,
+`title`, `links`, `link`, `search`, `actions`, `icon`, `badge`, `cta`, `toggle`, and
+`drawer`. The `link` and `cta` parts apply to both desktop and mobile. Existing
+appearance is preserved when settings are omitted. The standard `style` prop
+continues to style the outer header. In the visual editor, click navbar background
+space to select its container, or select a navbar item and choose the `Whole navbar`
+style scope. Editor styles use the stable `common.header.navbar` target (customizable
+with `stylePath`) and update shared typography on desktop and mobile.
+
 ### Installation
 
 ```bash
@@ -637,6 +798,12 @@ export function PromoSection() {
 
 DENEB UI commerce components natively support both **Single Fixed Prices** and **Dynamic Price Ranges**, as well as apparel clothing options (color swatches with image swapping and size chips).
 
+Fivora uses one canonical catalog contract: `ProductCard` is the commerce
+renderer, `ServiceCard` is the service/quote renderer, and `UniversalCard` is
+reserved for other generic entity listings. Keep `imageUrl` as the primary
+image and `additionalImages` as the ordered gallery; DENEB normalizes them to
+`images`/`gallery` for detail and quick-view components.
+
 Keep `price`, `compareAtPrice`, `minPrice`, `maxPrice`, and variant prices as
 JSON numbers. Keep `currency` or a currency symbol as separate text. A formatted
 `priceRange` string is display-only; numeric filters and sorting must use the
@@ -653,7 +820,8 @@ import { ProductCard } from "@deneb-ui/ui";
     price: 3500,
     compareAtPrice: 4500,
     currency: "LKR",
-    imageUrl: "/images/shirt.jpg"
+    imageUrl: "/images/shirt.jpg",
+    additionalImages: ["/images/shirt-back.jpg", "/images/shirt-detail.jpg"]
   }}
   itemPath="products[0]"
 />
@@ -673,6 +841,7 @@ import { ProductCard } from "@deneb-ui/ui";
     isPriceRange: true,
     currency: "LKR",
     imageUrl: "/images/tunic-navy.jpg",
+    additionalImages: ["/images/tunic-back.jpg", "/images/tunic-detail.jpg"],
     colors: [
       { name: "Navy Blue", hex: "#1e3a8a", imageUrl: "/images/tunic-navy.jpg" },
       { name: "Olive Green", hex: "#3f6212", imageUrl: "/images/tunic-olive.jpg" },
@@ -734,6 +903,63 @@ export function FullStorefrontDemo() {
 | [`@deneb-ui/create-template`](https://www.npmjs.com/package/@deneb-ui/create-template) | Instant storefront generator |
 
 ---
+
+## EditableBox container styles
+
+Use `stylePath` to give a container its own card style target without treating
+its child text as a single content field. Contact starter cards use
+`contact.informationCard` and `contact.formCard` in both templates. For example,
+`styles['contact.informationCard'] = { backgroundColor: '#f0fdf4', paddingTop: 0,
+paddingBottom: 24, paddingLeft: 24, paddingRight: 24, marginTop: 8, gap: 16 }`.
+These are root `styles` entries, not new content fields. Unedited boxes retain
+their existing props and class-based appearance. Saved styles override defaults;
+legacy content-suffix spacing remains supported. Gap affects a box's direct
+flex/grid children, not a nested form's internal spacing.
+
+In Local Lab, select the card's empty background/padding area to target its
+container. Text remains independently editable. Test background, each padding
+edge (including zero), margins, and flex/grid gap, then save/reload. The bridge
+forwards card style metadata; actual Inspector controls depend on the connected
+Fivora editor. Run `node scripts/box-editing.test.cjs` after building core/UI.
+
+## Footer headings and contact icons
+
+Built-in `EditableIcon` glyphs with a `fieldPath` now use an HTML span as their
+editing boundary, matching the existing custom-icon branches. The SVG remains
+inside it with its original size and SVG attributes; the field and icon-picker
+markers occur only on the wrapper. This lets HTML-based editor selection resolve
+clicks on SVG paths to the icon field rather than a neighboring text field.
+Icons without a `fieldPath` continue to render a bare SVG.
+
+`Footer` reuses `EditableText` for `common.footerExploreHeading` and
+`common.footerContactHeading`, including text style targets. It reuses
+`EditableIcon` for `common.footerEmailIcon`, `common.footerPhoneIcon`, and
+`common.footerLocationIcon`. These are content-relative paths under
+`content.common`; default icon names are `mail`, `phone`, and `map-pin`.
+The starter schemas declare the icons as text with `control: 'icon-picker'`.
+Contact icons appear alongside their corresponding nonempty contact values.
+Missing fields retain the original headings/icons; blank headings remain
+editable through placeholders. Verify heading text/typography and icon selection
+in the Lab, then save/reload. Contact values and destinations are independent
+of icon selection.
+
+## Footer newsletter description
+
+The newsletter also exposes `content.common.newsletterSubscribeLabel` and
+`content.common.newsletterEmailPlaceholder`. The button label reuses
+`EditableText`; the email input uses the existing input-placeholder field binding
+pattern. The visitor's entered email remains separate from the editable
+placeholder. Both starter schemas declare these as text fields. Original copy
+is the fallback when fields are missing; blank placeholder values are preserved.
+Verify edits and save/reload in Local Lab, plus newsletter submission in Preview.
+
+`Footer` / `EditableFooter` reuses `EditableText` for
+`content.common.newsletterDescription`. Its field and text style target are
+`common.newsletterDescription`; saved typography lives at
+`styles['common.newsletterDescription']`. Missing data uses the original copy;
+an empty string keeps an editable placeholder. Both starter templates declare
+the field as a textarea. With newsletters enabled, edit the paragraph in the
+Lab, save, and reload to verify persistence.
 
 ## Authors
 

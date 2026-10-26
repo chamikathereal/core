@@ -1,4 +1,12 @@
 {
+  "styles": {
+    "home.countdown.card": {
+      "backgroundColor": "#193e34"
+    },
+    "home.countdown.text": {
+      "color": "#fffaf0"
+    }
+  },
   "project": {
     "id": "deneb-portfolio-showcase",
     "slug": "deneb-portfolio-showcase",
@@ -54,6 +62,31 @@
     "requiredFeatures": []
   },
   "content": {
+    "announcementBarPreview": {
+      "announcements": [
+        {
+          "text": "A little good news: delivery is on us this weekend.",
+          "badge": "Delivery",
+          "icon": "🚚",
+          "linkLabel": "See details",
+          "linkUrl": "#preview-details"
+        },
+        {
+          "text": "Meet the latest additions to our collection.",
+          "badge": "New",
+          "icon": "✨",
+          "linkLabel": "Explore the collection",
+          "linkUrl": "#preview-details"
+        },
+        {
+          "text": "Questions? Our team is here to help.",
+          "badge": "",
+          "icon": "",
+          "linkLabel": "",
+          "linkUrl": ""
+        }
+      ]
+    },
     "common": {
       "websiteTitle": "DENEB UI — Showcase & Portfolio",
       "shortDescription": "The visual-first React framework for modern storefronts and digital portfolios. Powered by DENEB-UI in collaboration with FIVORA.",
@@ -66,6 +99,14 @@
         "contact": "Contact"
       },
       "footerHeading": "Build something extraordinary with DENEB-UI & FIVORA.",
+      "newsletterDescription": "Join our exclusive community for releases, updates, and special perks.",
+      "newsletterSubscribeLabel": "Subscribe",
+      "newsletterEmailPlaceholder": "Enter your email",
+      "footerExploreHeading": "Explore",
+      "footerContactHeading": "Contact & Support",
+      "footerEmailIcon": "mail",
+      "footerPhoneIcon": "phone",
+      "footerLocationIcon": "map-pin",
       "copyright": "DENEB-UI. All rights reserved. Collaborate with FIVORA.",
       "socialMedia": {
         "twitter": "https://twitter.com/denebui",
@@ -75,6 +116,13 @@
       }
     },
     "home": {
+      "countdown": {
+        "heading": "The flash sale ends in",
+        "deadline": "2026-11-05T23:59:59+05:30",
+        "expiryMessage": "This offer has ended. Discover what is new in the collection.",
+        "ctaLabel": "Shop the flash sale",
+        "ctaUrl": "#sale-collection"
+      },
       "heroEyebrow": "⚡ DENEB UI FRAMEWORK",
       "heroTitle": "The Visual-First React Framework for High-Converting Experiences",
       "heroSummary": "Design, build, and ship web storefronts and portfolios with 100% atomic editable components, auto-balancing layouts, and instant dual-mode aesthetics. Built in collaboration with FIVORA Cloud.",
@@ -185,6 +233,10 @@
       "directionsLabel": "Get Directions",
       "directionsUrl": "https://maps.app.goo.gl/example",
       "formTitle": "Send an Inquiry",
+      "directInformationTitle": "Direct Information",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "messageLabel": "Message",
       "submitLabel": "Send Message",
       "directMessageText": "Send us a direct message",
       "whatsapp": "+94 77 123 4567"

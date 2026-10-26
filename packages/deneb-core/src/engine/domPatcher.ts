@@ -51,7 +51,12 @@ export function patchElementStyle(
   const merged = deepMerge(previous, updates);
   if (cacheKey) liveStyleCache.set(cacheKey, merged);
 
-  const cssVars = styleToCssVariables(styleKind, merged);
+  const cssVars = {
+    ...styleToCssVariables(styleKind, merged),
+    ...(element.getAttribute('data-design-section') === 'navbar'
+      ? { ...styleToCssVariables('text', merged), ...styleToCssVariables('card', merged) }
+      : {}),
+  };
   applyCssVariablesToElement(element, cssVars);
 
   // Directly set standard CSS properties on inline style for instant rendering
@@ -103,9 +108,26 @@ export function patchElementStyle(
       const r = formatUnit(merged.borderRadius as string | number) || String(merged.borderRadius);
       element.style.setProperty("border-radius", r, "important");
     }
-    if (merged.padding !== undefined || merged.paddingTop !== undefined) {
-      const pad = formatUnit((merged.padding ?? merged.paddingTop) as string | number);
+    if (merged.padding !== undefined) {
+      const pad = formatUnit(merged.padding as string | number);
       if (pad) element.style.setProperty("padding", pad, "important");
+    }
+    // Preserve independent edges; paddingTop must not change all four sides.
+    for (const edge of ['Top', 'Bottom', 'Left', 'Right'] as const) {
+      const paddingValue = merged[`padding${edge}`];
+      if (paddingValue !== undefined) {
+        const value = formatUnit(paddingValue as string | number);
+        if (value) element.style.setProperty(`padding-${edge.toLowerCase()}`, value, 'important');
+      }
+      const marginValue = merged[`margin${edge}`] ?? merged[`spacing${edge}`];
+      if (marginValue !== undefined) {
+        const value = formatUnit(marginValue as string | number);
+        if (value) element.style.setProperty(`margin-${edge.toLowerCase()}`, value, 'important');
+      }
+    }
+    if (merged.gap !== undefined) {
+      const value = formatUnit(merged.gap as string | number);
+      if (value) element.style.setProperty('gap', value, 'important');
     }
     if (merged.boxShadow) {
       element.style.setProperty("box-shadow", String(merged.boxShadow), "important");

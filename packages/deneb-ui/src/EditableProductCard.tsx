@@ -11,6 +11,7 @@ import {
   ProductOptionInput,
 } from './utils/productOptions';
 import { platformProductDetailHref } from './PlatformProductDetail';
+import { resolveCatalogPrimaryImage } from './utils/catalogMedia';
 
 const COLOR_HEX_MAP: Record<string, string> = {
   black: '#111827',
@@ -75,12 +76,21 @@ export interface ProductItem {
   productImage?: string;
   gallery?: string[];
   images?: string[];
+  additionalImages?: string[];
   badge?: string;
   tag?: string;
   rating?: number | string;
   reviewsCount?: number | string;
   isNew?: boolean;
   isBestSeller?: boolean;
+
+  // Availability & Publishing Status
+  isAvailable?: boolean;
+  inStock?: boolean;
+  available?: boolean;
+  isActive?: boolean;
+  active?: boolean;
+  status?: string;
 
   // WhatsApp & CTA custom bindings per product
   whatsappNumber?: string;
@@ -146,6 +156,8 @@ export interface EditableProductCardProps extends React.HTMLAttributes<HTMLEleme
   onDetailClick?: (product: ProductItem, url: string) => void;
   onAddToCart?: (product: ProductItem) => void;
   onWhatsAppClick?: (product: ProductItem, url: string) => void;
+  checkoutMode?: "WHATSAPP_ONLY" | "FULL_ECOMMERCE";
+  ecommerceEnabled?: boolean;
 }
 
 function WhatsAppIcon({ className = '', style = {} }: { className?: string; style?: React.CSSProperties }) {
@@ -210,6 +222,8 @@ export function EditableProductCard({
   actionLabelPath,
   onAddToCart,
   onWhatsAppClick,
+  checkoutMode: propCheckoutMode,
+  ecommerceEnabled: propEcommerceEnabled,
   href,
   detailHref,
   showDetailLink = true,
@@ -389,15 +403,7 @@ export function EditableProductCard({
 
   const fallbackImage =
     imageFallback || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80';
-  const rawImage =
-    product?.imageUrl ||
-    product?.image ||
-    (product as any)?.photo ||
-    (product as any)?.thumbnail ||
-    (product as any)?.productImage ||
-    (Array.isArray(product?.gallery) && product.gallery[0]) ||
-    (Array.isArray(product?.images) && product.images[0]);
-  const baseImageUrl = String(rawImage || fallbackImage);
+  const baseImageUrl = resolveCatalogPrimaryImage(product, fallbackImage);
 
   // Active image: clicked color image -> resolved variant image -> product base image
   const currentImage = colorImage || resolvedPrice.variantImage || baseImageUrl;
@@ -409,6 +415,18 @@ export function EditableProductCard({
         : 'imageUrl');
 
   const siteDataCard = useSiteData<any>();
+
+  const resolvedCheckoutMode =
+    propCheckoutMode ||
+    siteDataCard?.siteData?.checkoutMode ||
+    siteDataCard?.checkoutMode ||
+    (siteDataCard?.siteData?.ecommerceEnabled || siteDataCard?.ecommerceEnabled ? "FULL_ECOMMERCE" : undefined) ||
+    (propEcommerceEnabled ? "FULL_ECOMMERCE" : undefined);
+
+  const effectiveShowAddToCart =
+    resolvedCheckoutMode === "WHATSAPP_ONLY"
+      ? (props as any).showAddToCartButton === true
+      : showAddToCartButton;
   const liveShopCard = siteDataCard?.shop;
   const liveWaCard =
     liveShopCard?.contact?.whatsapp ||
@@ -906,7 +924,7 @@ export function EditableProductCard({
                 />
               ) : null}
             </div>
-          ) : !effectiveShowPrice ? (
+          ) : (!effectiveShowPrice || !hasPrice) ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span
                 style={{
@@ -932,11 +950,11 @@ export function EditableProductCard({
             <div>{actionSlot}</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
-              {(showWhatsAppButton || showAddToCartButton) && (
+              {(showWhatsAppButton || effectiveShowAddToCart) && (
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: showWhatsAppButton && showAddToCartButton ? '1fr 1fr' : '1fr',
+                    gridTemplateColumns: showWhatsAppButton && effectiveShowAddToCart ? '1fr 1fr' : '1fr',
                     gap: '0.5rem',
                     width: '100%',
                   }}
@@ -977,7 +995,7 @@ export function EditableProductCard({
               )}
 
               {/* Button 2: Add to Cart Button */}
-              {showAddToCartButton && (
+              {effectiveShowAddToCart && (
                 <button
                   type="button"
                   onClick={handleAddToCartClick}

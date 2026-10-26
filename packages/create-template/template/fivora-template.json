@@ -5,11 +5,10 @@
     "contractVersion": 1,
     "mode": "strict",
     "controlOnlyPaths": [
+      "common.newsletterDescription",
       "products[*].id",
-      "products[*].isAvailable",
       "services[*].id",
       "products[*].currency",
-      "about.collageImages[*].id",
       "contact.whatsapp"
     ]
   },
@@ -38,13 +37,63 @@
     {
       "id": "contact",
       "label": "Contact",
-      "route": "/contact",
-      "required": true
+      "route": "/contact"
+    },
+    {
+      "id": "announcement_bar_preview",
+      "label": "Announcement Bar Preview",
+      "route": "/announcement-bar-preview"
+    },
+    {
+      "id": "countdown_preview",
+      "label": "Countdown Preview",
+      "route": "/countdown-preview"
     }
   ],
   "editorSchema": {
     "version": 1,
     "sections": [
+      {
+        "id": "countdown_preview",
+        "path": "home.countdown",
+        "pageKey": "countdown_preview",
+        "type": "object",
+        "label": "Flash Sale Countdown",
+        "fields": [
+          {
+            "key": "heading",
+            "type": "text",
+            "label": "Heading"
+          },
+          {
+            "key": "subtitle",
+            "type": "text",
+            "label": "Subtitle"
+          },
+          {
+            "key": "deadline",
+            "type": "text",
+            "label": "Sale end date and time (ISO)",
+            "placeholder": "2026-12-01T23:59+05:30",
+            "description": "Use YYYY-MM-DDTHH:MM with Z or a timezone offset. Example: 2026-12-01T23:59+05:30 (Sri Lanka time). Seconds are optional."
+          },
+          {
+            "key": "expiryMessage",
+            "type": "textarea",
+            "label": "Expiry message"
+          },
+          {
+            "key": "ctaLabel",
+            "type": "text",
+            "label": "CTA label"
+          },
+          {
+            "key": "ctaUrl",
+            "type": "url",
+            "label": "CTA URL"
+          }
+        ]
+      },
       {
         "id": "common",
         "path": "common",
@@ -105,6 +154,49 @@
             "key": "footerHeading",
             "type": "text",
             "label": "Footer heading"
+          },
+          {
+            "key": "newsletterSubscribeLabel",
+            "type": "text",
+            "label": "Newsletter subscribe button label"
+          },
+          {
+            "key": "newsletterEmailPlaceholder",
+            "type": "text",
+            "label": "Newsletter email placeholder"
+          },
+          {
+            "key": "newsletterDescription",
+            "type": "textarea",
+            "label": "Newsletter description"
+          },
+          {
+            "key": "footerExploreHeading",
+            "type": "text",
+            "label": "Footer navigation heading"
+          },
+          {
+            "key": "footerContactHeading",
+            "type": "text",
+            "label": "Footer contact heading"
+          },
+          {
+            "key": "footerEmailIcon",
+            "type": "text",
+            "control": "icon-picker",
+            "label": "Footer email icon"
+          },
+          {
+            "key": "footerPhoneIcon",
+            "type": "text",
+            "control": "icon-picker",
+            "label": "Footer phone icon"
+          },
+          {
+            "key": "footerLocationIcon",
+            "type": "text",
+            "control": "icon-picker",
+            "label": "Footer location icon"
           },
           {
             "key": "copyright",
@@ -409,6 +501,26 @@
             "label": "Directions Url"
           },
           {
+            "key": "directInformationTitle",
+            "type": "text",
+            "label": "Direct information heading"
+          },
+          {
+            "key": "nameLabel",
+            "type": "text",
+            "label": "Name field label"
+          },
+          {
+            "key": "emailLabel",
+            "type": "text",
+            "label": "Email field label"
+          },
+          {
+            "key": "messageLabel",
+            "type": "text",
+            "label": "Message field label"
+          },
+          {
             "key": "formTitle",
             "type": "text",
             "label": "Form heading"
@@ -508,6 +620,51 @@
             "key": "priceRange",
             "type": "text",
             "label": "Price Range Display"
+          }
+        ]
+      },
+      {
+        "id": "announcement_bar_preview",
+        "path": "announcementBarPreview",
+        "pageKey": "announcement_bar_preview",
+        "type": "object",
+        "label": "Announcement Bar Preview",
+        "fields": [
+          {
+            "key": "announcements",
+            "type": "list",
+            "label": "Announcements",
+            "itemLabel": "Announcement",
+            "minItems": 0,
+            "maxItems": 12,
+            "fields": [
+              {
+                "key": "text",
+                "type": "text",
+                "label": "Text",
+                "required": true
+              },
+              {
+                "key": "badge",
+                "type": "text",
+                "label": "Badge"
+              },
+              {
+                "key": "icon",
+                "type": "text",
+                "label": "Icon (text or emoji)"
+              },
+              {
+                "key": "linkLabel",
+                "type": "text",
+                "label": "Link label"
+              },
+              {
+                "key": "linkUrl",
+                "type": "url",
+                "label": "Link URL"
+              }
+            ]
           }
         ]
       }
